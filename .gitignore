@@ -1,0 +1,19 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+.kotlin
+/app/build
+
+# Secrets — never commit real credentials or signing material
+secrets.properties
+.env
+*.keystore
+*.jks
+key.properties

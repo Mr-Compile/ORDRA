@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Ordra" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#101116</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_ordra_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Ordra.Main</item>
+    </style>
+
+    <style name="Theme.Ordra.Main" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

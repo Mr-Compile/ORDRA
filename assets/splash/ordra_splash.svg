@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#F8F9FD"/>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5B5FEF"/><stop offset="1" stop-color="#7C5CFC"/></linearGradient></defs>
+  <circle cx="540" cy="760" r="150" fill="url(#g)"/>
+  <circle cx="540" cy="760" r="91" fill="none" stroke="#FFFFFF" stroke-width="30"/>
+  <path d="M496 750 L540 724 L584 750 L584 802 L540 828 L496 802 Z" fill="none" stroke="#FFFFFF" stroke-width="17" stroke-linejoin="round"/>
+  <path d="M518 775 L537 794 L570 758" fill="none" stroke="#35D0A0" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="540" y="1000" text-anchor="middle" font-family="sans-serif" font-size="100" font-weight="700" fill="#171821">ORDRA</text>
+  <text x="540" y="1080" text-anchor="middle" font-family="sans-serif" font-size="36" fill="#666979">All your orders. One place.</text>
+</svg>

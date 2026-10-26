@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ordra</string>
+    <string name="ordra_tagline">All your orders. One place.</string>
+    <string name="cd_ordra_logo">Ordra logo</string>
+    <string name="home_empty_title">No orders yet</string>
+    <string name="home_empty_body">Orders you add will appear here.</string>
+</resources>

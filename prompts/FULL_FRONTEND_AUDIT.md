@@ -1,0 +1,3 @@
+# Copy/Paste: Full Frontend Audit
+
+Audit the entire Ordra Android frontend against SCREEN_INVENTORY.md, NAVIGATION.md, FRONTEND_BIBLE.md, FRONTEND_RULES.md, DESIGN_SYSTEM.md, SCREEN_STATE_MATRIX.md and QA docs. Inspect actual code; do not infer completion from filenames. Produce a screen-by-screen matrix: IMPLEMENTED / PARTIAL / MISSING / BROKEN, route status, state coverage, feature coverage, accessibility/theme status, and repair priority. Also identify duplicate components/routes, hardcoded colors, direct DAO access from UI, technical errors exposed to users, navigation traps, missing offline fallbacks, and placeholder UI. Do not implement repairs until the audit report is complete.

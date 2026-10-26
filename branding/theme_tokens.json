@@ -1,0 +1,33 @@
+{
+  "brand": {
+    "name": "Ordra",
+    "tagline": "All your orders. One place.",
+    "primary": "#5B5FEF",
+    "secondary": "#7C5CFC",
+    "primaryDark": "#3F43C7",
+    "success": "#35D0A0",
+    "warning": "#FFB547",
+    "error": "#F05252"
+  },
+  "light": {
+    "background": "#F8F9FD",
+    "surface": "#FFFFFF",
+    "surfaceVariant": "#F0F1F8",
+    "primary": "#5B5FEF",
+    "primaryStrong": "#4549CF",
+    "secondary": "#7C5CFC",
+    "textPrimary": "#171821",
+    "textSecondary": "#666979",
+    "outline": "#DADCE8"
+  },
+  "dark": {
+    "background": "#101116",
+    "surface": "#18191F",
+    "surfaceVariant": "#212229",
+    "primary": "#8588FF",
+    "secondary": "#A48BFF",
+    "textPrimary": "#F5F5FA",
+    "textSecondary": "#B2B3C1",
+    "outline": "#343640"
+  }
+}

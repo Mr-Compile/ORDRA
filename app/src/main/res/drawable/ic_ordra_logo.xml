@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Gradient disc -->
+    <path android:pathData="M54,54 m-45,0 a45,45 0 1,0 90,0 a45,45 0 1,0 -90,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="9"
+                android:startY="9"
+                android:endX="99"
+                android:endY="99"
+                android:startColor="#5B5FEF"
+                android:endColor="#7C5CFC" />
+        </aapt:attr>
+    </path>
+    <!-- O ring -->
+    <path
+        android:pathData="M54,54 m-27.8,0 a27.8,27.8 0 1,0 55.6,0 a27.8,27.8 0 1,0 -55.6,0"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="8.9"
+        android:fillColor="#00000000" />
+    <!-- Parcel -->
+    <path
+        android:pathData="M40.9,50.2 L54,42.6 L67.1,50.2 L67.1,65.4 L54,73 L40.9,65.4 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5.1"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+    <!-- Check / route -->
+    <path
+        android:pathData="M47.3,57.6 L52.7,63.1 L63.3,52.1"
+        android:strokeColor="#35D0A0"
+        android:strokeWidth="4.6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+</vector>

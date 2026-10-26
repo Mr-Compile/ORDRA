@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordra — Interactive UI Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0..1,0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="stage-header">
+  <div class="stage-brand">
+    <svg class="stage-logo" viewBox="0 0 512 512" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5B5FEF"/><stop offset="1" stop-color="#7C5CFC"/></linearGradient></defs>
+      <rect width="512" height="512" rx="120" fill="url(#lg)"/>
+      <circle cx="256" cy="256" r="132" fill="none" stroke="#fff" stroke-width="42"/>
+      <path d="M194 238 L256 202 L318 238 L318 310 L256 346 L194 310 Z" fill="none" stroke="#fff" stroke-width="24" stroke-linejoin="round"/>
+      <path d="M224 273 L250 299 L300 247" fill="none" stroke="#35D0A0" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <h1>Ordra <span class="stage-tag">UI Mockup</span></h1>
+      <p>Interactive mirror of the live app UI — keep in sync per <code>RULES.md</code></p>
+    </div>
+  </div>
+  <button class="stage-theme-btn" id="stageThemeBtn" type="button" aria-label="Toggle mockup theme">
+    <span class="mi">dark_mode</span><span id="stageThemeLabel">Light</span>
+  </button>
+</header>
+
+<main class="stage">
+  <nav class="stage-rail" aria-label="Screens">
+    <p class="rail-title">Screens</p>
+    <button type="button" class="rail-link is-active" data-goto="home">Home</button>
+    <button type="button" class="rail-link" data-goto="orders">Orders</button>
+    <button type="button" class="rail-link" data-goto="detail">Order details</button>
+    <button type="button" class="rail-link" data-goto="add">New order</button>
+    <button type="button" class="rail-link" data-goto="settings">Settings</button>
+    <p class="rail-note">Everything inside the phone frame runs on the same data. Add, deliver, archive and delete orders to see the UI react.</p>
+  </nav>
+
+  <div class="device" id="device" data-theme="light">
+    <div class="device-statusbar">
+      <span id="clock">9:41</span>
+      <span class="statusbar-icons">
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1"/><rect x="9" y="2" width="3" height="10" rx="1"/><rect x="13" y="0" width="3" height="12" rx="1" opacity=".35"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor" aria-hidden="true"><path d="M8 9.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 6C6.2 6 4.5 6.7 3.3 7.9l1.4 1.4A4.4 4.4 0 0 1 8 8c1.2 0 2.4.5 3.3 1.3l1.4-1.4A6.4 6.4 0 0 0 8 6zM8 1.5C5 1.5 2.3 2.7.3 4.7l1.4 1.4A8.9 8.9 0 0 1 8 4c2.4 0 4.6.9 6.3 2.1l1.4-1.4A10.9 10.9 0 0 0 8 1.5z" transform="translate(0,-1.5)"/></svg>
+        <svg width="20" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" aria-hidden="true"><rect x="0.5" y="0.5" width="18" height="11" rx="3"/><rect x="2.5" y="2.5" width="13" height="7" rx="1.5" fill="currentColor" stroke="none"/><path d="M20.5 4v4" stroke-linecap="round"/></svg>
+      </span>
+    </div>
+
+    <div class="appbar" id="appbar"></div>
+
+    <div class="screens" id="screens">
+
+      <!-- ============ HOME ============ -->
+      <section class="screen is-active" id="screen-home" data-screen="home">
+        <div class="scroll">
+          <p class="greeting" id="greeting">Good evening</p>
+          <h2 class="headline">All your orders.<br>One place.</h2>
+
+          <div class="stat-row" id="statRow"></div>
+
+          <div class="section-head">
+            <h3>Arriving soon</h3>
+            <button class="text-btn" type="button" data-goto="orders">See all</button>
+          </div>
+          <div id="arrivingList" class="stack"></div>
+
+          <div class="section-head">
+            <h3>Recent orders</h3>
+            <button class="text-btn" type="button" data-goto="orders">See all</button>
+          </div>
+          <div id="recentList" class="stack"></div>
+          <div class="scroll-pad"></div>
+        </div>
+      </section>
+
+      <!-- ============ ORDERS ============ -->
+      <section class="screen" id="screen-orders" data-screen="orders">
+        <div class="scroll">
+          <label class="search-field">
+            <span class="mi">search</span>
+            <input id="searchInput" type="search" placeholder="Search item, seller, tracking…" autocomplete="off">
+          </label>
+          <div class="chip-row" id="filterChips" role="group" aria-label="Filter orders">
+            <button class="chip is-on" data-filter="all" type="button">All</button>
+            <button class="chip" data-filter="active" type="button">Active</button>
+            <button class="chip" data-filter="cod" type="button">COD</button>
+            <button class="chip" data-filter="delivered" type="button">Delivered</button>
+            <button class="chip" data-filter="archived" type="button">Archived</button>
+          </div>
+          <div class="list-meta">
+            <span id="listCount"></span>
+            <label class="sort-wrap">Sort
+              <select id="sortSelect">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="eta">Delivery soonest</option>
+                <option value="total-desc">Highest total</option>
+                <option value="total-asc">Lowest total</option>
+              </select>
+            </label>
+          </div>
+          <div id="ordersList" class="stack"></div>
+          <div class="scroll-pad"></div>
+        </div>
+      </section>
+
+      <!-- ============ ORDER DETAIL ============ -->
+      <section class="screen" id="screen-detail" data-screen="detail">
+        <div class="scroll" id="detailBody"></div>
+      </section>
+
+      <!-- ============ ADD ORDER WIZARD ============ -->
+      <section class="screen" id="screen-add" data-screen="add">
+        <div class="wizard-top">
+          <div class="wizard-meta">
+            <span id="stepLabel">Step 1 of 5</span>
+            <span id="stepName">Platform</span>
+          </div>
+          <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+        <div class="scroll" id="wizardBody"></div>
+        <div class="wizard-footer">
+          <button class="btn btn-tonal" id="wizBack" type="button">Back</button>
+          <button class="btn btn-fill" id="wizNext" type="button">Continue</button>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="screen" id="screen-settings" data-screen="settings">
+        <div class="scroll">
+          <div class="card">
+            <h4 class="card-title">Appearance</h4>
+            <p class="field-label">Theme</p>
+            <div class="segmented" id="themeSeg" role="group" aria-label="Theme">
+              <button class="seg" data-theme-opt="system" type="button">System</button>
+              <button class="seg is-on" data-theme-opt="light" type="button">Light</button>
+              <button class="seg" data-theme-opt="dark" type="button">Dark</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4 class="card-title">Defaults</h4>
+            <p class="field-label">Currency</p>
+            <select class="field" disabled><option>PHP — Philippine Peso (₱)</option></select>
+            <p class="field-label">Default platform</p>
+            <select class="field" id="defPlatform"></select>
+            <p class="field-label">Default payment method</p>
+            <select class="field" id="defPayment">
+              <option>COD</option><option>GCash</option><option>Maya</option><option>Card</option><option>Bank transfer</option>
+            </select>
+          </div>
+
+          <div class="card">
+            <h4 class="card-title">Notifications</h4>
+            <p class="card-sub">Delivery &amp; COD reminders — full scheduling arrives in Phase 2.</p>
+            <label class="switch-row"><span><strong>Delivery reminders</strong><small>Day of, 1 and 2 days before ETA</small></span><input type="checkbox" class="switch" checked></label>
+            <label class="switch-row"><span><strong>COD reminders</strong><small>Remind me to prepare exact cash</small></span><input type="checkbox" class="switch" checked></label>
+            <label class="switch-row"><span><strong>Morning summary</strong><small>One digest for today's deliveries</small></span><input type="checkbox" class="switch"></label>
+          </div>
+
+          <div class="card about-card">
+            <svg class="about-logo" viewBox="0 0 512 512" aria-hidden="true">
+              <rect width="512" height="512" rx="120" fill="url(#lg)"/>
+              <circle cx="256" cy="256" r="132" fill="none" stroke="#fff" stroke-width="42"/>
+              <path d="M194 238 L256 202 L318 238 L318 310 L256 346 L194 310 Z" fill="none" stroke="#fff" stroke-width="24" stroke-linejoin="round"/>
+              <path d="M224 273 L250 299 L300 247" fill="none" stroke="#35D0A0" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+              <strong>Ordra</strong>
+              <small>0.1.0 · UI mockup</small>
+              <small>Local-first. Your data stays on this device.</small>
+            </div>
+          </div>
+          <div class="scroll-pad"></div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="navbar" aria-label="Main navigation">
+      <button class="nav-item is-active" data-nav="home" type="button">
+        <span class="mi">home</span><span>Home</span>
+      </button>
+      <button class="nav-item" data-nav="orders" type="button">
+        <span class="mi">package_2</span><span>Orders</span>
+      </button>
+      <button class="fab" id="fabAdd" type="button" aria-label="Add order"><span class="mi">add</span></button>
+      <button class="nav-item" data-nav="settings" type="button">
+        <span class="mi">settings</span><span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="dialog-overlay" id="dialogOverlay" hidden>
+      <div class="dialog" role="alertdialog" aria-labelledby="dlgTitle" aria-describedby="dlgDesc">
+        <h3 id="dlgTitle">Delete this order?</h3>
+        <p id="dlgDesc">This permanently removes the order and its items. This can't be undone.</p>
+        <div class="dialog-actions">
+          <button class="btn btn-text" id="dlgCancel" type="button">Cancel</button>
+          <button class="btn btn-danger" id="dlgConfirm" type="button">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
