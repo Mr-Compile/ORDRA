@@ -38,5 +38,6 @@
 - Do not rewrite working architecture without a documented reason.
 - Do not mark a task DONE merely because files exist; acceptance criteria and tests must pass.
 - Make small feature-focused commits/milestones.
+- Auto-commit each completed feature with a clear message, then push it to `origin main` to keep the remote in sync.
 - If blocked, state the exact blocker and evidence instead of faking completion.
 - After each phase: build, test, audit, update QA status, then proceed.

@@ -23,6 +23,13 @@ You are working on Ordra, an Android-only local-first parcel/order manager.
 - Never add unrelated features because they seem useful.
 - Do not start future phases early.
 
+## Commits and sync
+- Commit after every completed feature or milestone — one feature, one commit.
+- Write clear commit messages describing the change.
+- Push each commit to `origin main` so the remote always reflects finished work.
+- Never commit secrets, credentials, or git-ignored files.
+- Do not bundle unrelated changes into one commit.
+
 ## Definition of done
 A milestone is DONE only when:
 - Required behavior exists.
