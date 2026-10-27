@@ -27,6 +27,7 @@ class SettingsRepositoryImpl @Inject constructor(
         val DEFAULT_PAYMENT = stringPreferencesKey("default_payment_method")
         val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
         val DAILY_SUMMARY = booleanPreferencesKey("daily_summary_enabled")
+        val ONLINE_ANALYSIS = booleanPreferencesKey("online_analysis_enabled")
     }
 
     private inline fun <reified T : Enum<T>> Preferences.enumOrNull(key: Preferences.Key<String>): T? =
@@ -39,6 +40,7 @@ class SettingsRepositoryImpl @Inject constructor(
             defaultPlatform = prefs.enumOrNull<Platform>(Keys.DEFAULT_PLATFORM),
             defaultPaymentMethod = prefs.enumOrNull<PaymentMethod>(Keys.DEFAULT_PAYMENT),
             dailySummaryEnabled = prefs[Keys.DAILY_SUMMARY] ?: false,
+            onlineAnalysisEnabled = prefs[Keys.ONLINE_ANALYSIS] ?: false,
             onboardingComplete = prefs[Keys.ONBOARDING_COMPLETE] ?: false,
         )
     }
@@ -63,6 +65,10 @@ class SettingsRepositoryImpl @Inject constructor(
             if (method == null) it.remove(Keys.DEFAULT_PAYMENT)
             else it[Keys.DEFAULT_PAYMENT] = method.name
         }
+    }
+
+    override suspend fun setOnlineAnalysisEnabled(enabled: Boolean) {
+        dataStore.edit { it[Keys.ONLINE_ANALYSIS] = enabled }
     }
 
     override suspend fun setDailySummaryEnabled(enabled: Boolean) {

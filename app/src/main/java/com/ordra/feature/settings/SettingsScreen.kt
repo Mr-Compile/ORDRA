@@ -183,6 +183,31 @@ fun SettingsScreen(
             }
 
             item {
+                SettingsCard(stringResource(R.string.settings_ai)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.settings_online_analysis),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text(
+                                stringResource(R.string.settings_online_analysis_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = s.onlineAnalysisEnabled,
+                            onCheckedChange = { viewModel.setOnlineAnalysis(it) },
+                        )
+                    }
+                }
+            }
+
+            item {
                 SettingsCard(stringResource(R.string.settings_app)) {
                     Row(
                         modifier = Modifier

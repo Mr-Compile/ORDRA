@@ -46,4 +46,8 @@ class SettingsViewModel @Inject constructor(
         repository.setDailySummaryEnabled(enabled)
         reminderScheduler.setDailySummaryEnabled(enabled)
     }
+
+    fun setOnlineAnalysis(enabled: Boolean) = viewModelScope.launch {
+        repository.setOnlineAnalysisEnabled(enabled)
+    }
 }

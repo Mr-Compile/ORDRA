@@ -26,6 +26,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -130,6 +131,7 @@ fun SmartImportScreen(
             ImportStep.REVIEW -> ReviewStep(
                 state = state,
                 onFormChange = viewModel::updateForm,
+                onAnalyze = viewModel::analyzeWithAi,
                 onSave = viewModel::confirm,
                 modifier = Modifier.padding(padding),
             )
@@ -141,6 +143,7 @@ fun SmartImportScreen(
 private fun ReviewStep(
     state: SmartImportUiState,
     onFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
+    onAnalyze: () -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -232,6 +235,38 @@ private fun ReviewStep(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
+        }
+        if (state.onlineAnalysisEnabled && state.aiConfigured) {
+            item {
+                OutlinedButton(
+                    onClick = onAnalyze,
+                    enabled = !state.aiAnalyzing,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (state.aiAnalyzing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.height(18.dp).padding(end = 8.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    }
+                    Text(stringResource(R.string.import_ai_analyze))
+                }
+            }
+        }
+        if (state.aiNotice != null) {
+            item {
+                Text(
+                    stringResource(
+                        when (state.aiNotice) {
+                            AiNotice.UNAVAILABLE -> R.string.import_ai_unavailable
+                            AiNotice.NO_TEXT -> R.string.import_ai_no_text
+                            AiNotice.DONE -> R.string.import_ai_done
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         item {
             Button(

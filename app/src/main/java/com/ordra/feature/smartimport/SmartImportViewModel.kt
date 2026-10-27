@@ -5,9 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.ordra.core.common.AppResult
 import com.ordra.core.common.MoneyFormat
 import com.ordra.core.ocr.OcrEngine
+import com.ordra.data.groq.GroqExtractor
+import com.ordra.data.groq.GroqResult
+import com.ordra.data.groq.OcrRedactor
+import com.ordra.domain.model.Courier
 import com.ordra.domain.model.OrderDraft
+import com.ordra.domain.model.PaymentMethod
+import com.ordra.domain.model.Platform
+import com.ordra.domain.model.ShipmentStatus
 import com.ordra.domain.model.SmartImportResult
 import com.ordra.domain.model.TrackingStatusSource
+import com.ordra.domain.repository.SettingsRepository
 import com.ordra.domain.repository.ShipmentRepository
 import com.ordra.domain.service.SmartImportParser
 import com.ordra.domain.usecase.CreateOrderUseCase
@@ -32,7 +40,13 @@ data class SmartImportUiState(
     val ocrFailed: Boolean = false,
     val form: OrderFormState = OrderFormState(),
     val isSaving: Boolean = false,
+    val onlineAnalysisEnabled: Boolean = false,
+    val aiConfigured: Boolean = false,
+    val aiAnalyzing: Boolean = false,
+    val aiNotice: AiNotice? = null,
 )
+
+enum class AiNotice { UNAVAILABLE, NO_TEXT, DONE }
 
 sealed interface SmartImportEffect {
     data object Saved : SmartImportEffect
@@ -43,13 +57,25 @@ class SmartImportViewModel @Inject constructor(
     private val ocrEngine: OcrEngine,
     private val createOrder: CreateOrderUseCase,
     private val shipmentRepository: ShipmentRepository,
+    private val groqExtractor: GroqExtractor,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SmartImportUiState())
+    private val _uiState = MutableStateFlow(
+        SmartImportUiState(aiConfigured = groqExtractor.isConfigured),
+    )
     val uiState: StateFlow<SmartImportUiState> = _uiState.asStateFlow()
 
     private val _effects = MutableSharedFlow<SmartImportEffect>()
     val effects: SharedFlow<SmartImportEffect> = _effects
+
+    init {
+        viewModelScope.launch {
+            settingsRepository.settings.collect {
+                _uiState.update { s -> s.copy(onlineAnalysisEnabled = it.onlineAnalysisEnabled) }
+            }
+        }
+    }
 
     fun onImagePicked(uri: String) {
         _uiState.update { it.copy(step = ImportStep.PROCESSING, imageUri = uri) }
@@ -79,6 +105,72 @@ class SmartImportViewModel @Inject constructor(
 
     fun updateForm(transform: (OrderFormState) -> OrderFormState) {
         _uiState.update { it.copy(form = transform(it.form)) }
+    }
+
+    /**
+     * Optional online pass: sends only redacted OCR text to Groq and merges
+     * results into fields the user has NOT already filled — user input always wins.
+     */
+    fun analyzeWithAi() {
+        val state = _uiState.value
+        val raw = state.result?.draft?.rawOcrText
+        if (state.aiAnalyzing) return
+        if (raw.isNullOrBlank()) {
+            _uiState.update { it.copy(aiNotice = AiNotice.NO_TEXT) }
+            return
+        }
+        _uiState.update { it.copy(aiAnalyzing = true, aiNotice = null) }
+        viewModelScope.launch {
+            when (val r = groqExtractor.extract(OcrRedactor.redact(raw))) {
+                is GroqResult.Success -> _uiState.update { s ->
+                    s.copy(
+                        aiAnalyzing = false,
+                        aiNotice = AiNotice.DONE,
+                        form = mergeGroq(s.form, r.extraction),
+                    )
+                }
+                GroqResult.Unavailable -> _uiState.update {
+                    it.copy(aiAnalyzing = false, aiNotice = AiNotice.UNAVAILABLE)
+                }
+            }
+        }
+    }
+
+    private fun mergeGroq(
+        form: OrderFormState,
+        dto: com.ordra.data.groq.GroqExtractionDto,
+    ): OrderFormState {
+        fun platform(v: String?) = v?.let {
+            runCatching { Platform.valueOf(it) }.getOrNull()
+        }
+        fun payment(v: String?) = v?.let {
+            runCatching { PaymentMethod.valueOf(it) }.getOrNull()
+        }
+        fun courier(v: String?) = v?.let {
+            runCatching { Courier.valueOf(it) }.getOrNull()
+        }
+        fun date(v: String?) = v?.let {
+            runCatching { java.time.LocalDate.parse(it) }.getOrNull()
+        }
+        fun money(v: Long?) = v?.let { MoneyFormat.formatMinor(it, "PHP") }
+        return form.copy(
+            title = form.title.ifBlank { dto.title.orEmpty() },
+            platform = form.platform ?: platform(dto.platform),
+            sellerName = form.sellerName.ifBlank { dto.sellerName.orEmpty() },
+            total = form.total.ifBlank { money(dto.totalAmountMinor).orEmpty() },
+            shipping = form.shipping.ifBlank { money(dto.shippingMinor).orEmpty() },
+            discount = form.discount.ifBlank { money(dto.discountMinor).orEmpty() },
+            paymentMethod = if (form.paymentMethod == PaymentMethod.UNKNOWN) {
+                payment(dto.paymentMethod) ?: form.paymentMethod
+            } else form.paymentMethod,
+            courier = if (form.courier == Courier.UNKNOWN) {
+                courier(dto.courier) ?: form.courier
+            } else form.courier,
+            trackingNumber = form.trackingNumber.ifBlank { dto.trackingNumber.orEmpty() },
+            orderedDate = form.orderedDate ?: date(dto.orderedDate),
+            etaStart = form.etaStart ?: date(dto.etaStart),
+            etaEnd = form.etaEnd ?: date(dto.etaEnd),
+        )
     }
 
     private fun formFrom(result: SmartImportResult): OrderFormState {

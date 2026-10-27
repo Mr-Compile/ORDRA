@@ -279,4 +279,11 @@
     <string name="field_payment">Payment method</string>
     <string name="field_courier">Courier</string>
     <string name="field_tracking">Tracking number</string>
+    <string name="settings_ai">ORDRA AI</string>
+    <string name="settings_online_analysis">Online smart analysis</string>
+    <string name="settings_online_analysis_hint">Sends only redacted OCR text to Groq when you ask during Smart Import. Off by default.</string>
+    <string name="import_ai_analyze">Improve with ORDRA AI</string>
+    <string name="import_ai_unavailable">Smart analysis isn0027t available right now. You can still review the detected text and complete the order manually.</string>
+    <string name="import_ai_no_text">No scanned text to analyze.</string>
+    <string name="import_ai_done">AI suggestions filled in empty fields — please review.</string>
 </resources>

@@ -8,5 +8,6 @@ data class UserSettings(
     val defaultPlatform: Platform? = null,
     val defaultPaymentMethod: PaymentMethod? = null,
     val dailySummaryEnabled: Boolean = false,
+    val onlineAnalysisEnabled: Boolean = false,
     val onboardingComplete: Boolean = false,
 )
