@@ -53,7 +53,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | I1 | Core order vertical slice | 1A–1D | UI-2/3/4 | PENDING | Orders list/Add-Edit/Detail end-to-end |
 | I2 | Dashboard/COD/analytics | 1C/1D/6 | UI-4/8 | PENDING | Aggregate queries → Home/Insights |
 | I3 | Reminders + calendar data | 2 | UI-5 | PENDING | WorkManager + channels |
-| I4 | OCR Smart Import | 3 | UI-6 | PENDING | ML Kit → parser → draft → review → save |
+| I4 | OCR Smart Import | 3 | UI-6 | IN PROGRESS | ML Kit → parser → draft → review → save — engine/parser/draft landed with Phase 3 in working tree; review→save + dedupe open |
 | I5 | Groq enhancement | 4 | UI-6 | PENDING | DTO-validated, offline fallback |
 | I6 | Smart Parcel Status assistance | 5 | UI-7 | PENDING | Share + NotificationListener (marketplace/courier/messaging registry) + StatusNormalizer + matching/confidence gates + ambiguous review |
 | I7 | Advanced records | 7 | UI-8 | PENDING | Receipts/returns/refunds/warranties |

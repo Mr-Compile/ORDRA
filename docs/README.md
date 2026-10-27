@@ -23,6 +23,8 @@ repo root. Start with `docs/START_HERE_PROMPT.md`.
 | File | Purpose |
 |---|---|
 | `docs/plan/MASTER_PLAN.md` | Master phase sequence 0 → 10 |
+| `docs/plan/IMPLEMENTATION_QUEUE.md` | Pull-from-here execution queue across all tracks |
+| `docs/plan/MEGAPLAN_FRONTEND.md` | Exhaustive frontend execution plan (phases F0 → F9) |
 | `docs/plan/MEGAPLAN_UIUX.md` | Exhaustive UI/UX execution plan (phases UI-0 → UI-10) |
 | `docs/plan/MEGAPLAN_INTEGRATION.md` | Exhaustive contract/integration plan (phases I0 → I9) |
 | `docs/plan/PHASE_00_PRODUCT_BRANDING.md` … `docs/plan/PHASE_10_BETA_LAUNCH.md` | Per-phase implementation plans (00, 01A–01E, 02–10) |

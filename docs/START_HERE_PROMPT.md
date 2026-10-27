@@ -10,7 +10,7 @@ Before coding, read in order:
 5. docs/TECH_STACK.md
 6. docs/BRANDING.md
 7. docs/plan/MASTER_PLAN.md
-8. docs/MEGAPLAN.md (umbrella) + docs/plan/MEGAPLAN_UIUX.md + docs/plan/MEGAPLAN_INTEGRATION.md
+8. docs/MEGAPLAN.md (umbrella) + docs/plan/MEGAPLAN_FRONTEND.md + docs/plan/MEGAPLAN_UIUX.md + docs/plan/MEGAPLAN_INTEGRATION.md + docs/plan/IMPLEMENTATION_QUEUE.md
 9. docs/specs/*
 10. docs/qa/MASTER_QA_CHECKLIST.md (+ docs/qa/TRACKING_QA.md for shipment/tracking work)
 11. UI/UX work: docs/uiux/README.md reading order

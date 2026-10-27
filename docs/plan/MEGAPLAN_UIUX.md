@@ -51,8 +51,8 @@ scope passes `docs/qa/UI_UX_QA.md` and `docs/qa/SCREEN_COVERAGE_MATRIX.md` is up
 | UI-2 | Core order components | Phase 1A/1B | F1 | PENDING | Depends on UI-0 tokens |
 | UI-3 | Order management screens | Phase 1B/1C | F1 | PENDING | Add/Edit, Review, Detail, archive |
 | UI-4 | Home + search + COD | Phase 1C/1D | F1/F2 | PENDING | Dashboard metrics via contracts |
-| UI-5 | Calendar + reminders | Phase 2 | F3 | PENDING | Local notifications only |
-| UI-6 | Smart Import | Phase 3/4 | F4 | PENDING | Offline fallback mandatory |
+| UI-5 | Calendar + reminders | Phase 2 | F3 | IN PROGRESS | Calendar + reminder engine shipped (Phase 2); dedicated config surfaces + permission-explainer polish open |
+| UI-6 | Smart Import | Phase 3/4 | F4 | IN PROGRESS | SmartImportScreen + ViewModel in working tree; review/Groq/offline states open |
 | UI-7 | Smart Parcel Status assistance | Phase 5 | F5 | PENDING | Optional notification access; confidence-gated suggestions |
 | UI-8 | Insights + advanced lifecycle | Phase 6/7 | F6/F7 | PENDING | Analytics is local-only |
 | UI-9 | Settings + backup + about | Phase 1E/8 | F2/F8 | PENDING | No account/cloud sections |
