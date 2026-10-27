@@ -46,17 +46,17 @@ scope passes `docs/qa/UI_UX_QA.md` and `docs/qa/SCREEN_COVERAGE_MATRIX.md` is up
 
 | UI phase | Scope | Master map | Frontend map | Status | Notes |
 |---|---|---|---|---|---|
-| UI-0 | Design foundation | Phase 0 | F0 | IN PROGRESS | Theme/tokens partially exist (`core/ui/theme`); verify vs `docs/uiux/DESIGN_SYSTEM.md` |
-| UI-1 | Navigation shell | Phase 1A | F0/F1 | PENDING | Nav spec conflict open — see Conflicts |
-| UI-2 | Core order components | Phase 1A/1B | F1 | PENDING | Depends on UI-0 tokens |
-| UI-3 | Order management screens | Phase 1B/1C | F1 | PENDING | Add/Edit, Review, Detail, archive |
-| UI-4 | Home + search + COD | Phase 1C/1D | F1/F2 | PENDING | Dashboard metrics via contracts |
-| UI-5 | Calendar + reminders | Phase 2 | F3 | IN PROGRESS | Calendar + reminder engine shipped (Phase 2); dedicated config surfaces + permission-explainer polish open |
-| UI-6 | Smart Import | Phase 3/4 | F4 | IN PROGRESS | SmartImportScreen + ViewModel in working tree; review/Groq/offline states open |
-| UI-7 | Smart Parcel Status assistance | Phase 5 | F5 | PENDING | Optional notification access; confidence-gated suggestions |
-| UI-8 | Insights + advanced lifecycle | Phase 6/7 | F6/F7 | PENDING | Analytics is local-only |
-| UI-9 | Settings + backup + about | Phase 1E/8 | F2/F8 | PENDING | No account/cloud sections |
-| UI-10 | Polish & regression | Phase 9 | F9 | PENDING | Full-screen regression pass |
+| UI-0 | Design foundation | Phase 0 | F0 | IN PROGRESS | Theme/tokens exist in `core/ui/theme` and are used app-wide; DESIGN_SYSTEM.md extraction audit not yet run |
+| UI-1 | Navigation shell | Phase 1A | F0/F1 | DONE | NavHost + routes shipped; spec conflict note may be stale — verify in polish pass |
+| UI-2 | Core order components | Phase 1A/1B | F1 | DONE | OrderCard/StatusChip/form components in `core/ui` + orderedit |
+| UI-3 | Order management screens | Phase 1B/1C | F1 | DONE | Add/Edit (review-before-save), Detail, archive/restore/delete |
+| UI-4 | Home + search + COD | Phase 1C/1D | F1/F2 | DONE | Dashboard metrics, Orders screen, COD overview |
+| UI-5 | Calendar + reminders | Phase 2 | F3 | DONE | Calendar + reminder chips + notification permission shipped (`32284ff`) |
+| UI-6 | Smart Import | Phase 3/4 | F4 | DONE | Pick→OCR→review→save + Groq path shipped (`eddcf8b`,`141b15e`) |
+| UI-7 | Smart Parcel Status assistance | Phase 5 | F5 | DONE | Listener opt-in, suggestion review + parcel pick (`2b0adf8`) |
+| UI-8 | Insights + advanced lifecycle | Phase 6/7 | F6/F7 | DONE | Analytics + post-purchase sections (`a85a64b`,`2883923`) |
+| UI-9 | Settings + backup + about | Phase 1E/8 | F2/F8 | DONE | Settings incl. backup/detections/AI toggles + About (`2069037`) |
+| UI-10 | Polish & regression | Phase 9 | F9 | PENDING | Full-screen regression pass not yet run |
 
 ## Canonical navigation model (per `docs/uiux/NAVIGATION_UX.md`)
 

@@ -58,16 +58,16 @@ passes `docs/qa/FRONTEND_QA.md` and the applicable critical flows of
 
 | F phase | Scope | Master map | UI map | Status | Notes |
 |---|---|---|---|---|---|
-| F0 | Design foundation | 0–1A | UI-0/UI-1 | IN PROGRESS | `core/ui/theme` (Color/Theme/Type) exists; token extraction per UI-0 checklist continues |
+| F0 | Design foundation | 0–1A | UI-0/UI-1 | IN PROGRESS | `core/ui/theme` (Color/Theme/Type) exists and is used app-wide; UI-0 token-extraction checklist not yet audited |
 | F1 | Core offline UI | 1A–1C | UI-1..UI-3 | DONE | Onboarding/Home/Orders/Add-Edit/Detail/Timeline shipped through 1E; v1.1 redesign deltas tracked under UI-3/UI-4 |
 | F2 | Discovery & organization | 1D | UI-4 | DONE | Search/filters/sort/categories/COD committed (`d728a30`); progressive-disclosure deltas under UI-4 |
 | F3 | Delivery experience | 2 | UI-5 | DONE | Calendar + reminders + notification permission committed (`32284ff`); dedicated reminder-config surfaces under UI-5 |
-| F4 | Smart Import | 3–4 | UI-6 | IN PROGRESS | OCR engine/parser/draft/screen in working tree; review→save, Groq + offline states open |
-| F5 | Smart Parcel Status assistance | 5 | UI-7 | PENDING | Share target, notification-assistance education, suggestion review, status-change notifications |
-| F6 | Insights | 6 | UI-8 | PENDING | Spending dashboard, platform/category breakdown, history |
-| F7 | After-purchase | 7 | UI-8 | PENDING | Returns/refunds, warranty, receipts/attachments |
-| F8 | Data portability | 8 | UI-9 | PENDING | Backup, restore, export, destructive confirmations |
-| F9 | Polish | 9 | UI-10 | PENDING | a11y, adaptive, performance, dark/light + state-restoration QA; run `prompts/FULL_FRONTEND_AUDIT.md` |
+| F4 | Smart Import | 3–4 | UI-6 | DONE | OCR engine/parser/draft/screen + Groq enhancement + offline fallback shipped (`eddcf8b`, `141b15e`) |
+| F5 | Smart Parcel Status assistance | 5 | UI-7 | DONE | Share target, optional listener, confidence-gated suggestions + review (`2b0adf8`) |
+| F6 | Insights | 6 | UI-8 | DONE | Spending analytics + monthly history (`a85a64b`) |
+| F7 | After-purchase | 7 | UI-8 | DONE | Returns/refunds/warranties/receipts + rating (`2883923`) |
+| F8 | Data portability | 8 | UI-9 | DONE | Versioned backup/restore + CSV via SAF (`2069037`) |
+| F9 | Polish | 9 | UI-10 | IN PROGRESS | Release hardening done (`0e154b9`); `prompts/FULL_FRONTEND_AUDIT.md` pass not yet run |
 
 ## F0 — Design foundation
 
