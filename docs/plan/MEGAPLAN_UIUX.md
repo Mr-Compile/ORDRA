@@ -46,7 +46,7 @@ scope passes `docs/qa/UI_UX_QA.md` and `docs/qa/SCREEN_COVERAGE_MATRIX.md` is up
 
 | UI phase | Scope | Master map | Frontend map | Status | Notes |
 |---|---|---|---|---|---|
-| UI-0 | Design foundation | Phase 0 | F0 | IN PROGRESS | Theme/tokens exist in `core/ui/theme` and are used app-wide; DESIGN_SYSTEM.md extraction audit not yet run |
+| UI-0 | Design foundation | Phase 0 | F0 | DONE | Token audit PASS — `docs/qa/TOKEN_AUDIT_EVIDENCE.md` |
 | UI-1 | Navigation shell | Phase 1A | F0/F1 | DONE | NavHost + routes shipped; spec conflict note may be stale — verify in polish pass |
 | UI-2 | Core order components | Phase 1A/1B | F1 | DONE | OrderCard/StatusChip/form components in `core/ui` + orderedit |
 | UI-3 | Order management screens | Phase 1B/1C | F1 | DONE | Add/Edit (review-before-save), Detail, archive/restore/delete |

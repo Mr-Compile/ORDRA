@@ -58,7 +58,7 @@ passes `docs/qa/FRONTEND_QA.md` and the applicable critical flows of
 
 | F phase | Scope | Master map | UI map | Status | Notes |
 |---|---|---|---|---|---|
-| F0 | Design foundation | 0–1A | UI-0/UI-1 | IN PROGRESS | `core/ui/theme` (Color/Theme/Type) exists and is used app-wide; UI-0 token-extraction checklist not yet audited |
+| F0 | Design foundation | 0–1A | UI-0/UI-1 | DONE | `core/ui/theme` matches `theme_tokens.json` byte-for-byte — `docs/qa/TOKEN_AUDIT_EVIDENCE.md` |
 | F1 | Core offline UI | 1A–1C | UI-1..UI-3 | DONE | Onboarding/Home/Orders/Add-Edit/Detail/Timeline shipped through 1E; v1.1 redesign deltas tracked under UI-3/UI-4 |
 | F2 | Discovery & organization | 1D | UI-4 | DONE | Search/filters/sort/categories/COD committed (`d728a30`); progressive-disclosure deltas under UI-4 |
 | F3 | Delivery experience | 2 | UI-5 | DONE | Calendar + reminders + notification permission committed (`32284ff`); dedicated reminder-config surfaces under UI-5 |
