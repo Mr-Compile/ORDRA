@@ -1,0 +1,245 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "8e8a08a76057c27e9cac088848e17e1d",
+    "entities": [
+      {
+        "tableName": "orders",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `platform` TEXT NOT NULL, `customPlatformName` TEXT, `sellerName` TEXT, `status` TEXT NOT NULL, `paymentMethod` TEXT NOT NULL, `paymentStatus` TEXT NOT NULL, `isCod` INTEGER NOT NULL, `currencyCode` TEXT NOT NULL, `itemSubtotalMinor` INTEGER, `shippingFeeMinor` INTEGER, `discountMinor` INTEGER, `totalAmountMinor` INTEGER, `courier` TEXT, `trackingNumber` TEXT, `orderedDate` INTEGER, `estimatedDeliveryStart` INTEGER, `estimatedDeliveryEnd` INTEGER, `deliveredAt` INTEGER, `notes` TEXT, `productImageUri` TEXT, `archivedAt` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "platform",
+            "columnName": "platform",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "customPlatformName",
+            "columnName": "customPlatformName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sellerName",
+            "columnName": "sellerName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paymentMethod",
+            "columnName": "paymentMethod",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paymentStatus",
+            "columnName": "paymentStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCod",
+            "columnName": "isCod",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currencyCode",
+            "columnName": "currencyCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemSubtotalMinor",
+            "columnName": "itemSubtotalMinor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "shippingFeeMinor",
+            "columnName": "shippingFeeMinor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "discountMinor",
+            "columnName": "discountMinor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "totalAmountMinor",
+            "columnName": "totalAmountMinor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "courier",
+            "columnName": "courier",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "trackingNumber",
+            "columnName": "trackingNumber",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "orderedDate",
+            "columnName": "orderedDate",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "estimatedDeliveryStart",
+            "columnName": "estimatedDeliveryStart",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "estimatedDeliveryEnd",
+            "columnName": "estimatedDeliveryEnd",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "deliveredAt",
+            "columnName": "deliveredAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "productImageUri",
+            "columnName": "productImageUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "archivedAt",
+            "columnName": "archivedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "order_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `orderId` TEXT NOT NULL, `name` TEXT NOT NULL, `variant` TEXT, `quantity` INTEGER NOT NULL, `unitPriceMinor` INTEGER, `lineTotalMinor` INTEGER, `imageUri` TEXT, `notes` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`orderId`) REFERENCES `orders`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orderId",
+            "columnName": "orderId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "variant",
+            "columnName": "variant",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "quantity",
+            "columnName": "quantity",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitPriceMinor",
+            "columnName": "unitPriceMinor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lineTotalMinor",
+            "columnName": "lineTotalMinor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "imageUri",
+            "columnName": "imageUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_order_items_orderId",
+            "unique": false,
+            "columnNames": [
+              "orderId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_order_items_orderId` ON `${TABLE_NAME}` (`orderId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "orders",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "orderId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8e8a08a76057c27e9cac088848e17e1d')"
+    ]
+  }
+}

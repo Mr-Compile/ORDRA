@@ -1,24 +1,11 @@
 package com.ordra.app
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.ordra.feature.home.HomeScreen
-
-object OrdraDestinations {
-    const val HOME = "home"
-}
+import com.ordra.app.navigation.OrdraNavHost
 
 @Composable
 fun OrdraApp() {
     val navController = rememberNavController()
-    NavHost(
-        navController = navController,
-        startDestination = OrdraDestinations.HOME,
-    ) {
-        composable(OrdraDestinations.HOME) {
-            HomeScreen()
-        }
-    }
+    OrdraNavHost(navController = navController)
 }

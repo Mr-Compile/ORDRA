@@ -33,7 +33,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | Phase | Scope | Frontend map | Status | Notes |
 |---|---|---|---|---|
 | 0 | Product & branding foundation | F0 (partial) | DONE | Name, tagline, tokens, light/dark theme, adaptive icon, system splash, launcher branding |
-| 1A | Android foundation + persistence | F0 | IN PROGRESS | Build config fixed for AGP 9 built-in Kotlin (2.2.10). Remaining: domain models, Room entities/DAO/db/mappers, repository + use cases, settings DS, nav shell, error model, unit tests |
+| 1A | Android foundation + persistence | F0 | DONE | Contract-aligned domain models, Room entities/DAO/db, repository + use cases, settings DS, nav shell, AppError model, 10 unit tests green, assembleDebug PASS |
 | 1B | Manual order management | F1 | PENDING | Add/edit multi-section form, review-before-save, archive/restore/delete |
 | 1C | Home & order details | F1 | PENDING | Home summary (active/arriving/COD), detail screen, status chips, mark-delivered |
 | 1D | Search/filters/categories/COD | F2 | PENDING | Search items/seller/tracking/notes, filters+sort, categories, COD totals |
