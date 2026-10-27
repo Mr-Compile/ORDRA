@@ -48,6 +48,8 @@ class OrdraDatabaseTest {
         deliveredAt = null,
         notes = null,
         productImageUri = null,
+        rating = null,
+        isFavorite = false,
         archivedAt = archivedAt,
         createdAt = 1_700_000_000_000,
         updatedAt = 1_700_000_000_000,

@@ -52,6 +52,9 @@ interface OrderDao {
     @Query("UPDATE orders SET status = :status, deliveredAt = :deliveredAt, updatedAt = :updatedAt WHERE id = :orderId")
     suspend fun updateStatus(orderId: String, status: String, deliveredAt: Long?, updatedAt: Long)
 
+    @Query("UPDATE orders SET rating = :rating, isFavorite = :isFavorite WHERE id = :orderId")
+    suspend fun updateRatingFavorite(orderId: String, rating: Int?, isFavorite: Boolean)
+
     @Query("DELETE FROM orders WHERE id = :orderId")
     suspend fun deleteOrder(orderId: String)
 

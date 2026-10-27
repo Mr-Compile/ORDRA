@@ -67,5 +67,8 @@ class OrderRepositoryImpl @Inject constructor(
             updatedAt = Instant.now().toEpochMilli(),
         )
 
+    override suspend fun setRatingFavorite(orderId: String, rating: Int?, isFavorite: Boolean) =
+        orderDao.updateRatingFavorite(orderId, rating, isFavorite)
+
     override suspend fun deleteOrderPermanently(orderId: String) = orderDao.deleteOrder(orderId)
 }

@@ -149,6 +149,8 @@ data class OrderFormState(
             estimatedDeliveryStart = etaStart,
             estimatedDeliveryEnd = etaEnd,
             deliveredAt = existing?.deliveredAt,
+            rating = existing?.rating,
+            isFavorite = existing?.isFavorite ?: false,
             notes = notes.ifBlank { null },
             productImageUri = productImageUri,
             archivedAt = existing?.archivedAt,

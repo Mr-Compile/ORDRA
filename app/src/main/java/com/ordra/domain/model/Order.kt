@@ -31,6 +31,8 @@ data class Order(
     val deliveredAt: Instant? = null,
     val notes: String? = null,
     val productImageUri: String? = null,
+    val rating: Int? = null,
+    val isFavorite: Boolean = false,
     val archivedAt: Instant? = null,
     val createdAt: Instant,
     val updatedAt: Instant,

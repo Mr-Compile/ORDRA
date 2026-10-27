@@ -31,6 +31,8 @@ data class OrderEntity(
     val deliveredAt: Long?,
     val notes: String?,
     val productImageUri: String?,
+    val rating: Int?,
+    val isFavorite: Boolean,
     val archivedAt: Long?,
     val createdAt: Long,
     val updatedAt: Long,

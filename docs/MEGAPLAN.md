@@ -57,7 +57,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 4 | Groq-assisted extraction | F4 | DONE | Direct Groq call, strict JSON DTO+validation, redaction (email/phone/url), settings toggle default-off, merge never overwrites user fields, graceful Unavailable fallback, 3 tests |
 | 5 | Share + notification assistance (5A/5B) | F5 | DONE | NotificationParser (EN+Filipino), ShipmentMatcher w/ confidence tiers, StatusProgression regression guard, detection_suggestions v5, listener service (optional), Detections review screen, share receiver, 6 tests |
 | 6 | Spending analytics + history | F6 | DONE | Deterministic SpendingAnalytics (weekly/monthly/platform/pending-vs-delivered/COD/avg), accessible progress-bar breakdowns, 4 tests, Settings entry |
-| 7 | Post-purchase tools | F7 | PENDING | Returns/refunds, warranties, receipts/attachments |
+| 7 | Post-purchase tools | F7 | DONE | returns/refunds/warranties/receipts (Room v6), rating+favorite, warranty-expiry CUSTOM reminder, detail post-purchase section w/ dialogs |
 | 8 | Backup, restore & export | F8 | PENDING | JSON/ZIP backup, CSV export, restore validation |
 | 9 | Hardening & release prep | F9 | PENDING | Security/privacy/perf audit, a11y, migrations, release config; Groq key decision for channel |
 | 10 | Beta & launch | F9 | PENDING | Needs owner: signing, store listing, beta rollout |

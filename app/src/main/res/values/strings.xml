@@ -315,4 +315,21 @@
     <string name="analytics_monthly">Monthly history</string>
     <string name="analytics_empty">No spending data yet.</string>
     <string name="settings_analytics">Spending analytics</string>
+    <!-- Post-purchase -->
+    <string name="pp_title">Post-purchase</string>
+    <string name="pp_favorite">Favorite</string>
+    <string name="pp_add_return">Return</string>
+    <string name="pp_add_refund">Refund</string>
+    <string name="pp_add_warranty">Warranty</string>
+    <string name="pp_add_receipt">Receipt</string>
+    <string name="pp_reason">Reason (optional)</string>
+    <string name="pp_amount">Amount</string>
+    <string name="pp_provider">Provider</string>
+    <string name="pp_start_date">Start (YYYY-MM-DD)</string>
+    <string name="pp_end_date">End (YYYY-MM-DD)</string>
+    <string name="pp_save">Save</string>
+    <string name="pp_return_line">Return — %1$s</string>
+    <string name="pp_refund_line">Refund %1$s — %2$s</string>
+    <string name="pp_warranty_line">Warranty %1$s: %2$s → %3$s</string>
+    <string name="pp_receipts_count">%1$d receipt(s) attached</string>
 </resources>

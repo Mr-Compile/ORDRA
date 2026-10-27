@@ -16,5 +16,6 @@ interface OrderRepository {
     suspend fun archiveOrder(orderId: String)
     suspend fun restoreOrder(orderId: String)
     suspend fun updateStatus(orderId: String, status: OrderStatus)
+    suspend fun setRatingFavorite(orderId: String, rating: Int?, isFavorite: Boolean)
     suspend fun deleteOrderPermanently(orderId: String)
 }

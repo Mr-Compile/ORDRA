@@ -28,6 +28,10 @@ import kotlinx.coroutines.launch
 data class OrderDetailUiState(
     val order: Order? = null,
     val shipment: Shipment? = null,
+    val returns: List<com.ordra.domain.model.PurchaseReturn> = emptyList(),
+    val refunds: List<com.ordra.domain.model.Refund> = emptyList(),
+    val warranties: List<com.ordra.domain.model.Warranty> = emptyList(),
+    val receipts: List<com.ordra.domain.model.Receipt> = emptyList(),
     val loaded: Boolean = false,
 )
 
@@ -46,6 +50,7 @@ class OrderDetailViewModel @Inject constructor(
     private val restoreOrder: RestoreOrderUseCase,
     private val deleteOrder: DeleteOrderUseCase,
     private val reminderScheduler: ReminderScheduler,
+    private val postPurchaseRepository: com.ordra.domain.repository.PostPurchaseRepository,
 ) : ViewModel() {
 
     private val orderId: String = checkNotNull(savedStateHandle[OrdraRoutes.ARG_ORDER_ID])
@@ -62,9 +67,83 @@ class OrderDetailViewModel @Inject constructor(
                 orderRepository.observeOrder(orderId),
                 shipmentRepository.observePrimaryShipment(orderId),
             ) { order, shipment ->
-                OrderDetailUiState(order = order, shipment = shipment, loaded = true)
+                _uiState.value.copy(order = order, shipment = shipment, loaded = true)
             }.collect { _uiState.value = it }
         }
+        viewModelScope.launch {
+            combine(
+                postPurchaseRepository.observeReturns(orderId),
+                postPurchaseRepository.observeRefunds(orderId),
+                postPurchaseRepository.observeWarranties(orderId),
+                postPurchaseRepository.observeReceipts(orderId),
+            ) { returns, refunds, warranties, receipts ->
+                _uiState.value.copy(
+                    returns = returns, refunds = refunds,
+                    warranties = warranties, receipts = receipts,
+                )
+            }.collect { _uiState.value = it }
+        }
+    }
+
+    fun setRating(rating: Int?) = viewModelScope.launch {
+        orderRepository.setRatingFavorite(
+            orderId, rating, _uiState.value.order?.isFavorite ?: false,
+        )
+    }
+
+    fun toggleFavorite() = viewModelScope.launch {
+        orderRepository.setRatingFavorite(
+            orderId, _uiState.value.order?.rating,
+            !(_uiState.value.order?.isFavorite ?: false),
+        )
+    }
+
+    fun addReturn(reason: String?) = viewModelScope.launch {
+        val now = java.time.Instant.now()
+        postPurchaseRepository.saveReturn(
+            com.ordra.domain.model.PurchaseReturn(
+                id = java.util.UUID.randomUUID().toString(),
+                orderId = orderId, reason = reason,
+                status = com.ordra.domain.model.ReturnStatus.REQUESTED,
+                requestedAt = now, resolvedAt = null, notes = null,
+            ),
+        )
+    }
+
+    fun addRefund(amountMinor: Long?, reason: String?) = viewModelScope.launch {
+        postPurchaseRepository.saveRefund(
+            com.ordra.domain.model.Refund(
+                id = java.util.UUID.randomUUID().toString(),
+                orderId = orderId, amountMinor = amountMinor,
+                status = com.ordra.domain.model.RefundStatus.PENDING,
+                reason = reason,
+                requestedAt = java.time.Instant.now(), processedAt = null,
+            ),
+        )
+    }
+
+    fun addWarranty(provider: String?, start: java.time.LocalDate, end: java.time.LocalDate) =
+        viewModelScope.launch {
+            if (end.isBefore(start)) return@launch
+            postPurchaseRepository.saveWarranty(
+                com.ordra.domain.model.Warranty(
+                    id = java.util.UUID.randomUUID().toString(),
+                    orderId = orderId, provider = provider,
+                    startDate = start, endDate = end, notes = null,
+                ),
+            )
+            orderRepository.getOrder(orderId)
+                ?.let { reminderScheduler.syncOrderReminders(it) }
+        }
+
+    fun addReceipt(imageUri: String) = viewModelScope.launch {
+        postPurchaseRepository.saveReceipt(
+            com.ordra.domain.model.Receipt(
+                id = java.util.UUID.randomUUID().toString(),
+                orderId = orderId, imageUri = imageUri, label = null,
+                addedAt = java.time.Instant.now(),
+            ),
+        )
     }
 
     fun setOrderStatus(status: OrderStatus) {

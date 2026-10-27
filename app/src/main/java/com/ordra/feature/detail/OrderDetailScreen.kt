@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -124,11 +125,18 @@ fun OrderDetailScreen(
             else -> DetailContent(
                 order = order,
                 shipment = uiState.shipment,
+                uiState = uiState,
                 onViewTimeline = onViewTimeline,
                 onUpdateOrderStatus = { showStatusPicker = true },
                 onUpdateShipment = { showShipmentPicker = true },
                 onTrackExternally = viewModel::trackExternally,
                 onMarkDelivered = { showDeliveredDialog = true },
+                onRating = viewModel::setRating,
+                onFavorite = viewModel::toggleFavorite,
+                onAddReturn = viewModel::addReturn,
+                onAddRefund = viewModel::addRefund,
+                onAddWarranty = viewModel::addWarranty,
+                onAddReceipt = viewModel::addReceipt,
                 modifier = Modifier.padding(padding),
             )
         }
@@ -295,11 +303,18 @@ private fun DetailTopBar(
 private fun DetailContent(
     order: Order,
     shipment: Shipment?,
+    uiState: OrderDetailUiState,
     onViewTimeline: (String) -> Unit,
     onUpdateOrderStatus: () -> Unit,
     onUpdateShipment: () -> Unit,
     onTrackExternally: () -> Unit,
     onMarkDelivered: () -> Unit,
+    onRating: (Int?) -> Unit,
+    onFavorite: () -> Unit,
+    onAddReturn: (String?) -> Unit,
+    onAddRefund: (Long?, String?) -> Unit,
+    onAddWarranty: (String?, java.time.LocalDate, java.time.LocalDate) -> Unit,
+    onAddReceipt: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -511,7 +526,223 @@ private fun DetailContent(
                 }
             }
         }
+
+        item {
+            PostPurchaseSection(
+                state = uiState,
+                onRating = onRating,
+                onFavorite = onFavorite,
+                onAddReturn = onAddReturn,
+                onAddRefund = onAddRefund,
+                onAddWarranty = onAddWarranty,
+                onAddReceipt = onAddReceipt,
+            )
+        }
     }
+}
+
+@Composable
+private fun PostPurchaseSection(
+    state: OrderDetailUiState,
+    onRating: (Int?) -> Unit,
+    onFavorite: () -> Unit,
+    onAddReturn: (String?) -> Unit,
+    onAddRefund: (Long?, String?) -> Unit,
+    onAddWarranty: (String?, java.time.LocalDate, java.time.LocalDate) -> Unit,
+    onAddReceipt: (String) -> Unit,
+) {
+    var dialog by remember { mutableStateOf<String?>(null) }
+    val receiptPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> uri?.let { onAddReceipt(it.toString()) } }
+
+    DetailSection(title = stringResource(R.string.pp_title)) {
+        // Rating stars + favorite
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            repeat(5) { i ->
+                TextButton(onClick = { onRating(if (state.order?.rating == i + 1) null else i + 1) }) {
+                    Text(
+                        if ((state.order?.rating ?: 0) > i) "★" else "☆",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            }
+            Spacer(Modifier.weight(1f))
+            androidx.compose.material3.FilterChip(
+                selected = state.order?.isFavorite == true,
+                onClick = onFavorite,
+                label = { Text(stringResource(R.string.pp_favorite)) },
+            )
+        }
+
+        if (state.returns.isNotEmpty() || state.refunds.isNotEmpty() ||
+            state.warranties.isNotEmpty() || state.receipts.isNotEmpty()
+        ) {
+            state.returns.forEach {
+                Text(
+                    stringResource(R.string.pp_return_line, it.status.name.lowercase()),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            state.refunds.forEach {
+                Text(
+                    stringResource(
+                        R.string.pp_refund_line,
+                        MoneyFormat.formatMinor(it.amountMinor, "PHP"),
+                        it.status.name.lowercase(),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            state.warranties.forEach {
+                Text(
+                    stringResource(
+                        R.string.pp_warranty_line,
+                        it.provider ?: "—", it.startDate, it.endDate,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            if (state.receipts.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.pp_receipts_count, state.receipts.size),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = { dialog = "return" }) {
+                Text(stringResource(R.string.pp_add_return))
+            }
+            TextButton(onClick = { dialog = "refund" }) {
+                Text(stringResource(R.string.pp_add_refund))
+            }
+            TextButton(onClick = { dialog = "warranty" }) {
+                Text(stringResource(R.string.pp_add_warranty))
+            }
+            TextButton(
+                onClick = {
+                    receiptPicker.launch(
+                        androidx.activity.result.PickVisualMediaRequest(
+                            androidx.activity.result.contract.ActivityResultContracts
+                                .PickVisualMedia.ImageOnly,
+                        ),
+                    )
+                },
+            ) { Text(stringResource(R.string.pp_add_receipt)) }
+        }
+    }
+
+    when (dialog) {
+        "return" -> TextDialog(
+            title = stringResource(R.string.pp_add_return),
+            label = stringResource(R.string.pp_reason),
+            onConfirm = { onAddReturn(it); dialog = null },
+            onDismiss = { dialog = null },
+        )
+        "refund" -> TextDialog(
+            title = stringResource(R.string.pp_add_refund),
+            label = stringResource(R.string.pp_amount),
+            secondLabel = stringResource(R.string.pp_reason),
+            onConfirm2 = { amount, reason ->
+                onAddRefund(MoneyFormat.parseToMinor(amount), reason.ifBlank { null })
+                dialog = null
+            },
+            onDismiss = { dialog = null },
+        )
+        "warranty" -> WarrantyDialog(
+            onConfirm = { p, s, e -> onAddWarranty(p, s, e); dialog = null },
+            onDismiss = { dialog = null },
+        )
+    }
+}
+
+@Composable
+private fun TextDialog(
+    title: String,
+    label: String,
+    onConfirm: (String) -> Unit = {},
+    secondLabel: String? = null,
+    onConfirm2: (String, String) -> Unit = { _, _ -> },
+    onDismiss: () -> Unit,
+) {
+    var text by remember { mutableStateOf("") }
+    var second by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                androidx.compose.material3.OutlinedTextField(
+                    value = text, onValueChange = { text = it },
+                    label = { Text(label) }, singleLine = true,
+                )
+                if (secondLabel != null) {
+                    Spacer(Modifier.height(8.dp))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = second, onValueChange = { second = it },
+                        label = { Text(secondLabel) }, singleLine = true,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (secondLabel != null) onConfirm2(text, second) else onConfirm(text)
+                },
+            ) { Text(stringResource(R.string.pp_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+@Composable
+private fun WarrantyDialog(
+    onConfirm: (String?, java.time.LocalDate, java.time.LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var provider by remember { mutableStateOf("") }
+    var start by remember { mutableStateOf("") }
+    var end by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pp_add_warranty)) },
+        text = {
+            Column {
+                androidx.compose.material3.OutlinedTextField(
+                    value = provider, onValueChange = { provider = it },
+                    label = { Text(stringResource(R.string.pp_provider)) }, singleLine = true,
+                )
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.material3.OutlinedTextField(
+                    value = start, onValueChange = { start = it },
+                    label = { Text(stringResource(R.string.pp_start_date)) }, singleLine = true,
+                )
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.material3.OutlinedTextField(
+                    value = end, onValueChange = { end = it },
+                    label = { Text(stringResource(R.string.pp_end_date)) }, singleLine = true,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val s = runCatching { java.time.LocalDate.parse(start) }.getOrNull()
+                    val e = runCatching { java.time.LocalDate.parse(end) }.getOrNull()
+                    if (s != null && e != null) onConfirm(provider.ifBlank { null }, s, e)
+                },
+            ) { Text(stringResource(R.string.pp_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
 }
 
 @Composable

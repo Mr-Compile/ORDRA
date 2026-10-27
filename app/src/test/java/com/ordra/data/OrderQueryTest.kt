@@ -61,6 +61,8 @@ class OrderQueryTest {
         deliveredAt = null,
         notes = notes,
         productImageUri = null,
+        rating = null,
+        isFavorite = false,
         archivedAt = null,
         createdAt = createdAt,
         updatedAt = createdAt,

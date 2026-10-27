@@ -6,6 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ordra.data.local.dao.CategoryDao
 import com.ordra.data.local.dao.DetectionDao
+import com.ordra.data.local.dao.PostPurchaseDao
 import com.ordra.data.local.dao.OrderDao
 import com.ordra.data.local.dao.ReminderDao
 import com.ordra.data.local.dao.ShipmentDao
@@ -15,7 +16,11 @@ import com.ordra.data.local.entity.DetectionSuggestionEntity
 import com.ordra.data.local.entity.OrderCategoryEntity
 import com.ordra.data.local.entity.OrderEntity
 import com.ordra.data.local.entity.OrderItemEntity
+import com.ordra.data.local.entity.ReceiptEntity
+import com.ordra.data.local.entity.RefundEntity
 import com.ordra.data.local.entity.ReminderEntity
+import com.ordra.data.local.entity.ReturnEntity
+import com.ordra.data.local.entity.WarrantyEntity
 import com.ordra.data.local.entity.ShipmentEntity
 import com.ordra.data.local.entity.TrackingEventEntity
 
@@ -37,8 +42,12 @@ import com.ordra.data.local.entity.TrackingEventEntity
         OrderCategoryEntity::class,
         ReminderEntity::class,
         DetectionSuggestionEntity::class,
+        ReturnEntity::class,
+        RefundEntity::class,
+        WarrantyEntity::class,
+        ReceiptEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class OrdraDatabase : RoomDatabase() {
@@ -48,6 +57,7 @@ abstract class OrdraDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun reminderDao(): ReminderDao
     abstract fun detectionDao(): DetectionDao
+    abstract fun postPurchaseDao(): PostPurchaseDao
 
     companion object {
         /**
@@ -226,6 +236,74 @@ abstract class OrdraDatabase : RoomDatabase() {
                     )
                     """.trimIndent(),
                 )
+            }
+        }
+
+        /** v5 -> v6: post-purchase tables + order rating/favorite columns. */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `orders` ADD COLUMN `rating` INTEGER")
+                db.execSQL("ALTER TABLE `orders` ADD COLUMN `isFavorite` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `returns` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `orderId` TEXT NOT NULL,
+                        `reason` TEXT,
+                        `status` TEXT NOT NULL,
+                        `requestedAt` INTEGER NOT NULL,
+                        `resolvedAt` INTEGER,
+                        `notes` TEXT,
+                        FOREIGN KEY(`orderId`) REFERENCES `orders`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `refunds` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `orderId` TEXT NOT NULL,
+                        `amountMinor` INTEGER,
+                        `status` TEXT NOT NULL,
+                        `reason` TEXT,
+                        `requestedAt` INTEGER NOT NULL,
+                        `processedAt` INTEGER,
+                        FOREIGN KEY(`orderId`) REFERENCES `orders`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `warranties` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `orderId` TEXT NOT NULL,
+                        `provider` TEXT,
+                        `startDate` TEXT NOT NULL,
+                        `endDate` TEXT NOT NULL,
+                        `notes` TEXT,
+                        FOREIGN KEY(`orderId`) REFERENCES `orders`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `receipts` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `orderId` TEXT NOT NULL,
+                        `imageUri` TEXT NOT NULL,
+                        `label` TEXT,
+                        `addedAt` INTEGER NOT NULL,
+                        FOREIGN KEY(`orderId`) REFERENCES `orders`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                listOf("returns", "refunds", "warranties", "receipts").forEach { t ->
+                    db.execSQL("CREATE INDEX IF NOT EXISTS `index_${t}_orderId` ON `$t` (`orderId`)")
+                }
             }
         }
     }
