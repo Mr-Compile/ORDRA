@@ -3,6 +3,8 @@ package com.ordra.app.di
 import com.ordra.data.repository.CategoryRepositoryImpl
 import com.ordra.data.repository.OrderRepositoryImpl
 import com.ordra.core.notifications.ReminderSchedulerImpl
+import com.ordra.core.ocr.OcrEngine
+import com.ordra.data.ocr.MlKitOcrEngine
 import com.ordra.data.repository.ReminderRepositoryImpl
 import com.ordra.data.repository.ShipmentRepositoryImpl
 import com.ordra.data.settings.SettingsRepositoryImpl
@@ -45,4 +47,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindReminderScheduler(impl: ReminderSchedulerImpl): ReminderScheduler
+
+    @Binds
+    @Singleton
+    abstract fun bindOcrEngine(impl: MlKitOcrEngine): OcrEngine
 }

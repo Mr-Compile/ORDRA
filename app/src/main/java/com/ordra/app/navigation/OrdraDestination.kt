@@ -12,6 +12,7 @@ object OrdraRoutes {
     const val ORDERS = "orders"
     const val COD = "cod"
     const val CALENDAR = "calendar"
+    const val SMART_IMPORT = "import"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
 

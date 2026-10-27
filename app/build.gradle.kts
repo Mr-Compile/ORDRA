@@ -106,6 +106,8 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.mlkit.text.recognition)
+    implementation(libs.kotlinx.coroutines.playservices)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

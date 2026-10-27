@@ -68,6 +68,7 @@ fun HomeScreen(
     onOpenCod: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenCalendar: () -> Unit,
+    onSmartImport: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,6 +81,7 @@ fun HomeScreen(
                 onOpenOrders = onOpenOrders,
                 onOpenSettings = onOpenSettings,
                 onOpenCalendar = onOpenCalendar,
+                onSmartImport = onSmartImport,
             )
         },
         floatingActionButton = {
@@ -120,6 +122,7 @@ private fun HomeTopBar(
     onOpenOrders: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenCalendar: () -> Unit,
+    onSmartImport: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -134,6 +137,12 @@ private fun HomeTopBar(
                 Icon(
                     Icons.Default.Search,
                     contentDescription = stringResource(R.string.home_orders),
+                )
+            }
+            IconButton(onClick = onSmartImport) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.home_scan),
                 )
             }
             IconButton(onClick = onOpenCalendar) {

@@ -53,7 +53,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 1D | Search/filters/categories/COD | F2 | DONE | RawQuery search (title/seller/notes/items/tracking), platform/status/COD/category filters, 5 sorts, categories+junction (v3), COD overview (today/3d/all), 7 query tests |
 | 1E | Settings, onboarding, polish, core QA | F2 | DONE | Theme/currency/default platform+payment settings, 3-page onboarding gate, About w/ privacy+licenses, editor prefilled defaults |
 | 2 | Reminders, calendar, notifications | F3 | DONE | Reminder model+Room v4, WorkManager sync on save/status/archive, delivery-day/-1/-2 chips, daily summary worker+toggle+POST_NOTIFICATIONS, delivery calendar screen |
-| 3 | Screenshot Smart Import (local) | F4 | IN PROGRESS | Photo picker, ML Kit OCR, deterministic parser, OrderDraft + shipment detection, confidence, review — OCR engine/parser/draft/screen in working tree; review→save path open |
+| 3 | Screenshot Smart Import (local OCR) | F4 | DONE | Photo picker, ML Kit text-recognition, deterministic parser (platform/courier/amounts/tracking/dates/status), OrderDraft+confidence, review-before-save, 4 parser tests |
 | 4 | Groq-assisted extraction | F4 | PENDING | Direct app→Groq (Retrofit/OkHttp/kotlinx), strict schema, graceful offline fallback |
 | 5 | Smart Parcel Status assistance | F5 | PENDING | 5A Smart Notification Detection (marketplace/courier/messaging sources, rider messages, matching+confidence, ambiguous review) → 5B normalization+courier registry → 5C provider abstraction+update pipeline → 5D optional external API |
 | 6 | Spending analytics & history | F6 | PENDING | Monthly/weekly totals, platform/category breakdown, local-only |

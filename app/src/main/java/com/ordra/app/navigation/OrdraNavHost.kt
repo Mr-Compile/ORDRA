@@ -14,6 +14,7 @@ import com.ordra.feature.orderedit.AddEditOrderScreen
 import com.ordra.feature.orders.OrdersScreen
 import com.ordra.feature.settings.AboutScreen
 import com.ordra.feature.settings.SettingsScreen
+import com.ordra.feature.smartimport.SmartImportScreen
 import com.ordra.feature.timeline.ShipmentTimelineScreen
 
 @Composable
@@ -30,6 +31,13 @@ fun OrdraNavHost(navController: NavHostController) {
                 onOpenCod = { navController.navigate(OrdraRoutes.COD) },
                 onOpenSettings = { navController.navigate(OrdraRoutes.SETTINGS) },
                 onOpenCalendar = { navController.navigate(OrdraRoutes.CALENDAR) },
+                onSmartImport = { navController.navigate(OrdraRoutes.SMART_IMPORT) },
+            )
+        }
+        composable(OrdraRoutes.SMART_IMPORT) {
+            SmartImportScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() },
             )
         }
         composable(OrdraRoutes.SETTINGS) {
