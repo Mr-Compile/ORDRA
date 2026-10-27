@@ -55,6 +55,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenDetections: () -> Unit = {},
+    onOpenAnalytics: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()

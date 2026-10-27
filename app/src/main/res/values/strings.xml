@@ -303,4 +303,16 @@
     <string name="settings_detection_rider_hint">Rider texts inside messaging apps (Facebook, WhatsApp, Telegram, Viber) — read via notifications only, never message inboxes.</string>
     <string name="settings_auto_apply">Auto-apply high-confidence updates</string>
     <string name="settings_review_detections">Review detected updates</string>
+    <!-- Analytics -->
+    <string name="analytics_title">Spending analytics</string>
+    <string name="analytics_this_month">This month</string>
+    <string name="analytics_this_week">This week</string>
+    <string name="analytics_total">Total spent</string>
+    <string name="analytics_avg">Avg order</string>
+    <string name="analytics_pending">Pending spend</string>
+    <string name="analytics_cod">COD outstanding</string>
+    <string name="analytics_by_platform">By platform</string>
+    <string name="analytics_monthly">Monthly history</string>
+    <string name="analytics_empty">No spending data yet.</string>
+    <string name="settings_analytics">Spending analytics</string>
 </resources>

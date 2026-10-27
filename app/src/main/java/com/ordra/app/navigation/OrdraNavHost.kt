@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.ordra.feature.analytics.AnalyticsScreen
 import com.ordra.feature.calendar.DeliveryCalendarScreen
 import com.ordra.feature.cod.CodOverviewScreen
 import com.ordra.feature.detections.DetectionsScreen
@@ -40,6 +41,9 @@ fun OrdraNavHost(navController: NavHostController) {
                 onSmartImport = { navController.navigate(OrdraRoutes.SMART_IMPORT) },
             )
         }
+        composable(OrdraRoutes.ANALYTICS) {
+            AnalyticsScreen(onNavigateBack = { navController.popBackStack() })
+        }
         composable(OrdraRoutes.DETECTIONS) {
             DetectionsScreen(
                 onNavigateBack = { navController.popBackStack() },
@@ -57,6 +61,7 @@ fun OrdraNavHost(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() },
                 onOpenAbout = { navController.navigate(OrdraRoutes.ABOUT) },
                 onOpenDetections = { navController.navigate(OrdraRoutes.DETECTIONS) },
+                onOpenAnalytics = { navController.navigate(OrdraRoutes.ANALYTICS) },
             )
         }
         composable(OrdraRoutes.ABOUT) {
