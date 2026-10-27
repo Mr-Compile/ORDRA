@@ -26,6 +26,7 @@ class SettingsRepositoryImpl @Inject constructor(
         val DEFAULT_PLATFORM = stringPreferencesKey("default_platform")
         val DEFAULT_PAYMENT = stringPreferencesKey("default_payment_method")
         val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
+        val DAILY_SUMMARY = booleanPreferencesKey("daily_summary_enabled")
     }
 
     private inline fun <reified T : Enum<T>> Preferences.enumOrNull(key: Preferences.Key<String>): T? =
@@ -37,6 +38,7 @@ class SettingsRepositoryImpl @Inject constructor(
             currencyCode = prefs[Keys.CURRENCY] ?: "PHP",
             defaultPlatform = prefs.enumOrNull<Platform>(Keys.DEFAULT_PLATFORM),
             defaultPaymentMethod = prefs.enumOrNull<PaymentMethod>(Keys.DEFAULT_PAYMENT),
+            dailySummaryEnabled = prefs[Keys.DAILY_SUMMARY] ?: false,
             onboardingComplete = prefs[Keys.ONBOARDING_COMPLETE] ?: false,
         )
     }
@@ -61,6 +63,10 @@ class SettingsRepositoryImpl @Inject constructor(
             if (method == null) it.remove(Keys.DEFAULT_PAYMENT)
             else it[Keys.DEFAULT_PAYMENT] = method.name
         }
+    }
+
+    override suspend fun setDailySummaryEnabled(enabled: Boolean) {
+        dataStore.edit { it[Keys.DAILY_SUMMARY] = enabled }
     }
 
     override suspend fun setOnboardingComplete(complete: Boolean) {

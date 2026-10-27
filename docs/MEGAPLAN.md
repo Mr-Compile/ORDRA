@@ -42,7 +42,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 1C | Home & order details | F1 | DONE | Summary metrics + upcoming/recent, OrderCard+StatusChip, detail hero/shipment/items/payment, timeline screen, mark-delivered, track-external |
 | 1D | Search/filters/categories/COD | F2 | DONE | RawQuery search (title/seller/notes/items/tracking), platform/status/COD/category filters, 5 sorts, categories+junction (v3), COD overview (today/3d/all), 7 query tests |
 | 1E | Settings, onboarding, polish, core QA | F2 | DONE | Theme/currency/default platform+payment settings, 3-page onboarding gate, About w/ privacy+licenses, editor prefilled defaults |
-| 2 | Reminders, calendar, notifications | F3 | PENDING | WorkManager scheduling, reminder types, daily summary, delivery calendar upgrades, channels |
+| 2 | Reminders, calendar, notifications | F3 | DONE | Reminder model+Room v4, WorkManager sync on save/status/archive, delivery-day/-1/-2 chips, daily summary worker+toggle+POST_NOTIFICATIONS, delivery calendar screen |
 | 3 | Screenshot Smart Import (local) | F4 | PENDING | Photo picker, ML Kit OCR, deterministic parser, OrderDraft + shipment detection, confidence, review |
 | 4 | Groq-assisted extraction | F4 | PENDING | Direct app→Groq (Retrofit/OkHttp/kotlinx), strict schema, graceful offline fallback |
 | 5 | Smart Parcel Status assistance | F5 | PENDING | 5A Smart Notification Detection (marketplace/courier/messaging sources, rider messages, matching+confidence, ambiguous review) → 5B normalization+courier registry → 5C provider abstraction+update pipeline → 5D optional external API |
@@ -71,7 +71,7 @@ spending, returns/warranty, backup, notification assistance.
 | 0–1A | UI-0, UI-1 | I0, I1 |
 | 1B–1D | UI-2, UI-3, UI-4 | I1, I2 |
 | 1E | Settings, onboarding, polish, core QA | F2 | DONE | Theme/currency/default platform+payment settings, 3-page onboarding gate, About w/ privacy+licenses, editor prefilled defaults |
-| 2 | UI-5 | I3 |
+| 2 | Reminders, calendar, notifications | F3 | DONE | Reminder model+Room v4, WorkManager sync on save/status/archive, delivery-day/-1/-2 chips, daily summary worker+toggle+POST_NOTIFICATIONS, delivery calendar screen |
 | 3–4 | UI-6 | I4, I5 |
 | 5 | UI-7 | I6 |
 | 6–7 | UI-8 | I2, I7 |

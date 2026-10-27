@@ -11,6 +11,7 @@ object OrdraRoutes {
     const val SHIPMENT_TIMELINE = "shipment/{shipmentId}/timeline"
     const val ORDERS = "orders"
     const val COD = "cod"
+    const val CALENDAR = "calendar"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
 

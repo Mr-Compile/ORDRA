@@ -8,6 +8,7 @@ import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.PaymentMethod
 import com.ordra.domain.model.PaymentStatus
 import com.ordra.domain.model.Platform
+import com.ordra.domain.model.ReminderType
 import com.ordra.domain.model.DetectionConfidence
 import com.ordra.domain.model.Shipment
 import com.ordra.domain.model.ShipmentStatus
@@ -55,6 +56,7 @@ data class OrderFormState(
     val productImageUri: String? = null,
     val currencyCode: String = "PHP",
     val selectedCategoryIds: Set<String> = emptySet(),
+    val reminderTypes: Set<ReminderType> = emptySet(),
     val isDirty: Boolean = false,
 ) {
     val isEdit: Boolean get() = orderId != null
@@ -186,6 +188,7 @@ data class OrderFormState(
             order: Order,
             shipment: Shipment? = null,
             categoryIds: Set<String> = emptySet(),
+            reminderTypes: Set<ReminderType> = emptySet(),
         ): OrderFormState = OrderFormState(
             orderId = order.id,
             title = order.title,
@@ -226,6 +229,7 @@ data class OrderFormState(
             productImageUri = order.productImageUri,
             currencyCode = order.currencyCode,
             selectedCategoryIds = categoryIds,
+            reminderTypes = reminderTypes,
             isDirty = false,
         )
     }

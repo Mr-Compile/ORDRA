@@ -14,6 +14,7 @@ import com.ordra.domain.usecase.ArchiveOrderUseCase
 import com.ordra.domain.usecase.DeleteOrderUseCase
 import com.ordra.domain.usecase.RestoreOrderUseCase
 import com.ordra.domain.usecase.UpdateOrderStatusUseCase
+import com.ordra.domain.repository.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -44,6 +45,7 @@ class OrderDetailViewModel @Inject constructor(
     private val archiveOrder: ArchiveOrderUseCase,
     private val restoreOrder: RestoreOrderUseCase,
     private val deleteOrder: DeleteOrderUseCase,
+    private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
     private val orderId: String = checkNotNull(savedStateHandle[OrdraRoutes.ARG_ORDER_ID])
@@ -83,11 +85,15 @@ class OrderDetailViewModel @Inject constructor(
         }
     }
 
-    fun archive() = viewModelScope.launch { archiveOrder(orderId) }
+    fun archive() = viewModelScope.launch {
+        reminderScheduler.cancelOrderReminders(orderId)
+        archiveOrder(orderId)
+    }
     fun restore() = viewModelScope.launch { restoreOrder(orderId) }
 
     fun delete() {
         viewModelScope.launch {
+            reminderScheduler.cancelOrderReminders(orderId)
             if (deleteOrder(orderId) is AppResult.Success) {
                 _effects.send(OrderDetailEffect.Deleted)
             }

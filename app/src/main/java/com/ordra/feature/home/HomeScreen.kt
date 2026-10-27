@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -66,6 +67,7 @@ fun HomeScreen(
     onOpenOrders: () -> Unit,
     onOpenCod: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenCalendar: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,6 +79,7 @@ fun HomeScreen(
                 onToggleArchived = viewModel::toggleArchived,
                 onOpenOrders = onOpenOrders,
                 onOpenSettings = onOpenSettings,
+                onOpenCalendar = onOpenCalendar,
             )
         },
         floatingActionButton = {
@@ -116,6 +119,7 @@ private fun HomeTopBar(
     onToggleArchived: () -> Unit,
     onOpenOrders: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenCalendar: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -130,6 +134,12 @@ private fun HomeTopBar(
                 Icon(
                     Icons.Default.Search,
                     contentDescription = stringResource(R.string.home_orders),
+                )
+            }
+            IconButton(onClick = onOpenCalendar) {
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = stringResource(R.string.home_calendar),
                 )
             }
             IconButton(onClick = onOpenSettings) {

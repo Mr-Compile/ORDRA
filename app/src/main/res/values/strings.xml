@@ -253,4 +253,14 @@
     <string name="about_licenses">Built with Jetpack Compose, Room, Hilt, WorkManager, ML Kit and Coil. Open-source licenses apply to those libraries.</string>
     <string name="about_ai_title">Ordi &amp; ORDRA AI</string>
     <string name="about_ai_body">Ordi is the companion face of ORDRA AI, Ordra\'s optional smart layer for features like screenshot import. Ordi only reflects your real order data — it never invents tracking updates or order details.</string>
+    <!-- Reminders + calendar -->
+    <string name="remind_delivery_day">On delivery day</string>
+    <string name="remind_day_before">1 day before</string>
+    <string name="remind_2_days">2 days before</string>
+    <string name="settings_daily_summary">Daily delivery summary</string>
+    <string name="settings_daily_summary_hint">One morning notification with today0027s deliveries and COD.</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="calendar_title">Delivery calendar</string>
+    <string name="calendar_empty_day">No deliveries expected this day</string>
+    <string name="home_calendar">Calendar</string>
 </resources>

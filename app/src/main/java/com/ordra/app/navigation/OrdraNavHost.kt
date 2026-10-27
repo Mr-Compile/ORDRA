@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.ordra.feature.calendar.DeliveryCalendarScreen
 import com.ordra.feature.cod.CodOverviewScreen
 import com.ordra.feature.detail.OrderDetailScreen
 import com.ordra.feature.home.HomeScreen
@@ -28,6 +29,7 @@ fun OrdraNavHost(navController: NavHostController) {
                 onOpenOrders = { navController.navigate(OrdraRoutes.ORDERS) },
                 onOpenCod = { navController.navigate(OrdraRoutes.COD) },
                 onOpenSettings = { navController.navigate(OrdraRoutes.SETTINGS) },
+                onOpenCalendar = { navController.navigate(OrdraRoutes.CALENDAR) },
             )
         }
         composable(OrdraRoutes.SETTINGS) {
@@ -41,6 +43,12 @@ fun OrdraNavHost(navController: NavHostController) {
         }
         composable(OrdraRoutes.ORDERS) {
             OrdersScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenOrder = { id -> navController.navigate(OrdraRoutes.orderDetail(id)) },
+            )
+        }
+        composable(OrdraRoutes.CALENDAR) {
+            DeliveryCalendarScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onOpenOrder = { id -> navController.navigate(OrdraRoutes.orderDetail(id)) },
             )

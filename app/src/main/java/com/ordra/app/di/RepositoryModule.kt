@@ -2,11 +2,15 @@ package com.ordra.app.di
 
 import com.ordra.data.repository.CategoryRepositoryImpl
 import com.ordra.data.repository.OrderRepositoryImpl
+import com.ordra.core.notifications.ReminderSchedulerImpl
+import com.ordra.data.repository.ReminderRepositoryImpl
 import com.ordra.data.repository.ShipmentRepositoryImpl
 import com.ordra.data.settings.SettingsRepositoryImpl
 import com.ordra.domain.repository.CategoryRepository
 import com.ordra.domain.repository.OrderRepository
 import com.ordra.domain.repository.SettingsRepository
+import com.ordra.domain.repository.ReminderRepository
+import com.ordra.domain.repository.ReminderScheduler
 import com.ordra.domain.repository.ShipmentRepository
 import dagger.Binds
 import dagger.Module
@@ -33,4 +37,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCategoryRepository(impl: CategoryRepositoryImpl): CategoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReminderRepository(impl: ReminderRepositoryImpl): ReminderRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReminderScheduler(impl: ReminderSchedulerImpl): ReminderScheduler
 }

@@ -10,6 +10,8 @@ import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.Shipment
 import com.ordra.domain.repository.CategoryRepository
+import com.ordra.domain.repository.ReminderRepository
+import com.ordra.domain.repository.ReminderScheduler
 import com.ordra.domain.repository.SettingsRepository
 import com.ordra.domain.repository.ShipmentRepository
 import com.ordra.domain.usecase.ArchiveOrderUseCase
@@ -63,6 +65,8 @@ class AddEditOrderViewModel @Inject constructor(
     private val deleteOrder: DeleteOrderUseCase,
     private val shipmentRepository: ShipmentRepository,
     private val categoryRepository: CategoryRepository,
+    private val reminderRepository: ReminderRepository,
+    private val reminderScheduler: ReminderScheduler,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 

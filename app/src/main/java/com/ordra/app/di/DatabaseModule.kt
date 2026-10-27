@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.ordra.data.local.OrdraDatabase
 import com.ordra.data.local.dao.CategoryDao
 import com.ordra.data.local.dao.OrderDao
+import com.ordra.data.local.dao.ReminderDao
 import com.ordra.data.local.dao.ShipmentDao
 import com.ordra.data.local.dao.TrackingEventDao
 import dagger.Module
@@ -22,7 +23,11 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): OrdraDatabase =
         Room.databaseBuilder(context, OrdraDatabase::class.java, "ordra.db")
-            .addMigrations(OrdraDatabase.MIGRATION_1_2, OrdraDatabase.MIGRATION_2_3)
+            .addMigrations(
+                OrdraDatabase.MIGRATION_1_2,
+                OrdraDatabase.MIGRATION_2_3,
+                OrdraDatabase.MIGRATION_3_4,
+            )
             .build()
 
     @Provides
@@ -37,4 +42,7 @@ object DatabaseModule {
 
     @Provides
     fun provideCategoryDao(database: OrdraDatabase): CategoryDao = database.categoryDao()
+
+    @Provides
+    fun provideReminderDao(database: OrdraDatabase): ReminderDao = database.reminderDao()
 }

@@ -7,5 +7,6 @@ data class UserSettings(
     val currencyCode: String = "PHP",
     val defaultPlatform: Platform? = null,
     val defaultPaymentMethod: PaymentMethod? = null,
+    val dailySummaryEnabled: Boolean = false,
     val onboardingComplete: Boolean = false,
 )

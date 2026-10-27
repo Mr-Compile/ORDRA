@@ -12,5 +12,6 @@ interface SettingsRepository {
     suspend fun setCurrencyCode(currencyCode: String)
     suspend fun setDefaultPlatform(platform: Platform?)
     suspend fun setDefaultPaymentMethod(method: PaymentMethod?)
+    suspend fun setDailySummaryEnabled(enabled: Boolean)
     suspend fun setOnboardingComplete(complete: Boolean)
 }

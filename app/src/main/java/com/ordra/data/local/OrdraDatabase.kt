@@ -6,12 +6,14 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ordra.data.local.dao.CategoryDao
 import com.ordra.data.local.dao.OrderDao
+import com.ordra.data.local.dao.ReminderDao
 import com.ordra.data.local.dao.ShipmentDao
 import com.ordra.data.local.dao.TrackingEventDao
 import com.ordra.data.local.entity.CategoryEntity
 import com.ordra.data.local.entity.OrderCategoryEntity
 import com.ordra.data.local.entity.OrderEntity
 import com.ordra.data.local.entity.OrderItemEntity
+import com.ordra.data.local.entity.ReminderEntity
 import com.ordra.data.local.entity.ShipmentEntity
 import com.ordra.data.local.entity.TrackingEventEntity
 
@@ -31,8 +33,9 @@ import com.ordra.data.local.entity.TrackingEventEntity
         TrackingEventEntity::class,
         CategoryEntity::class,
         OrderCategoryEntity::class,
+        ReminderEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class OrdraDatabase : RoomDatabase() {
@@ -40,6 +43,7 @@ abstract class OrdraDatabase : RoomDatabase() {
     abstract fun shipmentDao(): ShipmentDao
     abstract fun trackingEventDao(): TrackingEventDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun reminderDao(): ReminderDao
 
     companion object {
         /**
@@ -170,6 +174,28 @@ abstract class OrdraDatabase : RoomDatabase() {
                     """.trimIndent(),
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_order_categories_categoryId` ON `order_categories` (`categoryId`)")
+            }
+        }
+
+        /** v3 -> v4: reminders table for WorkManager-backed local reminders. */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `reminders` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `orderId` TEXT,
+                        `type` TEXT NOT NULL,
+                        `scheduledAt` INTEGER NOT NULL,
+                        `enabled` INTEGER NOT NULL,
+                        `notificationId` INTEGER,
+                        `createdAt` INTEGER NOT NULL,
+                        FOREIGN KEY(`orderId`) REFERENCES `orders`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_reminders_orderId` ON `reminders` (`orderId`)")
             }
         }
     }

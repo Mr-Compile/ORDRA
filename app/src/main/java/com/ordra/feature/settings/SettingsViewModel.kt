@@ -6,6 +6,7 @@ import com.ordra.domain.model.PaymentMethod
 import com.ordra.domain.model.Platform
 import com.ordra.domain.model.ThemeMode
 import com.ordra.domain.model.UserSettings
+import com.ordra.domain.repository.ReminderScheduler
 import com.ordra.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
+    private val reminderScheduler: ReminderScheduler,
 ) : ViewModel() {
 
     val settings: StateFlow<UserSettings?> = repository.settings
@@ -38,5 +40,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setDefaultPaymentMethod(method: PaymentMethod?) = viewModelScope.launch {
         repository.setDefaultPaymentMethod(method)
+    }
+
+    fun setDailySummary(enabled: Boolean) = viewModelScope.launch {
+        repository.setDailySummaryEnabled(enabled)
+        reminderScheduler.setDailySummaryEnabled(enabled)
     }
 }

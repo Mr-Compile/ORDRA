@@ -76,6 +76,7 @@ import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.PaymentMethod
 import com.ordra.domain.model.PaymentStatus
 import com.ordra.domain.model.Platform
+import com.ordra.domain.model.ReminderType
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -496,6 +497,14 @@ private fun OrderFormContent(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
+                ReminderChips(form.reminderTypes) { t ->
+                    onFormChange {
+                        it.copy(
+                            reminderTypes = if (t in it.reminderTypes) it.reminderTypes - t
+                            else it.reminderTypes + t,
+                        )
+                    }
+                }
                 DateField(
                     label = stringResource(R.string.editor_ordered_date),
                     value = form.orderedDate,
@@ -838,6 +847,26 @@ private fun CategoryPicker(
             },
             enabled = newName.isNotBlank(),
         ) { Text(stringResource(R.string.editor_add_category)) }
+    }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun ReminderChips(selected: Set<ReminderType>, onToggle: (ReminderType) -> Unit) {
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        listOf(
+            ReminderType.DELIVERY_DAY to stringResource(R.string.remind_delivery_day),
+            ReminderType.DAY_BEFORE to stringResource(R.string.remind_day_before),
+            ReminderType.TWO_DAYS_BEFORE to stringResource(R.string.remind_2_days),
+        ).forEach { (type, label) ->
+            androidx.compose.material3.FilterChip(
+                selected = type in selected,
+                onClick = { onToggle(type) },
+                label = { Text(label) },
+            )
+        }
     }
 }
 
