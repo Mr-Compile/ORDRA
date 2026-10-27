@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
  * Persisted order row. Enums stored as name strings; timestamps as epoch millis;
  * date-only delivery fields as epoch days; money as integer minor units.
  * [archivedAt] null = active row, non-null = archived (soft delete).
+ * Courier/tracking live on the shipments table, not here.
  */
 @Entity(tableName = "orders")
 data class OrderEntity(
@@ -24,8 +25,6 @@ data class OrderEntity(
     val shippingFeeMinor: Long?,
     val discountMinor: Long?,
     val totalAmountMinor: Long?,
-    val courier: String?,
-    val trackingNumber: String?,
     val orderedDate: Long?,
     val estimatedDeliveryStart: Long?,
     val estimatedDeliveryEnd: Long?,

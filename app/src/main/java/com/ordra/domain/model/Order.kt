@@ -25,8 +25,6 @@ data class Order(
     val shippingFeeMinor: Long? = null,
     val discountMinor: Long? = null,
     val totalAmountMinor: Long? = null,
-    val courier: String? = null,
-    val trackingNumber: String? = null,
     val orderedDate: Instant? = null,
     val estimatedDeliveryStart: LocalDate? = null,
     val estimatedDeliveryEnd: LocalDate? = null,

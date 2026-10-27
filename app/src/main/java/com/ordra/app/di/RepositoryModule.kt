@@ -1,9 +1,11 @@
 package com.ordra.app.di
 
 import com.ordra.data.repository.OrderRepositoryImpl
+import com.ordra.data.repository.ShipmentRepositoryImpl
 import com.ordra.data.settings.SettingsRepositoryImpl
 import com.ordra.domain.repository.OrderRepository
 import com.ordra.domain.repository.SettingsRepository
+import com.ordra.domain.repository.ShipmentRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,4 +23,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindShipmentRepository(impl: ShipmentRepositoryImpl): ShipmentRepository
 }

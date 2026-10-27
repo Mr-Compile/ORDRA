@@ -105,5 +105,53 @@
     <string name="editor_delete_body">This permanently removes the order and its items. This cannot be undone.</string>
     <string name="editor_delete_confirm">Delete</string>
     <string name="editor_required_summary">Required: a name, platform, and total.</string>
+    <string name="editor_custom_courier">Courier name</string>
     <string name="action_cancel">Cancel</string>
+
+    <!-- Shipment status -->
+    <string name="ship_unknown">Status unknown</string>
+    <string name="ship_preparing">Preparing</string>
+    <string name="ship_picked_up">Picked up</string>
+    <string name="ship_in_transit">In transit</string>
+    <string name="ship_arrived_hub">Arrived at hub</string>
+    <string name="ship_out_for_delivery">Out for delivery</string>
+    <string name="ship_delivered">Delivered</string>
+    <string name="ship_delivery_failed">Delivery failed</string>
+    <string name="ship_returning">Returning to seller</string>
+    <string name="ship_returned">Returned to seller</string>
+
+    <!-- Home summary -->
+    <string name="home_metric_active">Active</string>
+    <string name="home_metric_arriving">Arriving soon</string>
+    <string name="home_metric_cod">COD to prepare</string>
+    <string name="home_section_upcoming">Upcoming deliveries</string>
+    <string name="home_section_recent">Recent orders</string>
+    <string name="home_eta_range">%1$s – %2$s</string>
+    <string name="home_eta_single">Est. %1$s</string>
+
+    <!-- Order detail -->
+    <string name="detail_section_items">Items</string>
+    <string name="detail_section_payment">Payment</string>
+    <string name="detail_section_shipment">Shipment</string>
+    <string name="detail_section_notes">Notes</string>
+    <string name="detail_mark_delivered">Mark delivered</string>
+    <string name="detail_mark_delivered_title">Mark as delivered?</string>
+    <string name="detail_mark_delivered_body">This sets the order status to Delivered and stamps the delivery time.</string>
+    <string name="detail_update_status">Update status</string>
+    <string name="detail_update_shipment">Update shipment status</string>
+    <string name="detail_track_external">Track externally</string>
+    <string name="detail_view_timeline">View timeline</string>
+    <string name="detail_edit">Edit</string>
+    <string name="detail_no_shipment">No shipment details yet — add a courier or tracking number when editing.</string>
+    <string name="detail_detected_manual">Set manually</string>
+    <string name="detail_not_found">This order no longer exists.</string>
+    <string name="detail_qty_price">%1$s ×%2$d</string>
+    <string name="detail_subtotal">Items subtotal</string>
+
+    <!-- Timeline -->
+    <string name="timeline_title">Shipment timeline</string>
+    <string name="timeline_empty">No tracking events yet. Status updates you make will appear here.</string>
+    <string name="timeline_source_manual">Manual</string>
+    <string name="timeline_detected">Detected %1$s</string>
+    <string name="timeline_confidence">Confidence: %1$s</string>
 </resources>

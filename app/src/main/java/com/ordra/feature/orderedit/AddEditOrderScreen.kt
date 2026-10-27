@@ -70,6 +70,8 @@ import com.ordra.core.ui.orderStatusLabel
 import com.ordra.core.ui.paymentMethodLabel
 import com.ordra.core.ui.paymentStatusLabel
 import com.ordra.core.ui.platformLabel
+import com.ordra.core.ui.courierLabel
+import com.ordra.domain.model.Courier
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.PaymentMethod
 import com.ordra.domain.model.PaymentStatus
@@ -467,22 +469,31 @@ private fun OrderFormContent(
                     optionLabel = { orderStatusLabel(it) },
                     onSelect = { s -> onFormChange { it.copy(status = s) } },
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                EnumDropdown(
+                    label = stringResource(R.string.editor_courier),
+                    options = Courier.entries,
+                    selected = form.courier,
+                    optionLabel = { courierLabel(it, null) },
+                    onSelect = { c -> onFormChange { it.copy(courier = c) } },
+                )
+                if (form.courier == Courier.OTHER) {
                     OutlinedTextField(
-                        value = form.courier,
-                        onValueChange = { v -> onFormChange { it.copy(courier = v) } },
-                        label = { Text(stringResource(R.string.editor_courier)) },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                    )
-                    OutlinedTextField(
-                        value = form.trackingNumber,
-                        onValueChange = { v -> onFormChange { it.copy(trackingNumber = v) } },
-                        label = { Text(stringResource(R.string.editor_tracking)) },
-                        modifier = Modifier.weight(1f),
+                        value = form.customCourierName,
+                        onValueChange = { v -> onFormChange { it.copy(customCourierName = v) } },
+                        label = { Text(stringResource(R.string.editor_custom_courier)) },
+                        isError = errors.containsKey("customCourierName"),
+                        supportingText = { FieldError(errors["customCourierName"]) },
+                        modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                     )
                 }
+                OutlinedTextField(
+                    value = form.trackingNumber,
+                    onValueChange = { v -> onFormChange { it.copy(trackingNumber = v) } },
+                    label = { Text(stringResource(R.string.editor_tracking)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
                 DateField(
                     label = stringResource(R.string.editor_ordered_date),
                     value = form.orderedDate,
@@ -838,7 +849,12 @@ private fun OrderReviewContent(form: OrderFormState, modifier: Modifier = Modifi
         item {
             FormSection(title = stringResource(R.string.editor_section_delivery)) {
                 ReviewRow(stringResource(R.string.editor_status), orderStatusLabel(form.status))
-                if (form.courier.isNotBlank()) ReviewRow(stringResource(R.string.editor_courier), form.courier)
+                if (form.courier != Courier.UNKNOWN) {
+                    ReviewRow(
+                        stringResource(R.string.editor_courier),
+                        courierLabel(form.courier, form.customCourierName.ifBlank { null }),
+                    )
+                }
                 if (form.trackingNumber.isNotBlank()) {
                     ReviewRow(stringResource(R.string.editor_tracking), form.trackingNumber)
                 }

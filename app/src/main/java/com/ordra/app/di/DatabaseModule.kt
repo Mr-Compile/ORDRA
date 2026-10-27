@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.ordra.data.local.OrdraDatabase
 import com.ordra.data.local.dao.OrderDao
+import com.ordra.data.local.dao.ShipmentDao
+import com.ordra.data.local.dao.TrackingEventDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,8 +21,16 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): OrdraDatabase =
         Room.databaseBuilder(context, OrdraDatabase::class.java, "ordra.db")
+            .addMigrations(OrdraDatabase.MIGRATION_1_2)
             .build()
 
     @Provides
     fun provideOrderDao(database: OrdraDatabase): OrderDao = database.orderDao()
+
+    @Provides
+    fun provideShipmentDao(database: OrdraDatabase): ShipmentDao = database.shipmentDao()
+
+    @Provides
+    fun provideTrackingEventDao(database: OrdraDatabase): TrackingEventDao =
+        database.trackingEventDao()
 }

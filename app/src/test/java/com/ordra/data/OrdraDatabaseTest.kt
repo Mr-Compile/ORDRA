@@ -42,8 +42,6 @@ class OrdraDatabaseTest {
         shippingFeeMinor = 0,
         discountMinor = null,
         totalAmountMinor = 10000,
-        courier = null,
-        trackingNumber = null,
         orderedDate = 1_700_000_000_000,
         estimatedDeliveryStart = null,
         estimatedDeliveryEnd = null,

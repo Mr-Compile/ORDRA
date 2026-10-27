@@ -1,12 +1,17 @@
 package com.ordra.feature.orderedit
 
 import com.ordra.core.common.MoneyFormat
+import com.ordra.domain.model.Courier
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderItem
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.PaymentMethod
 import com.ordra.domain.model.PaymentStatus
 import com.ordra.domain.model.Platform
+import com.ordra.domain.model.DetectionConfidence
+import com.ordra.domain.model.Shipment
+import com.ordra.domain.model.ShipmentStatus
+import com.ordra.domain.model.TrackingStatusSource
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -39,7 +44,9 @@ data class OrderFormState(
     val shipping: String = "",
     val discount: String = "",
     val total: String = "",
-    val courier: String = "",
+    // Shipment fields — persisted on the primary Shipment, never on Order.
+    val courier: Courier = Courier.UNKNOWN,
+    val customCourierName: String = "",
     val trackingNumber: String = "",
     val orderedDate: LocalDate? = null,
     val etaStart: LocalDate? = null,
@@ -93,6 +100,9 @@ data class OrderFormState(
         if (discount.isNotBlank() && MoneyFormat.parseToMinor(discount) == null) {
             errors["discount"] = "Invalid amount"
         }
+        if (courier == Courier.OTHER && customCourierName.isBlank()) {
+            errors["customCourierName"] = "Name the courier"
+        }
         return errors
     }
 
@@ -132,8 +142,6 @@ data class OrderFormState(
             shippingFeeMinor = MoneyFormat.parseToMinor(shipping),
             discountMinor = MoneyFormat.parseToMinor(discount),
             totalAmountMinor = MoneyFormat.parseToMinor(total),
-            courier = courier.ifBlank { null },
-            trackingNumber = trackingNumber.ifBlank { null },
             orderedDate = orderedDate?.atStartOfDay(java.time.ZoneId.systemDefault())?.toInstant(),
             estimatedDeliveryStart = etaStart,
             estimatedDeliveryEnd = etaEnd,
@@ -147,8 +155,33 @@ data class OrderFormState(
         )
     }
 
+    /**
+     * Shipment fields map onto the order's primary [Shipment]. Null when the
+     * user entered no shipment data and none existed — avoids empty rows.
+     */
+    fun toShipment(orderId: String, existing: Shipment?, now: Instant): Shipment? {
+        val hasData = courier != Courier.UNKNOWN ||
+            trackingNumber.isNotBlank() ||
+            customCourierName.isNotBlank()
+        if (!hasData && existing == null) return null
+        return Shipment(
+            id = existing?.id ?: UUID.randomUUID().toString(),
+            orderId = orderId,
+            courier = courier,
+            customCourierName = customCourierName.ifBlank { null },
+            trackingNumber = trackingNumber.ifBlank { null },
+            shipmentStatus = existing?.shipmentStatus ?: ShipmentStatus.UNKNOWN,
+            statusSource = existing?.statusSource ?: TrackingStatusSource.MANUAL,
+            statusConfidence = existing?.statusConfidence ?: DetectionConfidence.HIGH,
+            lastStatusAt = existing?.lastStatusAt,
+            lastDetectedAt = existing?.lastDetectedAt,
+            createdAt = existing?.createdAt ?: now,
+            updatedAt = now,
+        )
+    }
+
     companion object {
-        fun fromOrder(order: Order): OrderFormState = OrderFormState(
+        fun fromOrder(order: Order, shipment: Shipment? = null): OrderFormState = OrderFormState(
             orderId = order.id,
             title = order.title,
             platform = order.platform,
@@ -177,8 +210,9 @@ data class OrderFormState(
             total = order.totalAmountMinor?.let {
                 java.math.BigDecimal(it).movePointLeft(2).stripTrailingZeros().toPlainString()
             }.orEmpty(),
-            courier = order.courier.orEmpty(),
-            trackingNumber = order.trackingNumber.orEmpty(),
+            courier = shipment?.courier ?: Courier.UNKNOWN,
+            customCourierName = shipment?.customCourierName.orEmpty(),
+            trackingNumber = shipment?.trackingNumber.orEmpty(),
             orderedDate = order.orderedDate
                 ?.atZone(java.time.ZoneId.systemDefault())?.toLocalDate(),
             etaStart = order.estimatedDeliveryStart,

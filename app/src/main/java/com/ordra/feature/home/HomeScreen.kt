@@ -1,6 +1,5 @@
 package com.ordra.feature.home
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,12 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,9 +34,24 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
 import com.ordra.core.common.MoneyFormat
-import com.ordra.core.ui.orderStatusLabel
-import com.ordra.core.ui.platformLabel
+import com.ordra.core.ui.components.OrderCard
 import com.ordra.domain.model.Order
+import java.time.format.DateTimeFormatter
+
+private val ETA_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d")
+
+@Composable
+private fun etaText(order: Order): String? {
+    val start = order.estimatedDeliveryStart
+    val end = order.estimatedDeliveryEnd
+    return when {
+        start != null && end != null && start != end ->
+            stringResource(R.string.home_eta_range, start.format(ETA_FMT), end.format(ETA_FMT))
+        start != null || end != null ->
+            stringResource(R.string.home_eta_single, (start ?: end)!!.format(ETA_FMT))
+        else -> null
+    }
+}
 
 @Composable
 fun HomeScreen(
@@ -64,23 +77,20 @@ fun HomeScreen(
             }
         },
     ) { innerPadding ->
-        if (uiState.orders.isEmpty()) {
-            EmptyState(
-                showingArchived = uiState.showingArchived,
+        if (uiState.showingArchived) {
+            ArchivedContent(
+                orders = uiState.archived,
+                onOpenOrder = onOpenOrder,
                 modifier = Modifier.padding(innerPadding),
             )
+        } else if (uiState.isEmpty && uiState.loaded) {
+            EmptyState(modifier = Modifier.padding(innerPadding))
         } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(uiState.orders, key = { it.id }) { order ->
-                    OrderRow(order = order, onClick = { onOpenOrder(order.id) })
-                }
-            }
+            HomeContent(
+                state = uiState,
+                onOpenOrder = onOpenOrder,
+                modifier = Modifier.padding(innerPadding),
+            )
         }
     }
 }
@@ -110,7 +120,116 @@ private fun HomeTopBar(showingArchived: Boolean, onToggleArchived: () -> Unit) {
 }
 
 @Composable
-private fun EmptyState(showingArchived: Boolean, modifier: Modifier = Modifier) {
+private fun HomeContent(
+    state: HomeUiState,
+    onOpenOrder: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item {
+            SummaryRow(state = state)
+            Spacer(Modifier.height(8.dp))
+        }
+        if (state.upcoming.isNotEmpty()) {
+            item {
+                Text(
+                    stringResource(R.string.home_section_upcoming),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                )
+            }
+            items(state.upcoming, key = { "up_${it.id}" }) { order ->
+                OrderCard(order = order, onClick = { onOpenOrder(order.id) }, etaText = etaText(order))
+            }
+        }
+        if (state.recent.isNotEmpty()) {
+            item {
+                Text(
+                    stringResource(R.string.home_section_recent),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                )
+            }
+            items(state.recent, key = { "re_${it.id}" }) { order ->
+                OrderCard(order = order, onClick = { onOpenOrder(order.id) }, etaText = etaText(order))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(state: HomeUiState) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        SummaryCard(
+            label = stringResource(R.string.home_metric_active),
+            value = state.activeCount.toString(),
+            modifier = Modifier.weight(1f),
+        )
+        SummaryCard(
+            label = stringResource(R.string.home_metric_arriving),
+            value = state.arrivingSoonCount.toString(),
+            modifier = Modifier.weight(1f),
+        )
+        SummaryCard(
+            label = stringResource(R.string.home_metric_cod),
+            value = MoneyFormat.formatMinor(state.codToPrepareMinor ?: 0L, state.codCurrency)
+                .ifBlank { "0" },
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SummaryCard(label: String, value: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ArchivedContent(
+    orders: List<Order>,
+    onOpenOrder: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (orders.isEmpty()) {
+        EmptyState(showingArchived = true, modifier = modifier)
+        return
+    }
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(orders, key = { it.id }) { order ->
+            OrderCard(order = order, onClick = { onOpenOrder(order.id) })
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(showingArchived: Boolean = false, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -150,43 +269,6 @@ private fun EmptyState(showingArchived: Boolean, modifier: Modifier = Modifier) 
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun OrderRow(order: Order, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    ) {
-        Row(
-            Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(order.title, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    platformLabel(order.platform, order.customPlatformName),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                order.totalAmountMinor?.let {
-                    Text(
-                        MoneyFormat.formatMinor(it, order.currencyCode),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                }
-                Text(
-                    orderStatusLabel(order.status),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }

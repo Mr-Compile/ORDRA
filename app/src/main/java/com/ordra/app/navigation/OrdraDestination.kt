@@ -8,11 +8,14 @@ object OrdraRoutes {
     const val HOME = "home"
     const val ORDER_DETAIL = "order/{orderId}"
     const val ORDER_EDITOR = "order/edit?orderId={orderId}"
+    const val SHIPMENT_TIMELINE = "shipment/{shipmentId}/timeline"
     const val SETTINGS = "settings"
 
     const val ARG_ORDER_ID = "orderId"
+    const val ARG_SHIPMENT_ID = "shipmentId"
 
     fun orderDetail(orderId: String) = "order/$orderId"
     fun orderEditor(orderId: String? = null) =
         if (orderId == null) "order/edit" else "order/edit?orderId=$orderId"
+    fun shipmentTimeline(shipmentId: String) = "shipment/$shipmentId/timeline"
 }

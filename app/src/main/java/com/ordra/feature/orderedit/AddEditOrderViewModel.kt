@@ -7,7 +7,9 @@ import com.ordra.app.navigation.OrdraRoutes
 import com.ordra.core.common.AppResult
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderStatus
+import com.ordra.domain.model.Shipment
 import com.ordra.domain.repository.SettingsRepository
+import com.ordra.domain.repository.ShipmentRepository
 import com.ordra.domain.usecase.ArchiveOrderUseCase
 import com.ordra.domain.usecase.CreateOrderUseCase
 import com.ordra.domain.usecase.DeleteOrderUseCase
@@ -56,11 +58,13 @@ class AddEditOrderViewModel @Inject constructor(
     private val archiveOrder: ArchiveOrderUseCase,
     private val restoreOrder: RestoreOrderUseCase,
     private val deleteOrder: DeleteOrderUseCase,
+    private val shipmentRepository: ShipmentRepository,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val orderId: String? = savedStateHandle[OrdraRoutes.ARG_ORDER_ID]
     private var existing: Order? = null
+    private var existingShipment: Shipment? = null
 
     private val _uiState = MutableStateFlow(AddEditUiState())
     val uiState: StateFlow<AddEditUiState> = _uiState.asStateFlow()
@@ -75,9 +79,10 @@ class AddEditOrderViewModel @Inject constructor(
                 when (val result = getOrderDetails(orderId)) {
                     is AppResult.Success -> {
                         existing = result.value
+                        existingShipment = shipmentRepository.getPrimaryShipment(orderId)
                         _uiState.update {
                             it.copy(
-                                form = OrderFormState.fromOrder(result.value),
+                                form = OrderFormState.fromOrder(result.value, existingShipment),
                                 loaded = true,
                                 isArchived = result.value.isArchived,
                             )
@@ -127,6 +132,12 @@ class AddEditOrderViewModel @Inject constructor(
             val result = if (existing == null) createOrder(order) else updateOrder(order)
             when (result) {
                 is AppResult.Success -> {
+                    // Courier/tracking persist on the primary Shipment, not the Order.
+                    state.form.toShipment(order.id, existingShipment, Instant.now())
+                        ?.let {
+                            existingShipment = it
+                            shipmentRepository.saveShipment(it)
+                        }
                     _uiState.update { it.copy(isSaving = false) }
                     _effects.send(AddEditEffect.Saved)
                 }
