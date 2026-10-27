@@ -3,6 +3,107 @@
     <string name="app_name">Ordra</string>
     <string name="ordra_tagline">All your orders. One place.</string>
     <string name="cd_ordra_logo">Ordra logo</string>
+
+    <!-- Home -->
     <string name="home_empty_title">No orders yet</string>
-    <string name="home_empty_body">Orders you add will appear here.</string>
+    <string name="home_empty_body">Orders you add will appear here. Tap + to add your first order.</string>
+    <string name="home_add_order">Add order</string>
+    <string name="home_show_archived">Show archived</string>
+    <string name="home_show_active">Show active</string>
+    <string name="home_archived_empty">No archived orders</string>
+    <string name="home_active_heading">Orders</string>
+    <string name="home_archived_heading">Archived</string>
+
+    <!-- Platforms -->
+    <string name="platform_shopee">Shopee</string>
+    <string name="platform_tiktok">TikTok Shop</string>
+    <string name="platform_lazada">Lazada</string>
+    <string name="platform_temu">Temu</string>
+    <string name="platform_amazon">Amazon</string>
+    <string name="platform_facebook">Facebook seller</string>
+    <string name="platform_instagram">Instagram seller</string>
+    <string name="platform_other">Other</string>
+
+    <!-- Order status -->
+    <string name="status_draft">Draft</string>
+    <string name="status_ordered">Ordered</string>
+    <string name="status_processing">Processing</string>
+    <string name="status_packed">Packed</string>
+    <string name="status_shipped">Shipped</string>
+    <string name="status_out_for_delivery">Out for delivery</string>
+    <string name="status_delivered">Delivered</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="status_returned">Returned</string>
+    <string name="status_refunded">Refunded</string>
+
+    <!-- Payment -->
+    <string name="payment_cod">Cash on delivery</string>
+    <string name="payment_ewallet">E-wallet</string>
+    <string name="payment_card">Card</string>
+    <string name="payment_bank">Bank transfer</string>
+    <string name="payment_cash">Cash</string>
+    <string name="payment_other">Other</string>
+    <string name="payment_unknown">Not set</string>
+    <string name="paystatus_unpaid">Unpaid</string>
+    <string name="paystatus_partial">Partially paid</string>
+    <string name="paystatus_paid">Paid</string>
+    <string name="paystatus_refunded">Refunded</string>
+
+    <!-- Add / Edit order -->
+    <string name="editor_title_add">New order</string>
+    <string name="editor_title_edit">Edit order</string>
+    <string name="editor_section_platform">Platform</string>
+    <string name="editor_section_items">Items</string>
+    <string name="editor_section_pricing">Pricing</string>
+    <string name="editor_section_payment">Payment</string>
+    <string name="editor_section_delivery">Delivery</string>
+    <string name="editor_section_attachment">Image</string>
+    <string name="editor_section_notes">Notes</string>
+    <string name="editor_order_title">Order name</string>
+    <string name="editor_platform">Platform</string>
+    <string name="editor_custom_platform">Platform or store name</string>
+    <string name="editor_seller">Seller / store</string>
+    <string name="editor_item_name">Item name</string>
+    <string name="editor_item_variant">Variant</string>
+    <string name="editor_item_qty">Qty</string>
+    <string name="editor_item_price">Unit price</string>
+    <string name="editor_add_item">Add item</string>
+    <string name="editor_remove_item">Remove item</string>
+    <string name="editor_items_subtotal">Items subtotal</string>
+    <string name="editor_shipping">Shipping</string>
+    <string name="editor_discount">Discount</string>
+    <string name="editor_total">Total</string>
+    <string name="editor_total_hint">Suggested: %1$s</string>
+    <string name="editor_payment_method">Payment method</string>
+    <string name="editor_payment_status">Payment status</string>
+    <string name="editor_cod_note">COD amount to prepare: %1$s</string>
+    <string name="editor_status">Order status</string>
+    <string name="editor_courier">Courier</string>
+    <string name="editor_tracking">Tracking number</string>
+    <string name="editor_ordered_date">Order date</string>
+    <string name="editor_eta_start">Earliest delivery</string>
+    <string name="editor_eta_end">Latest delivery</string>
+    <string name="editor_pick_date">Pick a date</string>
+    <string name="editor_clear_date">Clear</string>
+    <string name="editor_pick_image">Pick image</string>
+    <string name="editor_image_set">Image attached</string>
+    <string name="editor_remove_image">Remove</string>
+    <string name="editor_notes">Notes</string>
+    <string name="editor_review">Review</string>
+    <string name="editor_review_title">Review order</string>
+    <string name="editor_back_to_edit">Back to edit</string>
+    <string name="editor_save">Save order</string>
+    <string name="editor_saved_error">Could not save this order. Please check the fields and try again.</string>
+    <string name="editor_discard_title">Discard changes?</string>
+    <string name="editor_discard_body">You have unsaved changes. Leave without saving?</string>
+    <string name="editor_discard_confirm">Discard</string>
+    <string name="editor_keep_editing">Keep editing</string>
+    <string name="editor_archive">Archive</string>
+    <string name="editor_restore">Restore</string>
+    <string name="editor_delete">Delete permanently</string>
+    <string name="editor_delete_title">Delete this order?</string>
+    <string name="editor_delete_body">This permanently removes the order and its items. This cannot be undone.</string>
+    <string name="editor_delete_confirm">Delete</string>
+    <string name="editor_required_summary">Required: a name, platform, and total.</string>
+    <string name="action_cancel">Cancel</string>
 </resources>
