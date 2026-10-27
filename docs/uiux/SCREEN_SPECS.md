@@ -86,11 +86,16 @@ where supported. Explain local notifications and permission state.
 
 ## Activity / Smart Parcel Status (Notification Assistance)
 Detection/activity feed + permission explainer first — why notification access helps, privacy
-note, continue/not-now — before linking to Android settings. Detected marketplace update
-`TrackingSuggestionCard`s show source, matched order/shipment, proposed ShipmentStatus,
-confidence/reason, Confirm/Ignore. Never present an uncertain match as fact; never label
-status "live"/"real-time" — show detection source and freshness. Manual update path always
-available.
+note, continue/not-now — before linking to Android settings. Detected marketplace/courier/
+message updates show `TrackingSuggestionCard`s with source, matched order/shipment, proposed
+ShipmentStatus, confidence/reason, Confirm/Ignore. Ambiguous detections show the
+`ParcelMatchReview` card ("Possible Parcel Update": detected signals + candidate parcels +
+Select Parcel / Ignore) — never an arbitrary pick. Detection history lists outcomes only.
+Rider/message detection gets its own explainer ("ORDRA can analyze delivery-related message
+notifications to identify updates for your existing parcels. Unrelated messages are ignored
+by the parcel detection pipeline.") with Enable / Not Now before its settings toggle.
+Never present an uncertain match as fact; never label status "live"/"real-time" — show
+detection source and freshness. Manual update path always available.
 
 ## Smart Import Entry
 Actions: select screenshot/image; optionally receive shared image. Privacy note: OCR is
@@ -133,9 +138,11 @@ preview backup metadata and warn about replacement/merge behavior per
 
 ## Settings
 Appearance (system/light/dark), currency, default platform/payment, reminders, Smart
-Import/Groq configuration, Smart Parcel Status (marketplace notification detection,
-automatic high-confidence updates, status-change notifications, per-marketplace toggles),
-backup/export, privacy, About. No account/cloud-sync sections.
+Import/Groq configuration, Smart Parcel Detection (marketplace notifications, courier
+notifications, rider/SMS notification detection — separate toggle, automatic
+high-confidence updates, ask-before-ambiguous updates, AI-assisted detection — separate
+toggle, status-change notifications, per-source toggles), backup/export, privacy, About.
+No account/cloud-sync sections.
 
 ## About
 Ordra name, tagline, version, local-first description, privacy summary, licenses, project

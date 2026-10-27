@@ -124,10 +124,12 @@ Required minimum: name/order label, platform, total.
 
 ## Smart Parcel Status (Notification Assistance)
 - Explain optional Notification Access before Android settings.
-- Supported marketplace source status (Shopee, Lazada, TikTok Shop…).
+- Supported source status across marketplace (Shopee, Lazada, TikTok Shop…),
+  courier (SPX, J&T, Flash, Ninja Van, LBC…) and messaging/rider notifications.
+- Separate rider/message-detection consent with its own privacy explainer.
 - Detected shipment update suggestions with source, matched order/shipment, proposed status, confidence.
-- Confirm/ignore update; high-confidence auto-apply only when user-enabled.
-- Detection history where useful.
+- Confirm/ignore update; ambiguous multi-match review lets the user pick the parcel; high-confidence auto-apply only when user-enabled.
+- Detection history where useful (outcomes only, no raw content).
 - Manual status fallback always available.
 
 ## Settings
@@ -136,7 +138,7 @@ Required minimum: name/order label, platform, total.
 - Default platform/payment.
 - Reminder defaults.
 - Smart Import settings/Groq availability.
-- Smart Parcel Status: marketplace notification detection, automatic high-confidence updates, status-change notifications.
+- Smart Parcel Detection: marketplace + courier + rider/SMS notification detection (separate toggles), automatic high-confidence updates, ask-before-ambiguous, AI-assisted detection, status-change notifications.
 - Privacy/data controls.
 - Backup/export.
 - About.

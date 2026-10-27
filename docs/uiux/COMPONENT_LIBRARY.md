@@ -62,6 +62,29 @@ tracking number + copy, status, detected-at + source attribution).
   Confirm/Ignore.
 - TrackExternallyAction: opens the courier's official tracking page; never scrapes.
 
+## Smart Detection (Phase 5A)
+Same visual language as the rest of the app — no separate styling. Names below are
+canonical; several are variants of existing primitives, not new visuals.
+- DetectionSourceBadge: variant of PlatformBadge — source label ("Shopee
+  notification", "Courier notification", "Delivery message", "Manual").
+- SmartDetectionStatus / DetectedStatusLine: status + source + freshness
+  ("Out for Delivery — Detected from delivery notification · Today 9:42 AM").
+- ConfidenceIndicator: reuse `ConfidenceField` for detection confidence.
+- DetectedUpdateCard: detection summary — detected signals (status, COD,
+  courier/marketplace guess), matched shipment, actions.
+- TrackingSuggestionCard (existing) = the Confirm/Ignore detected-update surface.
+- AmbiguousMatchCard / ParcelMatchReview: "Possible Parcel Update" — detected
+  signals + candidate parcel list (name, marketplace · courier, COD) + Select
+  Parcel / Ignore; optional "always trust similar high-confidence matches" where
+  safe, never encouraging unsafe auto-matching.
+- SmartDetectionPermissionCard: reuse `PermissionExplainer` — notification-access
+  education; a second variant explains rider/message detection before its toggle.
+- NotificationSourceSettings: settings section — marketplace notifications,
+  courier notifications, rider/SMS detection, automatic high-confidence updates,
+  ask-before-ambiguous, AI-assisted detection.
+- DetectionHistoryItem: feed row — outcome (Detected/Matched/Needs Review/
+  Ignored/Duplicate/Rejected/Failed), source badge, time; no raw content.
+
 ## Dashboard (Bento)
 - BentoGrid + BentoCard: span-sized cards for Home/Insights only. Largest span reserved for
   the most important current shipment. Suggested set: Active Parcels, Arriving Today,

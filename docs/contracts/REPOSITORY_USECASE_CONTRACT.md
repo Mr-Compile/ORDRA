@@ -28,6 +28,10 @@ Conceptual operations:
 - findShipmentByTrackingNumber(trackingNumber)
 - matchDetectionToShipment(extracted detection signals)
 - applyTrackingSuggestion(suggestion) / dismissTrackingSuggestion(suggestionId)
+- resolveAmbiguousMatch(detectionId, chosenShipmentId) — user-picked parcel from the
+  ambiguous-match review applies the suggestion to that shipment only
+- observeDetectionHistory() / recordDetectionOutcome(record) — Phase 5A detection
+  history (DetectionRecord); structured fields only, no raw notification bodies
 
 Manual status updates go through `updateShipmentStatus` with `source = MANUAL`, which
 also writes the corresponding `TrackingEvent`.
@@ -66,6 +70,10 @@ Examples:
 - NormalizeDetectedStatusUseCase
 - MatchDetectionToShipmentUseCase
 - ApplyTrackingSuggestionUseCase
+- ProcessDetectedNotificationUseCase (Phase 5A: source filter → relevance → parse →
+  match → confidence → suggestion/event, incl. dedupe + transition validation)
+- InterpretAmbiguousNotificationUseCase (Phase 5A: optional ORDRA AI fallback when
+  deterministic parsing is insufficient and AI-assisted detection is enabled)
 - NotifyShipmentStatusChangeUseCase
 
 ## Return types

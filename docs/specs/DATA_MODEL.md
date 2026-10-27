@@ -8,7 +8,7 @@ Core aggregates: Order, OrderItem and Shipment. Supporting models may include Tr
 - Money uses integer minor units or a decimal-safe representation with currency code.
 - Store timestamps consistently and format in UI; delivery dates may be date-only.
 - Soft archive is distinct from permanent delete.
-- Shipment status history lives on the TrackingEvent timeline (Shipment 1→N TrackingEvent), attributed by source + confidence.
+- Shipment status history lives on the TrackingEvent timeline (Shipment 1→N TrackingEvent), attributed by source + confidence plus minimal provenance fields (`rawStatus`, `sourceDetail`) — never raw notification/OCR content. Detection outcomes are recorded in a lightweight `DetectionRecord` history (Phase 5A).
 - Imported/OCR/AI data first lives in OrderDraft; only validated user-confirmed data becomes Order.
 
 ## Relationships

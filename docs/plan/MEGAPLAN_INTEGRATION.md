@@ -55,7 +55,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | I3 | Reminders + calendar data | 2 | UI-5 | PENDING | WorkManager + channels |
 | I4 | OCR Smart Import | 3 | UI-6 | PENDING | ML Kit → parser → draft → review → save |
 | I5 | Groq enhancement | 4 | UI-6 | PENDING | DTO-validated, offline fallback |
-| I6 | Smart Parcel Status assistance | 5 | UI-7 | PENDING | Share + NotificationListener + StatusNormalizer + confidence gates |
+| I6 | Smart Parcel Status assistance | 5 | UI-7 | PENDING | Share + NotificationListener (marketplace/courier/messaging registry) + StatusNormalizer + matching/confidence gates + ambiguous review |
 | I7 | Advanced records | 7 | UI-8 | PENDING | Receipts/returns/refunds/warranties |
 | I8 | Backup/restore/export | 8 | UI-9 | PENDING | Versioned manifest, transactional restore |
 | I9 | Full integration audit | 9 | UI-10 | PENDING | `prompts/INTEGRATION_AUDIT_PROMPT.md` |
@@ -86,19 +86,28 @@ renames of `totalAmountMinor`).
   CANCELLED, RETURNED, REFUNDED. Parcel-movement states are NOT here.
 - **ShipmentStatus**: UNKNOWN, PREPARING, PICKED_UP, IN_TRANSIT, ARRIVED_AT_HUB,
   OUT_FOR_DELIVERY, DELIVERED, DELIVERY_FAILED, RETURNING, RETURNED.
-- **TrackingStatusSource**: MANUAL, MARKETPLACE_NOTIFICATION, SCREENSHOT_OCR,
-  SMART_IMPORT, SHARED_CONTENT, FUTURE_OFFICIAL_PROVIDER (extension point only).
+- **TrackingStatusSource**: MANUAL, MARKETPLACE_NOTIFICATION,
+  COURIER_APP_NOTIFICATION, MESSAGE_NOTIFICATION, SCREENSHOT_OCR, SMART_IMPORT,
+  SHARED_CONTENT, FUTURE_OFFICIAL_PROVIDER (extension point only).
 - **DetectionConfidence**: LOW, MEDIUM, HIGH (internal numeric 0.0–1.0 allowed).
 - **PaymentMethod**: COD, EWALLET, CARD, BANK_TRANSFER, CASH, OTHER, UNKNOWN.
 - **PaymentStatus**: UNPAID, PARTIALLY_PAID, PAID, REFUNDED, UNKNOWN.
 - **Category**: id, name, createdAt, updatedAt.
 - **TrackingEvent**: id, shipmentId, shipmentStatus, title, description?, occurredAt,
   detectedAt, source (`TrackingStatusSource`), confidence (`DetectionConfidence`),
-  rawReference?. References `shipmentId`, never only `orderId`.
+  rawStatus?, sourceDetail?, rawReference?. References `shipmentId`, never only
+  `orderId`.
 - **TrackingSuggestion**: id, detectionSource, candidateShipmentId?, candidateOrderId?,
   proposedShipmentStatus?, proposedTrackingNumber?, confidence, explanation,
   matchedSignals, requiresConfirmation. Transient — resolves to a TrackingEvent or nothing.
   (Supersedes the former order-level NotificationSuggestion.)
+- **DetectionRecord** (Phase 5A): id, detectedAt, source, sourceDetail?, outcome
+  (DETECTED|MATCHED|NEEDS_REVIEW|IGNORED|DUPLICATE|REJECTED|FAILED),
+  candidateShipmentId?, proposedShipmentStatus?, confidence?, reason?. Structured
+  history only — no raw notification bodies.
+- **ExtractedSignals** (transient parser output): trackingNumber?,
+  marketplaceOrderId?, courier?, marketplace?, codAmountMinor?, orderAmountMinor?,
+  productHint?, rawStatusPhrase?, deliveryDateHint?, riderIndicator, locationHint?.
 - **Reminder**: id, orderId?, type, scheduledAt, enabled, notificationId?, createdAt.
 - **Receipt**: id, orderId, localUri, displayName?, mimeType?, createdAt.
 - **Warranty**: id, orderId, title?, startDate?, endDate?, notes?, reminderEnabled.
@@ -236,27 +245,42 @@ source/tests/logs; test-matrix Groq rows executed.
 ## I6 — Smart Parcel Status assistance
 
 **Objective:** share-to-Ordra + optional NotificationListenerService → normalized,
-confidence-gated shipment status updates per `docs/contracts/TRACKING_CONTRACT.md`.
+confidence-gated shipment status updates per `docs/contracts/TRACKING_CONTRACT.md`
+(Phase 5A–5C; 5D external providers stay an extension point).
 
 Targets:
 - Share-intent receivers routing into Smart Import flow / shipment detection.
-- `data/notification/` — source-package filter, per-source adapters/parsers extracting
-  tracking number, order reference, courier, raw status text, order hints.
-- `StatusNormalizer` — raw platform wording → canonical `ShipmentStatus` (single
-  dedicated layer; no scattered string matching).
-- Matching engine producing `TrackingSuggestion` with confidence + matched signals;
-  exact tracking-number match = strong confidence; never silently fuzzy-match
-  unrelated shipments.
+- `data/notification/` — source registry (package → parser adapter): supported
+  marketplace apps, courier apps, and messaging-app notifications carrying
+  rider/delivery texts (Rider Message Detection; notifications only — never SMS
+  inbox). Per-source parsers extract tracking number, order reference, courier,
+  marketplace, COD/order amount, status text, product hints, rider indicators.
+- Delivery-relevance + rider keyword dictionaries incl. mixed English/Filipino
+  wording; unrelated notifications dropped before parsing and never stored.
+- `StatusNormalizer` — raw platform/courier/rider wording → canonical
+  `ShipmentStatus` (single dedicated layer; no scattered string matching).
+- `ShipmentMatcher` + confidence engine producing `TrackingSuggestion` with
+  confidence + matched signals; exact tracking-number match = strong confidence;
+  signal tiers per contract; never silently fuzzy-match unrelated shipments;
+  ambiguous multi-match → parcel-pick review, never arbitrary pick.
 - Confidence gates: HIGH auto-applies only if user-enabled; MEDIUM shows
   Confirm/Ignore; LOW suggests only. Confirmation flow → use case →
-  `ShipmentRepository` → `TrackingEvent` with source + confidence recorded.
+  `ShipmentRepository` → `TrackingEvent` with source + confidence + provenance
+  (`rawStatus`, `sourceDetail`) recorded.
+- Optional ORDRA AI fallback for ambiguous delivery text — separately toggleable,
+  minimized payload, deterministic-first; never every notification.
+- Event deduplication (composite key) + status-transition/regression validation.
+- Detection history (`DetectionRecord`: outcomes only, no raw bodies); Smart
+  Detection settings incl. separate rider/SMS and AI toggles; permission and
+  message-privacy explainers.
 - Local status-change notification (dedupe per event); unrelated notification
   content never stored.
 - "Track Externally" opens the official courier page only — never scraped.
 
 Acceptance: assistance fully optional (revoke access → app unaffected); weak matches
-require confirmation; invalid transitions rejected/confirmed; test-matrix
-Notification-assist + Tracking rows executed.
+require confirmation; ambiguous matches never auto-pick; invalid/stale transitions
+rejected or confirmed (no regressing DELIVERED); test-matrix Notification-assist +
+Tracking rows executed.
 
 ## I7 — Advanced records
 
@@ -330,7 +354,11 @@ shipments per order, tracking-number matching (exact/ambiguous), status normaliz
 notification parser, OCR status extraction, manual update, event/timeline ordering, duplicate
 event prevention, confidence gates (auto-apply/confirm/reject), invalid transition, offline,
 Track Externally, backup/restore of shipments, migration, local status-change notification —
-checklist in `docs/qa/TRACKING_QA.md`. No PASS claimed without executed evidence.
+checklist in `docs/qa/TRACKING_QA.md`. Notification-detection scope additionally:
+source registry filtering (marketplace/courier/messaging), rider/Filipino-English
+phrase parsing, ambiguous multi-match review, status regression protection,
+dedupe on reposted notifications, AI-fallback payload minimization, detection
+history privacy. No PASS claimed without executed evidence.
 
 ## Known conflicts & open decisions
 

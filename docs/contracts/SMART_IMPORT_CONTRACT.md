@@ -37,6 +37,17 @@ Request structured JSON only. Parse into a dedicated DTO, validate every field, 
 ## Privacy
 Prefer sending normalized extracted text rather than full screenshots when sufficient. Minimize personal/address/payment data sent to Groq. Never log the API key or unnecessary sensitive OCR content.
 
+## ORDRA AI fallback for notification detection (Phase 5A)
+The same Groq path may interpret ambiguous delivery-related notification text when
+deterministic notification parsing cannot structure it (Phase 5A, see
+`docs/contracts/TRACKING_CONTRACT.md` → Local-first parsing & AI fallback). Same
+rules apply: optional and separately toggleable, minimized single-notification
+payload only, structured JSON response validated per field, output treated as
+candidate signals — never authoritative. It may classify delivery wording and
+extract courier/marketplace/COD/order identifiers; it may not invent tracking
+events, guess tracking numbers, mutate a shipment without validation, or resolve
+ambiguous matches without sufficient evidence.
+
 ## Failure modes
 Handle: no text found, unreadable screenshot, unsupported layout, no network, timeout, 4xx/5xx, rate limit, malformed JSON, partial extraction, duplicate candidate.
 

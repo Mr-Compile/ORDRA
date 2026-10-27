@@ -13,7 +13,7 @@ Ordra is an Android-only, local-first universal order and parcel manager. Users 
 - Phase 2 — Reminders, delivery calendar and notification infrastructure
 - Phase 3 — Screenshot Smart Import: image selection, ML Kit OCR, order + shipment detection, parsing and review
 - Phase 4 — Optional Groq-assisted extraction (direct app → Groq, local config key, graceful offline fallback)
-- Phase 5 — Smart Parcel Status: share-to-Ordra, marketplace notification assistance, status normalization, confidence-gated matching
+- Phase 5 — Smart Parcel Status: share-to-Ordra, notification assistance (marketplace + courier + messaging/rider), status normalization, confidence-gated matching. Sub-phases: 5A Smart Notification Detection → 5B Status Normalization + Courier Detection → 5C Tracking Provider + update pipeline → 5D Optional External Tracking API (extension point only)
 - Phase 6 — Spending analytics, purchase history and insights
 - Phase 7 — Returns, refunds, warranties, receipts and post-purchase tools
 - Phase 8 — Backup, restore and export

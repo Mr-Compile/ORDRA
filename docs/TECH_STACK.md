@@ -11,7 +11,7 @@
 - DataStore Preferences
 - WorkManager
 - Android Notification APIs
-- NotificationListenerService (explicit optional permission; primary automatic parcel-status assistance source)
+- NotificationListenerService (explicit optional permission; primary automatic parcel-status assistance source — supported marketplace, courier and messaging-app notifications via a source registry; messaging apps only through notifications, never SMS inbox reads)
 - ML Kit Text Recognition for on-device OCR (smart import and shipment-status screenshot detection)
 - Retrofit + OkHttp
 - Kotlinx Serialization

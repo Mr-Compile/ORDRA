@@ -26,7 +26,9 @@ UI and integration gates all pass.
   Hilt, DataStore, WorkManager, Nav Compose, Coil. Local-only: no backend/accounts/cloud.
 - Only online service: direct Groq API (Phase 4+), key in git-ignored `secrets.properties`.
   Tracking is local-first Smart Parcel Status — no courier APIs, third-party trackers,
-  or scraped pages; shipments/events live in Room per `docs/contracts/TRACKING_CONTRACT.md`.
+  or scraped pages; detection sources are marketplace/courier/messaging notifications
+  (messaging via notifications only, never SMS inbox), OCR, shared content, manual;
+  shipments/events live in Room per `docs/contracts/TRACKING_CONTRACT.md`.
 - `mockup/` mirrors the live UI; update it with any UI change (drift = defect).
 
 ## Status key
@@ -43,7 +45,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 2 | Reminders, calendar, notifications | F3 | PENDING | WorkManager scheduling, reminder types, daily summary, delivery calendar upgrades, channels |
 | 3 | Screenshot Smart Import (local) | F4 | PENDING | Photo picker, ML Kit OCR, deterministic parser, OrderDraft + shipment detection, confidence, review |
 | 4 | Groq-assisted extraction | F4 | PENDING | Direct app→Groq (Retrofit/OkHttp/kotlinx), strict schema, graceful offline fallback |
-| 5 | Smart Parcel Status assistance | F5 | PENDING | Share target, NotificationListenerService (optional), parsers, StatusNormalizer, confidence-gated matching, confirm suggestions |
+| 5 | Smart Parcel Status assistance | F5 | PENDING | 5A Smart Notification Detection (marketplace/courier/messaging sources, rider messages, matching+confidence, ambiguous review) → 5B normalization+courier registry → 5C provider abstraction+update pipeline → 5D optional external API |
 | 6 | Spending analytics & history | F6 | PENDING | Monthly/weekly totals, platform/category breakdown, local-only |
 | 7 | Post-purchase tools | F7 | PENDING | Returns/refunds, warranties, receipts/attachments |
 | 8 | Backup, restore & export | F8 | PENDING | JSON/ZIP backup, CSV export, restore validation |

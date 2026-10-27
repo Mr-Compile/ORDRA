@@ -12,6 +12,7 @@ Prevent drift between Compose UI, ViewModels, domain/use cases, repositories, Ro
 - No accounts, cloud database, cloud sync, or custom backend.
 - Groq is the only planned online service and is optional.
 - No courier APIs, third-party tracking APIs, or scraped tracking pages — tracking is local Smart Parcel Status.
+- Notification detection covers supported marketplace, courier and messaging apps through Android notifications only — never SMS inbox reads.
 - ML Kit OCR is local.
 - Never commit a real Groq API key.
 - UI never talks directly to Room, Retrofit, WorkManager, or NotificationListenerService.

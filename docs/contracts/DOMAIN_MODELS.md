@@ -69,9 +69,16 @@ Immutable timeline entry belonging to a Shipment (not directly to an Order).
 - detectedAt
 - source: TrackingStatusSource
 - confidence: DetectionConfidence
+- rawStatus?
+- sourceDetail?
 - rawReference?
 
-`rawReference` is an optional minimal pointer (e.g. local screenshot URI), never the full raw notification/OCR text — do not persist sensitive raw content.
+`rawStatus` is a short raw status classification label (e.g. the detected phrase's
+normalized key), `sourceDetail` is a minimal provenance key such as the source
+app/package identifier (e.g. `shopee`, `spx`, `sms`) — both are small structured
+fields for notification-derived events. `rawReference` is an optional minimal
+pointer (e.g. local screenshot URI), never the full raw notification/OCR text —
+do not persist sensitive raw content.
 
 ## Platform
 SHOPEE, TIKTOK_SHOP, LAZADA, TEMU, AMAZON, FACEBOOK, INSTAGRAM, OTHER
@@ -93,20 +100,28 @@ Raw status text from notifications/OCR/imports is normalized into this enum by t
 
 ## TrackingStatusSource
 Where a shipment status/event came from.
-MANUAL, MARKETPLACE_NOTIFICATION, SCREENSHOT_OCR, SMART_IMPORT, SHARED_CONTENT, FUTURE_OFFICIAL_PROVIDER
+MANUAL, MARKETPLACE_NOTIFICATION, COURIER_APP_NOTIFICATION, MESSAGE_NOTIFICATION,
+SCREENSHOT_OCR, SMART_IMPORT, SHARED_CONTENT, FUTURE_OFFICIAL_PROVIDER
 
-`FUTURE_OFFICIAL_PROVIDER` is an architectural extension point only — it does NOT mean a courier API is implemented in v1.
+Notification sources split by app category so settings, labels and priority stay
+distinct: marketplace apps (Shopee/Lazada/TikTok Shop), courier apps (SPX, J&T,
+Flash, Ninja Van, LBC…), and messaging-app notifications carrying rider/delivery
+messages (MESSAGE_NOTIFICATION — notification-based only, never SMS inbox reads).
+`FUTURE_OFFICIAL_PROVIDER` is an architectural extension point only — it does NOT
+mean a courier API is implemented in v1.
 
 ## DetectionConfidence
 LOW, MEDIUM, HIGH
 
-Confidence decides behavior: HIGH may auto-apply when the user enabled automatic updates; MEDIUM requires explicit Confirm/Ignore; LOW never modifies the shipment and may appear as suggestion only. Internal implementations may store a normalized 0.0–1.0 score; the band above is the canonical contract level.
+Confidence decides behavior: HIGH may auto-apply when the user enabled automatic updates; MEDIUM requires explicit Confirm/Ignore; LOW never modifies the shipment and may appear as suggestion only; ambiguous multi-candidate detections always go to user review. Internal implementations may store a normalized 0.0–1.0 score — the exact scoring algorithm is fixed during implementation/testing, not in docs; the band above is the canonical contract level.
 
 ## TrackingSuggestion
 A proposed shipment update produced by detection (marketplace notification, screenshot OCR, shared content) before it is confirmed or applied. Supersedes the former order-level `NotificationSuggestion`.
 - id
 - detectionSource: TrackingStatusSource
 - candidateShipmentId?
+- candidateShipmentIds? (populated for ambiguous multi-match review — the user
+  picks the parcel; never auto-applied)
 - candidateOrderId?
 - proposedShipmentStatus?
 - proposedTrackingNumber?
@@ -116,6 +131,35 @@ A proposed shipment update produced by detection (marketplace notification, scre
 - requiresConfirmation
 
 Suggestions are transient: once confirmed/ignored they resolve into a `TrackingEvent` (or nothing); they are not the shipment timeline itself.
+
+## DetectionRecord
+Lightweight persisted detection-history entry (Phase 5A). Records what the
+detection pipeline did with each candidate notification for transparency and the
+detection-history UI — structured fields only, never raw notification bodies.
+- id
+- detectedAt
+- source: TrackingStatusSource
+- sourceDetail?
+- outcome: DETECTED | MATCHED | NEEDS_REVIEW | IGNORED | DUPLICATE | REJECTED | FAILED
+- candidateShipmentId?
+- proposedShipmentStatus?
+- confidence?
+- reason?
+
+## ExtractedSignals
+Structured candidate signals produced by the notification/OCR parser before
+matching (transient, not persisted raw):
+- trackingNumber?
+- marketplaceOrderId?
+- courier?
+- marketplace?
+- codAmountMinor?
+- orderAmountMinor?
+- productHint?
+- rawStatusPhrase?
+- deliveryDateHint?
+- riderIndicator
+- locationHint?
 
 ## PaymentMethod
 COD, EWALLET, CARD, BANK_TRANSFER, CASH, OTHER, UNKNOWN

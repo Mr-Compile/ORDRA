@@ -18,8 +18,8 @@ Connect image picker -> ML Kit -> local parser -> OrderDraft -> review -> save.
 ## I5 — Groq enhancement
 Add optional Groq interpretation with DTO validation, field confidence, offline fallback, and secret hygiene.
 
-## I6 — Smart Parcel Status assistance
-Connect Android share intents and optional NotificationListenerService to the tracking pipeline (TRACKING_CONTRACT): platform parsers → StatusNormalizer → shipment matching → confidence-gated TrackingSuggestion → confirm/apply → TrackingEvent + local notification.
+## I6 — Smart Parcel Status assistance (Phase 5A–5C)
+Connect Android share intents and optional NotificationListenerService to the tracking pipeline (TRACKING_CONTRACT): source registry (marketplace/courier/messaging apps; messaging via notifications only, never SMS inbox) → delivery-relevance check → deterministic parsers + signal extraction → StatusNormalizer → ShipmentMatcher + confidence engine → confidence-gated TrackingSuggestion → confirm/apply/ambiguous review → TrackingEvent + local notification. Rider Message Detection and AI-assisted interpretation are separately toggleable; ORDRA AI is fallback-only. Event deduplication + transition/regression validation included. Phase 5D external providers remain an extension point.
 
 ## I7 — Advanced records
 Integrate receipts, returns/refunds, warranties, and their reminders.

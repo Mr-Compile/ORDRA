@@ -17,7 +17,10 @@
 14. Ordra is offline-first. All core order, shipment, reminder, analytics, backup, OCR, and manual tracking functionality must work locally. Groq is the only planned online service used directly by Ordra v1, for optional Smart Import enhancement only; it degrades to OCR + manual review. Courier tracking APIs and third-party tracking services are NOT used in Ordra v1. External official courier tracking pages may be opened by the user but are never scraped or treated as internal data sources.
 15. No courier/tracking data integrations in v1: no AfterShip, 17TRACK, EasyPost, Shippo, Parcel Monitor, unofficial courier APIs, reverse-engineered marketplace APIs, scraped courier pages, or browser automation against courier sites.
 16. A tracking number is an identifier and matching signal, never a live status source. Every shipment status carries a TrackingStatusSource and confidence; manual status updates must always be possible.
-17. Never present Ordra tracking as "live" or "real-time" courier tracking. Use Smart Parcel Status / Shipment Timeline wording and show detection source and freshness.
+17. Never present Ordra tracking as "live" or "real-time" courier tracking. Use Smart Parcel Status / Shipment Timeline / detected-update wording and show detection source and freshness.
+18. Notification detection covers supported marketplace, courier and messaging apps via a source registry. Messaging apps are inspected only through their notifications — Ordra never reads the SMS inbox; direct inbox access is a future capability needing its own privacy/platform review.
+19. Notification parsing is local and deterministic first. Groq may interpret ambiguous delivery-related text only as an optional, separately toggleable fallback with minimized payloads — never every notification.
+20. Ambiguous shipment matches never auto-apply: the user picks the parcel or ignores. Weak signals (amount-only, marketplace-only) can never silently update a shipment, and stale detections must not regress a delivered parcel.
 
 ## Engineering rules
 - Prefer simple, testable code over premature abstraction.

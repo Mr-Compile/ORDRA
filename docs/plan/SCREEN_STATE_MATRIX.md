@@ -8,10 +8,10 @@ Scan: idle; image selected; OCR processing; OCR success; OCR partial; Groq proce
 Calendar: no deliveries; one day; many same-day; COD aggregate.
 Spending: no data; one month; multiple categories/platforms.
 Backup: idle; exporting; success; invalid restore file; restore confirmation; restore failure.
-Notification assistance: permission off; permission on; unsupported/no detections; suggested match; low confidence; auto-apply enabled/disabled.
+Notification assistance: permission off; permission on; unsupported/no detections; suggested match; ambiguous multi-match review; low confidence; rider/message detection off; auto-apply enabled/disabled; detection history populated/empty.
 Shipment section: no shipment; single shipment; multiple shipments; no tracking number; detected vs manual status source.
 Shipment Timeline: empty; single event; ordered multi-source events.
 Status Suggestion: high confidence; medium confidence confirm/ignore; low confidence suggestion; dismissed.
-Settings: system/light/dark; Groq configured/unavailable; permissions on/off; marketplace detection/auto-update/status-notification toggles.
+Settings: system/light/dark; Groq configured/unavailable; permissions on/off; marketplace/courier/rider-SMS detection toggles; auto-update/ask-before-ambiguous/AI-assisted/status-notification toggles.
 ORDRA AI banner (Home): attention; arriving today; delivered recently; active; empty; AI unavailable (reserved — no remote AI yet). Ask ORDRA hidden until an AI destination exists.
 Companion (Ordi): idle; greeting; happy; thinking; working; success; delivery; attention; warning; empty; error; offline — long-message/wide-screen/reduced-motion/missing-asset fallbacks apply wherever used.

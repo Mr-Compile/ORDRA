@@ -38,8 +38,17 @@ must be supported by schema even where UI commonly creates one.
 - `tracking_events`: id, shipment_id (FK), shipment_status, title, description?,
   occurred_at, detected_at, source, confidence, raw_reference?. Index shipment_id and
   occurred_at for timeline ordering.
+  - Phase 5A adds optional provenance columns `raw_status`? (short classification
+    label) and `source_detail`? (source app/package key) via a versioned migration.
+    Enum source values persist as strings, so new `TrackingStatusSource` values
+    (COURIER_APP_NOTIFICATION, MESSAGE_NOTIFICATION) need no schema change.
+  - Phase 5A adds a `detection_records` table: id, detected_at, source,
+    source_detail?, outcome, candidate_shipment_id?, proposed_status?,
+    confidence?, reason? — structured fields only, no raw notification bodies.
 - Timeline queries order by occurred_at; dedupe detections so the same detected
-  transition cannot create duplicate events.
+  transition cannot create duplicate events (composite key: shipment + source +
+  normalized status + time window + source event identifier/hash — not text
+  equality alone).
 - Courier/tracking columns that existed on `orders` in early schemas migrate into a
   default shipment row per affected order via an explicit versioned Migration —
   no destructive reset, no data loss.

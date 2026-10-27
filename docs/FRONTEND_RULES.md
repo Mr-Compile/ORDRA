@@ -12,8 +12,8 @@
 - Avoid technical user-facing errors.
 - No fake online dependency for offline features.
 - Groq UI must show offline/failure fallback.
-- Notification access is optional and must explain why it is requested.
-- Do not silently update an order from uncertain marketplace notification matches.
+- Notification access is optional and must explain why it is requested; rider/message detection gets its own consent explainer before enabling.
+- Do not silently update an order/shipment from uncertain detection matches; ambiguous matches always route to parcel-pick review.
 - AI/OCR import must show a review screen before permanent save.
 - No placeholder screens may be marked complete.
 - Each screen must have preview/sample states and QA acceptance criteria.

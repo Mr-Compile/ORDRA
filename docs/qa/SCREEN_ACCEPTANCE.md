@@ -12,4 +12,4 @@ Critical flows:
 7. Order -> reminder -> local notification configuration.
 8. Settings -> theme -> immediate visual update.
 9. Backup -> create -> restore validation.
-10. Notification suggestion -> confirm/ignore without silent mutation.
+10. Notification suggestion -> confirm/ignore without silent mutation; ambiguous detection -> parcel-pick review (never arbitrary apply).

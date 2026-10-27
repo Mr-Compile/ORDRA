@@ -280,15 +280,24 @@ shipment status detection (`docs/contracts/TRACKING_CONTRACT.md`).
 Deliverables:
 - Share intent receiving UX: lands in the safe import flow, returns to Ordra normally.
 - Notification Assistance: permission explainer first (why, privacy note, continue/not-now);
-  detected-update `TrackingSuggestionCard`s show source, matched order/shipment, proposed
-  `ShipmentStatus`, confidence/reason, Confirm/Ignore; detection history where useful.
-- Status wording always shows source + freshness ("Detected 8:42 AM · Shopee notification");
-  never "live"/"real-time" tracking copy.
-- Settings controls: marketplace notification detection, automatic high-confidence updates,
-  status-change notifications, per-marketplace toggles.
+  detected-update `TrackingSuggestionCard`s show source (marketplace / courier / delivery
+  message), matched order/shipment, proposed `ShipmentStatus`, confidence/reason,
+  Confirm/Ignore; detection history feed (`DetectionHistoryItem`, outcomes only).
+- Ambiguous detections render `ParcelMatchReview`/`AmbiguousMatchCard` ("Possible Parcel
+  Update" → candidate parcels → Select Parcel / Ignore); never an arbitrary pick.
+- Rider/message detection has its own privacy explainer + Enable/Not Now before the
+  settings toggle can be switched on.
+- Status wording always shows source + freshness ("Detected 8:42 AM · Shopee notification",
+  "Last detected update: 12 minutes ago"); never "live"/"real-time" tracking copy; never
+  technical words (NotificationListenerService, Groq, regex).
+- Settings controls (`NotificationSourceSettings`): marketplace notifications, courier
+  notifications, rider/SMS detection (separate), automatic high-confidence updates,
+  ask-before-ambiguous, AI-assisted detection (separate), status-change notifications,
+  per-source toggles.
 
 Acceptance: permission optional and revocable path explained; no silent shipment mutation
-path exists in UI; flow 10 of `docs/qa/SCREEN_ACCEPTANCE.md` passes.
+path exists in UI; ambiguous matches always reach review; flow 10 of
+`docs/qa/SCREEN_ACCEPTANCE.md` passes.
 
 ## UI-8 — Insights + advanced order lifecycle
 

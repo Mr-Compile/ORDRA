@@ -19,6 +19,8 @@ Run at every phase gate.
 ## Tracking (when shipment features are in scope)
 [ ] Detected statuses carry source + confidence; confidence gates enforced
 [ ] Manual shipment status always works; tracking survives with notification access off
+[ ] Marketplace/courier/messaging sources filtered by registry; SMS inbox never read
+[ ] Ambiguous matches reach review; stale detections cannot regress delivered parcels
 [ ] No courier API/third-party tracker/scraping dependency anywhere
 [ ] Checklist: docs/qa/TRACKING_QA.md
 
