@@ -1,6 +1,7 @@
 package com.ordra.data.local.entity
 
 import androidx.room.Entity
+import kotlinx.serialization.Serializable
 import androidx.room.PrimaryKey
 
 /**
@@ -10,6 +11,7 @@ import androidx.room.PrimaryKey
  * Courier/tracking live on the shipments table, not here.
  */
 @Entity(tableName = "orders")
+@Serializable
 data class OrderEntity(
     @PrimaryKey val id: String,
     val title: String,

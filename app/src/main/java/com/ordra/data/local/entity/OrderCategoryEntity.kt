@@ -1,6 +1,7 @@
 package com.ordra.data.local.entity
 
 import androidx.room.Entity
+import kotlinx.serialization.Serializable
 import androidx.room.ForeignKey
 import androidx.room.Index
 
@@ -24,6 +25,7 @@ import androidx.room.Index
     ],
     indices = [Index("categoryId")],
 )
+@Serializable
 data class OrderCategoryEntity(
     val orderId: String,
     val categoryId: String,

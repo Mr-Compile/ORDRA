@@ -29,12 +29,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -278,6 +281,77 @@ fun SettingsScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsCard(stringResource(R.string.settings_backup)) {
+                    val ctx = LocalContext.current
+                    val scope = rememberCoroutineScope()
+                    var notice by remember { mutableStateOf<Int?>(null) }
+                    val createDoc = rememberLauncherForActivityResult(
+                        ActivityResultContracts.CreateDocument("application/json"),
+                    ) { uri ->
+                        uri?.let {
+                            scope.launch {
+                                val bytes = viewModel.exportBackupBytes()
+                                ctx.contentResolver.openOutputStream(it)?.use { os -> os.write(bytes) }
+                                notice = R.string.backup_exported
+                            }
+                        }
+                    }
+                    val createCsv = rememberLauncherForActivityResult(
+                        ActivityResultContracts.CreateDocument("text/csv"),
+                    ) { uri ->
+                        uri?.let {
+                            scope.launch {
+                                ctx.contentResolver.openOutputStream(it)?.use { os ->
+                                    os.write(viewModel.exportCsvText().toByteArray())
+                                }
+                                notice = R.string.backup_csv_exported
+                            }
+                        }
+                    }
+                    val openDoc = rememberLauncherForActivityResult(
+                        ActivityResultContracts.OpenDocument(),
+                    ) { uri ->
+                        uri?.let {
+                            scope.launch {
+                                val bytes = ctx.contentResolver.openInputStream(it)?.readBytes()
+                                if (bytes != null) {
+                                    when (viewModel.importBackupBytes(bytes)) {
+                                        is com.ordra.core.common.AppResult.Success ->
+                                            notice = R.string.backup_imported
+                                        is com.ordra.core.common.AppResult.Failure ->
+                                            notice = R.string.backup_invalid
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Text(
+                        stringResource(R.string.settings_backup_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { createDoc.launch("ordra-backup.json") }) {
+                            Text(stringResource(R.string.backup_export))
+                        }
+                        TextButton(
+                            onClick = { openDoc.launch(arrayOf("application/json", "text/*")) },
+                        ) { Text(stringResource(R.string.backup_import)) }
+                        TextButton(onClick = { createCsv.launch("ordra-orders.csv") }) {
+                            Text(stringResource(R.string.backup_csv))
+                        }
+                    }
+                    notice?.let {
+                        Text(
+                            stringResource(it),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
                         )
                     }
                 }

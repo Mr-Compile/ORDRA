@@ -1,6 +1,7 @@
 package com.ordra.data.local.entity
 
 import androidx.room.Entity
+import kotlinx.serialization.Serializable
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -17,6 +18,7 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index("shipmentId")],
 )
+@Serializable
 data class TrackingEventEntity(
     @PrimaryKey val id: String,
     val shipmentId: String,

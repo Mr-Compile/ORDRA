@@ -332,4 +332,14 @@
     <string name="pp_refund_line">Refund %1$s — %2$s</string>
     <string name="pp_warranty_line">Warranty %1$s: %2$s → %3$s</string>
     <string name="pp_receipts_count">%1$d receipt(s) attached</string>
+    <!-- Backup -->
+    <string name="settings_backup">Backup &amp; export</string>
+    <string name="settings_backup_hint">Local only — your data never leaves this device unless you share the file.</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_import">Restore</string>
+    <string name="backup_csv">Export CSV</string>
+    <string name="backup_exported">Backup exported.</string>
+    <string name="backup_csv_exported">CSV exported.</string>
+    <string name="backup_imported">Backup restored.</string>
+    <string name="backup_invalid">That file isn0027t a valid Ordra backup.</string>
 </resources>

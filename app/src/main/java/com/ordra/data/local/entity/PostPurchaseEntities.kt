@@ -1,6 +1,7 @@
 package com.ordra.data.local.entity
 
 import androidx.room.Entity
+import kotlinx.serialization.Serializable
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -10,6 +11,7 @@ import androidx.room.PrimaryKey
     foreignKeys = [ForeignKey(OrderEntity::class, ["id"], ["orderId"], onDelete = ForeignKey.CASCADE)],
     indices = [Index("orderId")],
 )
+@Serializable
 data class ReturnEntity(
     @PrimaryKey val id: String,
     val orderId: String,
@@ -25,6 +27,7 @@ data class ReturnEntity(
     foreignKeys = [ForeignKey(OrderEntity::class, ["id"], ["orderId"], onDelete = ForeignKey.CASCADE)],
     indices = [Index("orderId")],
 )
+@Serializable
 data class RefundEntity(
     @PrimaryKey val id: String,
     val orderId: String,
@@ -40,6 +43,7 @@ data class RefundEntity(
     foreignKeys = [ForeignKey(OrderEntity::class, ["id"], ["orderId"], onDelete = ForeignKey.CASCADE)],
     indices = [Index("orderId")],
 )
+@Serializable
 data class WarrantyEntity(
     @PrimaryKey val id: String,
     val orderId: String,
@@ -54,6 +58,7 @@ data class WarrantyEntity(
     foreignKeys = [ForeignKey(OrderEntity::class, ["id"], ["orderId"], onDelete = ForeignKey.CASCADE)],
     indices = [Index("orderId")],
 )
+@Serializable
 data class ReceiptEntity(
     @PrimaryKey val id: String,
     val orderId: String,

@@ -7,6 +7,7 @@ import com.ordra.domain.model.Platform
 import com.ordra.domain.model.ThemeMode
 import com.ordra.domain.model.UserSettings
 import com.ordra.domain.repository.ReminderScheduler
+import com.ordra.domain.repository.BackupRepository
 import com.ordra.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
     private val reminderScheduler: ReminderScheduler,
+    private val backupRepository: BackupRepository,
 ) : ViewModel() {
 
     val settings: StateFlow<UserSettings?> = repository.settings
@@ -62,6 +64,10 @@ class SettingsViewModel @Inject constructor(
     fun setDetectionRider(v: Boolean) = viewModelScope.launch {
         repository.setDetectionRider(v)
     }
+
+    suspend fun exportBackupBytes(): ByteArray = backupRepository.exportBackup()
+    suspend fun importBackupBytes(bytes: ByteArray) = backupRepository.importBackup(bytes)
+    suspend fun exportCsvText(): String = backupRepository.exportCsv()
 
     fun setAutoApplyHigh(v: Boolean) = viewModelScope.launch {
         repository.setAutoApplyHighConfidence(v)

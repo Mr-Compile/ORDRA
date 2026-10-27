@@ -5,6 +5,7 @@ import com.ordra.data.repository.OrderRepositoryImpl
 import com.ordra.core.notifications.ReminderSchedulerImpl
 import com.ordra.core.ocr.OcrEngine
 import com.ordra.data.ocr.MlKitOcrEngine
+import com.ordra.data.repository.BackupRepositoryImpl
 import com.ordra.data.repository.DetectionRepositoryImpl
 import com.ordra.data.repository.PostPurchaseRepositoryImpl
 import com.ordra.data.repository.ReminderRepositoryImpl
@@ -13,6 +14,7 @@ import com.ordra.data.settings.SettingsRepositoryImpl
 import com.ordra.domain.repository.CategoryRepository
 import com.ordra.domain.repository.OrderRepository
 import com.ordra.domain.repository.SettingsRepository
+import com.ordra.domain.repository.BackupRepository
 import com.ordra.domain.repository.DetectionRepository
 import com.ordra.domain.repository.PostPurchaseRepository
 import com.ordra.domain.repository.ReminderRepository
@@ -63,4 +65,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindPostPurchaseRepository(impl: PostPurchaseRepositoryImpl): PostPurchaseRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository
 }

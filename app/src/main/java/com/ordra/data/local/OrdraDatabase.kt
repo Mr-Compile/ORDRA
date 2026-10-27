@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.ordra.data.local.dao.BackupDao
 import com.ordra.data.local.dao.CategoryDao
 import com.ordra.data.local.dao.DetectionDao
 import com.ordra.data.local.dao.PostPurchaseDao
@@ -58,6 +59,7 @@ abstract class OrdraDatabase : RoomDatabase() {
     abstract fun reminderDao(): ReminderDao
     abstract fun detectionDao(): DetectionDao
     abstract fun postPurchaseDao(): PostPurchaseDao
+    abstract fun backupDao(): BackupDao
 
     companion object {
         /**

@@ -58,7 +58,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 5 | Share + notification assistance (5A/5B) | F5 | DONE | NotificationParser (EN+Filipino), ShipmentMatcher w/ confidence tiers, StatusProgression regression guard, detection_suggestions v5, listener service (optional), Detections review screen, share receiver, 6 tests |
 | 6 | Spending analytics + history | F6 | DONE | Deterministic SpendingAnalytics (weekly/monthly/platform/pending-vs-delivered/COD/avg), accessible progress-bar breakdowns, 4 tests, Settings entry |
 | 7 | Post-purchase tools | F7 | DONE | returns/refunds/warranties/receipts (Room v6), rating+favorite, warranty-expiry CUSTOM reminder, detail post-purchase section w/ dialogs |
-| 8 | Backup, restore & export | F8 | PENDING | JSON/ZIP backup, CSV export, restore validation |
+| 8 | Backup, restore, export | F8 | DONE | Versioned JSON backup (all 11 tables, schemaVersion guard), validate+import in transaction, CSV export, Settings backup section, 3 codec tests |
 | 9 | Hardening & release prep | F9 | PENDING | Security/privacy/perf audit, a11y, migrations, release config; Groq key decision for channel |
 | 10 | Beta & launch | F9 | PENDING | Needs owner: signing, store listing, beta rollout |
 
@@ -86,5 +86,5 @@ notification assistance.
 | 3–4 | UI-6 | I4, I5 |
 | 5 | Share + notification assistance (5A/5B) | F5 | DONE | NotificationParser (EN+Filipino), ShipmentMatcher w/ confidence tiers, StatusProgression regression guard, detection_suggestions v5, listener service (optional), Detections review screen, share receiver, 6 tests |
 | 6–7 | UI-8 | I2, I7 |
-| 8 | UI-9 | I8 |
+| 8 | Backup, restore, export | F8 | DONE | Versioned JSON backup (all 11 tables, schemaVersion guard), validate+import in transaction, CSV export, Settings backup section, 3 codec tests |
 | 9–10 | UI-10 | I9 |

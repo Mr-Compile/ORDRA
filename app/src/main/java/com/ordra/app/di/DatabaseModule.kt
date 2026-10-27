@@ -3,6 +3,7 @@ package com.ordra.app.di
 import android.content.Context
 import androidx.room.Room
 import com.ordra.data.local.OrdraDatabase
+import com.ordra.data.local.dao.BackupDao
 import com.ordra.data.local.dao.CategoryDao
 import com.ordra.data.local.dao.DetectionDao
 import com.ordra.data.local.dao.PostPurchaseDao
@@ -55,4 +56,7 @@ object DatabaseModule {
 
     @Provides
     fun providePostPurchaseDao(database: OrdraDatabase): PostPurchaseDao = database.postPurchaseDao()
+
+    @Provides
+    fun provideBackupDao(database: OrdraDatabase): BackupDao = database.backupDao()
 }
