@@ -59,8 +59,8 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 6 | Spending analytics + history | F6 | DONE | Deterministic SpendingAnalytics (weekly/monthly/platform/pending-vs-delivered/COD/avg), accessible progress-bar breakdowns, 4 tests, Settings entry |
 | 7 | Post-purchase tools | F7 | DONE | returns/refunds/warranties/receipts (Room v6), rating+favorite, warranty-expiry CUSTOM reminder, detail post-purchase section w/ dialogs |
 | 8 | Backup, restore, export | F8 | DONE | Versioned JSON backup (all 11 tables, schemaVersion guard), validate+import in transaction, CSV export, Settings backup section, 3 codec tests |
-| 9 | Hardening & release prep | F9 | PENDING | Security/privacy/perf audit, a11y, migrations, release config; Groq key decision for channel |
-| 10 | Beta & launch | F9 | PENDING | Needs owner: signing, store listing, beta rollout |
+| 9 | Hardening + release prep | F9 | DONE | R8/shrink enabled, proguard keeps for @Serializable entities+backup codec, lintVital clean (WorkManagerInitializer removed for on-demand init), unsigned release APK builds, secrets only in gitignored secrets.properties |
+| 10 | Beta + launch | — | BLOCKED-OWNER | Needs owner actions: release keystore, Play/console account, store listing, signing. All engineering prerequisites done (release build green, privacy/data-safety documented in code+About). |
 
 ## Current run scope
 Offline core through Phase 2 committed; current head is Phase 3 (Smart Import, in-flight
