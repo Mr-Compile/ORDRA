@@ -5,11 +5,13 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ordra.data.local.dao.CategoryDao
+import com.ordra.data.local.dao.DetectionDao
 import com.ordra.data.local.dao.OrderDao
 import com.ordra.data.local.dao.ReminderDao
 import com.ordra.data.local.dao.ShipmentDao
 import com.ordra.data.local.dao.TrackingEventDao
 import com.ordra.data.local.entity.CategoryEntity
+import com.ordra.data.local.entity.DetectionSuggestionEntity
 import com.ordra.data.local.entity.OrderCategoryEntity
 import com.ordra.data.local.entity.OrderEntity
 import com.ordra.data.local.entity.OrderItemEntity
@@ -34,8 +36,9 @@ import com.ordra.data.local.entity.TrackingEventEntity
         CategoryEntity::class,
         OrderCategoryEntity::class,
         ReminderEntity::class,
+        DetectionSuggestionEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class OrdraDatabase : RoomDatabase() {
@@ -44,6 +47,7 @@ abstract class OrdraDatabase : RoomDatabase() {
     abstract fun trackingEventDao(): TrackingEventDao
     abstract fun categoryDao(): CategoryDao
     abstract fun reminderDao(): ReminderDao
+    abstract fun detectionDao(): DetectionDao
 
     companion object {
         /**
@@ -196,6 +200,32 @@ abstract class OrdraDatabase : RoomDatabase() {
                     """.trimIndent(),
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_reminders_orderId` ON `reminders` (`orderId`)")
+            }
+        }
+
+        /** v4 -> v5: detection suggestions for notification/share assistance. */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `detection_suggestions` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `shipmentId` TEXT,
+                        `orderId` TEXT,
+                        `status` TEXT NOT NULL,
+                        `courier` TEXT,
+                        `trackingNumber` TEXT,
+                        `source` TEXT NOT NULL,
+                        `confidence` TEXT NOT NULL,
+                        `state` TEXT NOT NULL,
+                        `needsParcelPick` INTEGER NOT NULL,
+                        `notificationPackage` TEXT,
+                        `summary` TEXT,
+                        `detectedAt` INTEGER NOT NULL,
+                        `appliedAt` INTEGER
+                    )
+                    """.trimIndent(),
+                )
             }
         }
     }

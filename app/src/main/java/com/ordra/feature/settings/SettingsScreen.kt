@@ -54,6 +54,7 @@ import com.ordra.domain.model.ThemeMode
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onOpenAbout: () -> Unit,
+    onOpenDetections: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -208,6 +209,80 @@ fun SettingsScreen(
             }
 
             item {
+                SettingsCard(stringResource(R.string.settings_detection)) {
+                    val ctx = LocalContext.current
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                ctx.startActivity(
+                                    android.content.Intent(
+                                        android.provider.Settings
+                                            .ACTION_NOTIFICATION_LISTENER_SETTINGS,
+                                    ),
+                                )
+                            }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.settings_detection_access),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text(
+                                stringResource(R.string.settings_detection_access_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                        )
+                    }
+                    DetectionToggle(
+                        label = stringResource(R.string.settings_detection_marketplace),
+                        checked = s.detectionMarketplace,
+                        onChange = viewModel::setDetectionMarketplace,
+                    )
+                    DetectionToggle(
+                        label = stringResource(R.string.settings_detection_courier),
+                        checked = s.detectionCourier,
+                        onChange = viewModel::setDetectionCourier,
+                    )
+                    DetectionToggle(
+                        label = stringResource(R.string.settings_detection_rider),
+                        hint = stringResource(R.string.settings_detection_rider_hint),
+                        checked = s.detectionRider,
+                        onChange = viewModel::setDetectionRider,
+                    )
+                    DetectionToggle(
+                        label = stringResource(R.string.settings_auto_apply),
+                        checked = s.autoApplyHighConfidence,
+                        onChange = viewModel::setAutoApplyHigh,
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onOpenDetections)
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.settings_review_detections),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                        )
+                    }
+                }
+            }
+
+            item {
                 SettingsCard(stringResource(R.string.settings_app)) {
                     Row(
                         modifier = Modifier
@@ -247,6 +322,31 @@ private fun SettingsCard(title: String, content: @Composable () -> Unit) {
             Text(title, style = MaterialTheme.typography.titleMedium)
             content()
         }
+    }
+}
+
+@Composable
+private fun DetectionToggle(
+    label: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    hint: String? = null,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodyMedium)
+            hint?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        androidx.compose.material3.Switch(checked = checked, onCheckedChange = onChange)
     }
 }
 

@@ -286,4 +286,21 @@
     <string name="import_ai_unavailable">Smart analysis isn0027t available right now. You can still review the detected text and complete the order manually.</string>
     <string name="import_ai_no_text">No scanned text to analyze.</string>
     <string name="import_ai_done">AI suggestions filled in empty fields — please review.</string>
+    <!-- Detection assistance -->
+    <string name="detections_title">Detected updates</string>
+    <string name="detections_empty">No detected parcel updates right now.</string>
+    <string name="detections_meta">Confidence: %1$s · %2$s</string>
+    <string name="detections_apply">Apply</string>
+    <string name="detections_ignore">Ignore</string>
+    <string name="detections_pick">Pick parcel</string>
+    <string name="detections_pick_title">Which parcel is this update for?</string>
+    <string name="settings_detection">Smart detection</string>
+    <string name="settings_detection_access">Notification access</string>
+    <string name="settings_detection_access_hint">Let Ordra read marketplace, courier and rider notifications. Optional — everything works without it.</string>
+    <string name="settings_detection_marketplace">Marketplace notifications</string>
+    <string name="settings_detection_courier">Courier notifications</string>
+    <string name="settings_detection_rider">Rider / messaging notifications</string>
+    <string name="settings_detection_rider_hint">Rider texts inside messaging apps (Facebook, WhatsApp, Telegram, Viber) — read via notifications only, never message inboxes.</string>
+    <string name="settings_auto_apply">Auto-apply high-confidence updates</string>
+    <string name="settings_review_detections">Review detected updates</string>
 </resources>

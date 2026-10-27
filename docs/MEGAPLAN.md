@@ -55,7 +55,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 2 | Reminders, calendar, notifications | F3 | DONE | Reminder model+Room v4, WorkManager sync on save/status/archive, delivery-day/-1/-2 chips, daily summary worker+toggle+POST_NOTIFICATIONS, delivery calendar screen |
 | 3 | Screenshot Smart Import (local OCR) | F4 | DONE | Photo picker, ML Kit text-recognition, deterministic parser (platform/courier/amounts/tracking/dates/status), OrderDraft+confidence, review-before-save, 4 parser tests |
 | 4 | Groq-assisted extraction | F4 | DONE | Direct Groq call, strict JSON DTO+validation, redaction (email/phone/url), settings toggle default-off, merge never overwrites user fields, graceful Unavailable fallback, 3 tests |
-| 5 | Smart Parcel Status assistance | F5 | PENDING | 5A Smart Notification Detection (marketplace/courier/messaging sources, rider messages, matching+confidence, ambiguous review) → 5B normalization+courier registry → 5C provider abstraction+update pipeline → 5D optional external API |
+| 5 | Share + notification assistance (5A/5B) | F5 | DONE | NotificationParser (EN+Filipino), ShipmentMatcher w/ confidence tiers, StatusProgression regression guard, detection_suggestions v5, listener service (optional), Detections review screen, share receiver, 6 tests |
 | 6 | Spending analytics & history | F6 | PENDING | Monthly/weekly totals, platform/category breakdown, local-only |
 | 7 | Post-purchase tools | F7 | PENDING | Returns/refunds, warranties, receipts/attachments |
 | 8 | Backup, restore & export | F8 | PENDING | JSON/ZIP backup, CSV export, restore validation |
@@ -84,7 +84,7 @@ notification assistance.
 | 1E | UI-9 (settings part) | I2 |
 | 2 | UI-5 | I3 |
 | 3–4 | UI-6 | I4, I5 |
-| 5 | UI-7 | I6 |
+| 5 | Share + notification assistance (5A/5B) | F5 | DONE | NotificationParser (EN+Filipino), ShipmentMatcher w/ confidence tiers, StatusProgression regression guard, detection_suggestions v5, listener service (optional), Detections review screen, share receiver, 6 tests |
 | 6–7 | UI-8 | I2, I7 |
 | 8 | UI-9 | I8 |
 | 9–10 | UI-10 | I9 |

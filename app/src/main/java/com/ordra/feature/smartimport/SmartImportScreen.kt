@@ -68,6 +68,14 @@ fun SmartImportScreen(
     LaunchedEffect(Unit) {
         viewModel.effects.collect { if (it is SmartImportEffect.Saved) onSaved() }
     }
+    LaunchedEffect(Unit) {
+        com.ordra.app.AppIntake.pendingImageUri.collect { uri ->
+            if (uri != null) {
+                com.ordra.app.AppIntake.pendingImageUri.value = null
+                viewModel.onImagePicked(uri)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {

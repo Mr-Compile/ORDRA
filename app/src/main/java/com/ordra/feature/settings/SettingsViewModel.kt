@@ -50,4 +50,20 @@ class SettingsViewModel @Inject constructor(
     fun setOnlineAnalysis(enabled: Boolean) = viewModelScope.launch {
         repository.setOnlineAnalysisEnabled(enabled)
     }
+
+    fun setDetectionMarketplace(v: Boolean) = viewModelScope.launch {
+        repository.setDetectionMarketplace(v)
+    }
+
+    fun setDetectionCourier(v: Boolean) = viewModelScope.launch {
+        repository.setDetectionCourier(v)
+    }
+
+    fun setDetectionRider(v: Boolean) = viewModelScope.launch {
+        repository.setDetectionRider(v)
+    }
+
+    fun setAutoApplyHigh(v: Boolean) = viewModelScope.launch {
+        repository.setAutoApplyHighConfidence(v)
+    }
 }

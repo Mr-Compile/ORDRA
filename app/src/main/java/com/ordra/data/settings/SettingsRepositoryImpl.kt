@@ -28,6 +28,11 @@ class SettingsRepositoryImpl @Inject constructor(
         val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
         val DAILY_SUMMARY = booleanPreferencesKey("daily_summary_enabled")
         val ONLINE_ANALYSIS = booleanPreferencesKey("online_analysis_enabled")
+        val DETECTION_MARKETPLACE = booleanPreferencesKey("detection_marketplace")
+        val DETECTION_COURIER = booleanPreferencesKey("detection_courier")
+        val DETECTION_RIDER = booleanPreferencesKey("detection_rider")
+        val AUTO_APPLY_HIGH = booleanPreferencesKey("auto_apply_high_confidence")
+        val AI_ASSISTED_DETECTION = booleanPreferencesKey("ai_assisted_detection")
     }
 
     private inline fun <reified T : Enum<T>> Preferences.enumOrNull(key: Preferences.Key<String>): T? =
@@ -41,6 +46,11 @@ class SettingsRepositoryImpl @Inject constructor(
             defaultPaymentMethod = prefs.enumOrNull<PaymentMethod>(Keys.DEFAULT_PAYMENT),
             dailySummaryEnabled = prefs[Keys.DAILY_SUMMARY] ?: false,
             onlineAnalysisEnabled = prefs[Keys.ONLINE_ANALYSIS] ?: false,
+            detectionMarketplace = prefs[Keys.DETECTION_MARKETPLACE] ?: false,
+            detectionCourier = prefs[Keys.DETECTION_COURIER] ?: false,
+            detectionRider = prefs[Keys.DETECTION_RIDER] ?: false,
+            autoApplyHighConfidence = prefs[Keys.AUTO_APPLY_HIGH] ?: false,
+            aiAssistedDetection = prefs[Keys.AI_ASSISTED_DETECTION] ?: false,
             onboardingComplete = prefs[Keys.ONBOARDING_COMPLETE] ?: false,
         )
     }
@@ -65,6 +75,26 @@ class SettingsRepositoryImpl @Inject constructor(
             if (method == null) it.remove(Keys.DEFAULT_PAYMENT)
             else it[Keys.DEFAULT_PAYMENT] = method.name
         }
+    }
+
+    override suspend fun setDetectionMarketplace(enabled: Boolean) {
+        dataStore.edit { it[Keys.DETECTION_MARKETPLACE] = enabled }
+    }
+
+    override suspend fun setDetectionCourier(enabled: Boolean) {
+        dataStore.edit { it[Keys.DETECTION_COURIER] = enabled }
+    }
+
+    override suspend fun setDetectionRider(enabled: Boolean) {
+        dataStore.edit { it[Keys.DETECTION_RIDER] = enabled }
+    }
+
+    override suspend fun setAutoApplyHighConfidence(enabled: Boolean) {
+        dataStore.edit { it[Keys.AUTO_APPLY_HIGH] = enabled }
+    }
+
+    override suspend fun setAiAssistedDetection(enabled: Boolean) {
+        dataStore.edit { it[Keys.AI_ASSISTED_DETECTION] = enabled }
     }
 
     override suspend fun setOnlineAnalysisEnabled(enabled: Boolean) {

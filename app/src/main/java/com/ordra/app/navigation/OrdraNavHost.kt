@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.ordra.feature.calendar.DeliveryCalendarScreen
 import com.ordra.feature.cod.CodOverviewScreen
+import com.ordra.feature.detections.DetectionsScreen
 import com.ordra.feature.detail.OrderDetailScreen
 import com.ordra.feature.home.HomeScreen
 import com.ordra.feature.orderedit.AddEditOrderScreen
@@ -19,6 +20,11 @@ import com.ordra.feature.timeline.ShipmentTimelineScreen
 
 @Composable
 fun OrdraNavHost(navController: NavHostController) {
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        com.ordra.app.AppIntake.pendingRoute.collect { route ->
+            navController.navigate(route)
+        }
+    }
     NavHost(
         navController = navController,
         startDestination = OrdraRoutes.HOME,
@@ -34,6 +40,12 @@ fun OrdraNavHost(navController: NavHostController) {
                 onSmartImport = { navController.navigate(OrdraRoutes.SMART_IMPORT) },
             )
         }
+        composable(OrdraRoutes.DETECTIONS) {
+            DetectionsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenOrder = { id -> navController.navigate(OrdraRoutes.orderDetail(id)) },
+            )
+        }
         composable(OrdraRoutes.SMART_IMPORT) {
             SmartImportScreen(
                 onNavigateBack = { navController.popBackStack() },
@@ -44,6 +56,7 @@ fun OrdraNavHost(navController: NavHostController) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onOpenAbout = { navController.navigate(OrdraRoutes.ABOUT) },
+                onOpenDetections = { navController.navigate(OrdraRoutes.DETECTIONS) },
             )
         }
         composable(OrdraRoutes.ABOUT) {
