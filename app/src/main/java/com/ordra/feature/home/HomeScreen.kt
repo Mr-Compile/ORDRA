@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +58,8 @@ private fun etaText(order: Order): String? {
 fun HomeScreen(
     onAddOrder: () -> Unit,
     onOpenOrder: (String) -> Unit,
+    onOpenOrders: () -> Unit,
+    onOpenCod: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,6 +69,7 @@ fun HomeScreen(
             HomeTopBar(
                 showingArchived = uiState.showingArchived,
                 onToggleArchived = viewModel::toggleArchived,
+                onOpenOrders = onOpenOrders,
             )
         },
         floatingActionButton = {
@@ -89,6 +93,7 @@ fun HomeScreen(
             HomeContent(
                 state = uiState,
                 onOpenOrder = onOpenOrder,
+                onOpenCod = onOpenCod,
                 modifier = Modifier.padding(innerPadding),
             )
         }
@@ -97,7 +102,11 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeTopBar(showingArchived: Boolean, onToggleArchived: () -> Unit) {
+private fun HomeTopBar(
+    showingArchived: Boolean,
+    onToggleArchived: () -> Unit,
+    onOpenOrders: () -> Unit,
+) {
     TopAppBar(
         title = {
             Text(
@@ -107,6 +116,12 @@ private fun HomeTopBar(showingArchived: Boolean, onToggleArchived: () -> Unit) {
             )
         },
         actions = {
+            IconButton(onClick = onOpenOrders) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = stringResource(R.string.home_orders),
+                )
+            }
             IconButton(onClick = onToggleArchived) {
                 Icon(
                     Icons.AutoMirrored.Filled.List,
@@ -123,6 +138,7 @@ private fun HomeTopBar(showingArchived: Boolean, onToggleArchived: () -> Unit) {
 private fun HomeContent(
     state: HomeUiState,
     onOpenOrder: (String) -> Unit,
+    onOpenCod: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -131,7 +147,7 @@ private fun HomeContent(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
-            SummaryRow(state = state)
+            SummaryRow(state = state, onOpenCod = onOpenCod)
             Spacer(Modifier.height(8.dp))
         }
         if (state.upcoming.isNotEmpty()) {
@@ -162,7 +178,7 @@ private fun HomeContent(
 }
 
 @Composable
-private fun SummaryRow(state: HomeUiState) {
+private fun SummaryRow(state: HomeUiState, onOpenCod: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         SummaryCard(
             label = stringResource(R.string.home_metric_active),
@@ -179,13 +195,21 @@ private fun SummaryRow(state: HomeUiState) {
             value = MoneyFormat.formatMinor(state.codToPrepareMinor ?: 0L, state.codCurrency)
                 .ifBlank { "0" },
             modifier = Modifier.weight(1f),
+            onClick = onOpenCod,
         )
     }
 }
 
 @Composable
-private fun SummaryCard(label: String, value: String, modifier: Modifier = Modifier) {
+private fun SummaryCard(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+) {
     Card(
+        onClick = { onClick?.invoke() },
+        enabled = onClick != null,
         modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,

@@ -1,8 +1,10 @@
 package com.ordra.data.repository
 
+import com.ordra.data.local.OrderQuerySql
 import com.ordra.data.local.dao.OrderDao
 import com.ordra.data.local.mapper.OrderMapper
 import com.ordra.domain.model.Order
+import com.ordra.domain.model.OrderQuery
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.repository.OrderRepository
 import java.time.Instant
@@ -18,6 +20,10 @@ class OrderRepositoryImpl @Inject constructor(
 
     override fun observeActiveOrders(): Flow<List<Order>> =
         orderDao.observeActiveOrders().map { list -> list.map(OrderMapper::toDomain) }
+
+    override fun observeOrders(query: OrderQuery): Flow<List<Order>> =
+        orderDao.observeOrdersRaw(OrderQuerySql.build(query))
+            .map { list -> list.map(OrderMapper::toDomain) }
 
     override fun observeArchivedOrders(): Flow<List<Order>> =
         orderDao.observeArchivedOrders().map { list -> list.map(OrderMapper::toDomain) }

@@ -140,6 +140,7 @@ fun AddEditOrderScreen(
             OrderFormContent(
                 state = uiState,
                 onFormChange = viewModel::updateForm,
+                onCreateCategory = viewModel::createCategory,
                 modifier = Modifier.padding(padding),
             )
         } else {
@@ -289,6 +290,7 @@ private fun EditorBottomBar(
 private fun OrderFormContent(
     state: AddEditUiState,
     onFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
+    onCreateCategory: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val form = state.form
@@ -514,6 +516,27 @@ private fun OrderFormContent(
                     )
                 }
                 FieldError(errors["etaEnd"])
+            }
+        }
+
+        item {
+            FormSection(title = stringResource(R.string.editor_section_categories)) {
+                CategoryPicker(
+                    available = state.availableCategories,
+                    selected = form.selectedCategoryIds,
+                    onToggle = { id ->
+                        onFormChange {
+                            it.copy(
+                                selectedCategoryIds = if (id in it.selectedCategoryIds) {
+                                    it.selectedCategoryIds - id
+                                } else {
+                                    it.selectedCategoryIds + id
+                                },
+                            )
+                        }
+                    },
+                    onCreate = onCreateCategory,
+                )
             }
         }
 
@@ -774,6 +797,47 @@ private fun ItemFields(
             )
         }
         FieldError(errors["item_qty_$index"])
+    }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun CategoryPicker(
+    available: List<com.ordra.domain.model.Category>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+    onCreate: (String) -> Unit,
+) {
+    var newName by remember { mutableStateOf("") }
+    if (available.isNotEmpty()) {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            available.forEach { category ->
+                androidx.compose.material3.FilterChip(
+                    selected = category.id in selected,
+                    onClick = { onToggle(category.id) },
+                    label = { Text(category.name) },
+                )
+            }
+        }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(
+            value = newName,
+            onValueChange = { newName = it },
+            label = { Text(stringResource(R.string.editor_new_category)) },
+            modifier = Modifier.weight(1f),
+            singleLine = true,
+        )
+        Spacer(Modifier.width(8.dp))
+        TextButton(
+            onClick = {
+                onCreate(newName)
+                newName = ""
+            },
+            enabled = newName.isNotBlank(),
+        ) { Text(stringResource(R.string.editor_add_category)) }
     }
 }
 

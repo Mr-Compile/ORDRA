@@ -2,8 +2,10 @@ package com.ordra.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.ordra.data.local.entity.OrderEntity
 import com.ordra.data.local.entity.OrderItemEntity
 import com.ordra.data.local.entity.OrderWithItems
@@ -52,4 +54,12 @@ interface OrderDao {
 
     @Query("DELETE FROM orders WHERE id = :orderId")
     suspend fun deleteOrder(orderId: String)
+
+    /**
+     * Combined search/filter/sort. SQL is built by the repository from a
+     * domain OrderQuery — the DAO stays persistence-only.
+     */
+    @Transaction
+    @RawQuery(observedEntities = [OrderEntity::class, OrderItemEntity::class])
+    fun observeOrdersRaw(query: SupportSQLiteQuery): Flow<List<OrderWithItems>>
 }

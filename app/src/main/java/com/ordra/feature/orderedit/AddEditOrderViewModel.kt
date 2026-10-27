@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ordra.app.navigation.OrdraRoutes
 import com.ordra.core.common.AppResult
+import com.ordra.domain.model.Category
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.Shipment
+import com.ordra.domain.repository.CategoryRepository
 import com.ordra.domain.repository.SettingsRepository
 import com.ordra.domain.repository.ShipmentRepository
 import com.ordra.domain.usecase.ArchiveOrderUseCase
@@ -44,6 +46,7 @@ data class AddEditUiState(
     val attemptedSave: Boolean = false,
     val saveError: Boolean = false,
     val isArchived: Boolean = false,
+    val availableCategories: List<Category> = emptyList(),
 ) {
     val fieldErrors: Map<String, String> get() =
         if (attemptedSave) form.fieldErrors() else emptyMap()
@@ -59,6 +62,7 @@ class AddEditOrderViewModel @Inject constructor(
     private val restoreOrder: RestoreOrderUseCase,
     private val deleteOrder: DeleteOrderUseCase,
     private val shipmentRepository: ShipmentRepository,
+    private val categoryRepository: CategoryRepository,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
@@ -74,15 +78,26 @@ class AddEditOrderViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            categoryRepository.observeCategories().collect { categories ->
+                _uiState.update { it.copy(availableCategories = categories) }
+            }
+        }
+        viewModelScope.launch {
             val defaultCurrency = settingsRepository.settings.first().currencyCode
             if (orderId != null) {
                 when (val result = getOrderDetails(orderId)) {
                     is AppResult.Success -> {
                         existing = result.value
                         existingShipment = shipmentRepository.getPrimaryShipment(orderId)
+                        val categoryIds = categoryRepository
+                            .getCategoryIdsForOrder(orderId).toSet()
                         _uiState.update {
                             it.copy(
-                                form = OrderFormState.fromOrder(result.value, existingShipment),
+                                form = OrderFormState.fromOrder(
+                                    result.value,
+                                    existingShipment,
+                                    categoryIds,
+                                ),
                                 loaded = true,
                                 isArchived = result.value.isArchived,
                             )
@@ -104,6 +119,15 @@ class AddEditOrderViewModel @Inject constructor(
     fun updateForm(transform: (OrderFormState) -> OrderFormState) {
         _uiState.update { state ->
             state.copy(form = transform(state.form).copy(isDirty = true))
+        }
+    }
+
+    fun createCategory(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            val category = categoryRepository.createCategory(trimmed)
+            updateForm { it.copy(selectedCategoryIds = it.selectedCategoryIds + category.id) }
         }
     }
 
@@ -138,6 +162,10 @@ class AddEditOrderViewModel @Inject constructor(
                             existingShipment = it
                             shipmentRepository.saveShipment(it)
                         }
+                    categoryRepository.setOrderCategories(
+                        order.id,
+                        state.form.selectedCategoryIds.toList(),
+                    )
                     _uiState.update { it.copy(isSaving = false) }
                     _effects.send(AddEditEffect.Saved)
                 }

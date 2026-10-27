@@ -154,4 +154,39 @@
     <string name="timeline_source_manual">Manual</string>
     <string name="timeline_detected">Detected %1$s</string>
     <string name="timeline_confidence">Confidence: %1$s</string>
+
+    <!-- Orders -->
+    <string name="orders_title">Orders</string>
+    <string name="orders_search_hint">Search orders, sellers, items, tracking…</string>
+    <string name="orders_sort">Sort</string>
+    <string name="orders_filters">Filters</string>
+    <string name="orders_filters_count">Filters (%1$d)</string>
+    <string name="orders_clear_all">Clear all</string>
+    <string name="orders_no_results">No orders match these filters</string>
+    <string name="orders_filter_platform">Platform</string>
+    <string name="orders_filter_status">Status</string>
+    <string name="orders_filter_category">Category</string>
+    <string name="orders_filter_cod">COD pending only</string>
+    <string name="orders_filter_archived">Show archived</string>
+    <string name="orders_done">Done</string>
+    <string name="sort_newest">Newest first</string>
+    <string name="sort_oldest">Oldest first</string>
+    <string name="sort_delivery">Delivery soonest</string>
+    <string name="sort_highest">Highest total</string>
+    <string name="sort_lowest">Lowest total</string>
+
+    <!-- COD overview -->
+    <string name="cod_title">COD to prepare</string>
+    <string name="cod_empty">No outstanding COD orders</string>
+    <string name="cod_outstanding_total">Total outstanding</string>
+    <string name="cod_today">Expected today</string>
+    <string name="cod_next_3_days">Next 3 days</string>
+    <string name="cod_all_pending">All pending COD</string>
+
+    <!-- Categories -->
+    <string name="editor_section_categories">Categories</string>
+    <string name="editor_new_category">New category name</string>
+    <string name="editor_add_category">Add</string>
+    <string name="home_orders">All orders</string>
+    <string name="home_cod">COD</string>
 </resources>

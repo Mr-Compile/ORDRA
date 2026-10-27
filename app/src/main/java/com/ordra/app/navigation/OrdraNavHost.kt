@@ -6,9 +6,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.ordra.feature.cod.CodOverviewScreen
 import com.ordra.feature.detail.OrderDetailScreen
 import com.ordra.feature.home.HomeScreen
 import com.ordra.feature.orderedit.AddEditOrderScreen
+import com.ordra.feature.orders.OrdersScreen
 import com.ordra.feature.timeline.ShipmentTimelineScreen
 
 @Composable
@@ -20,6 +22,20 @@ fun OrdraNavHost(navController: NavHostController) {
         composable(OrdraRoutes.HOME) {
             HomeScreen(
                 onAddOrder = { navController.navigate(OrdraRoutes.orderEditor()) },
+                onOpenOrder = { id -> navController.navigate(OrdraRoutes.orderDetail(id)) },
+                onOpenOrders = { navController.navigate(OrdraRoutes.ORDERS) },
+                onOpenCod = { navController.navigate(OrdraRoutes.COD) },
+            )
+        }
+        composable(OrdraRoutes.ORDERS) {
+            OrdersScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenOrder = { id -> navController.navigate(OrdraRoutes.orderDetail(id)) },
+            )
+        }
+        composable(OrdraRoutes.COD) {
+            CodOverviewScreen(
+                onNavigateBack = { navController.popBackStack() },
                 onOpenOrder = { id -> navController.navigate(OrdraRoutes.orderDetail(id)) },
             )
         }

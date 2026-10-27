@@ -54,6 +54,7 @@ data class OrderFormState(
     val notes: String = "",
     val productImageUri: String? = null,
     val currencyCode: String = "PHP",
+    val selectedCategoryIds: Set<String> = emptySet(),
     val isDirty: Boolean = false,
 ) {
     val isEdit: Boolean get() = orderId != null
@@ -181,7 +182,11 @@ data class OrderFormState(
     }
 
     companion object {
-        fun fromOrder(order: Order, shipment: Shipment? = null): OrderFormState = OrderFormState(
+        fun fromOrder(
+            order: Order,
+            shipment: Shipment? = null,
+            categoryIds: Set<String> = emptySet(),
+        ): OrderFormState = OrderFormState(
             orderId = order.id,
             title = order.title,
             platform = order.platform,
@@ -220,6 +225,7 @@ data class OrderFormState(
             notes = order.notes.orEmpty(),
             productImageUri = order.productImageUri,
             currencyCode = order.currencyCode,
+            selectedCategoryIds = categoryIds,
             isDirty = false,
         )
     }

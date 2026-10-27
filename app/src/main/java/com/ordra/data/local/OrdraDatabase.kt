@@ -4,9 +4,12 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.ordra.data.local.dao.CategoryDao
 import com.ordra.data.local.dao.OrderDao
 import com.ordra.data.local.dao.ShipmentDao
 import com.ordra.data.local.dao.TrackingEventDao
+import com.ordra.data.local.entity.CategoryEntity
+import com.ordra.data.local.entity.OrderCategoryEntity
 import com.ordra.data.local.entity.OrderEntity
 import com.ordra.data.local.entity.OrderItemEntity
 import com.ordra.data.local.entity.ShipmentEntity
@@ -26,14 +29,17 @@ import com.ordra.data.local.entity.TrackingEventEntity
         OrderItemEntity::class,
         ShipmentEntity::class,
         TrackingEventEntity::class,
+        CategoryEntity::class,
+        OrderCategoryEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class OrdraDatabase : RoomDatabase() {
     abstract fun orderDao(): OrderDao
     abstract fun shipmentDao(): ShipmentDao
     abstract fun trackingEventDao(): TrackingEventDao
+    abstract fun categoryDao(): CategoryDao
 
     companion object {
         /**
@@ -134,6 +140,36 @@ abstract class OrdraDatabase : RoomDatabase() {
                     """.trimIndent(),
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_tracking_events_shipmentId` ON `tracking_events` (`shipmentId`)")
+            }
+        }
+
+        /** v2 -> v3: categories + order↔category junction for Phase 1D. */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `categories` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `name` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `order_categories` (
+                        `orderId` TEXT NOT NULL,
+                        `categoryId` TEXT NOT NULL,
+                        PRIMARY KEY(`orderId`, `categoryId`),
+                        FOREIGN KEY(`orderId`) REFERENCES `orders`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_order_categories_categoryId` ON `order_categories` (`categoryId`)")
             }
         }
     }

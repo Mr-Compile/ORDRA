@@ -9,6 +9,8 @@ object OrdraRoutes {
     const val ORDER_DETAIL = "order/{orderId}"
     const val ORDER_EDITOR = "order/edit?orderId={orderId}"
     const val SHIPMENT_TIMELINE = "shipment/{shipmentId}/timeline"
+    const val ORDERS = "orders"
+    const val COD = "cod"
     const val SETTINGS = "settings"
 
     const val ARG_ORDER_ID = "orderId"
