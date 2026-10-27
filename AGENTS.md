@@ -6,8 +6,9 @@ You are working on Ordra, an Android-only local-first parcel/order manager.
 1. `docs/BIBLE.md`
 2. `docs/RULES.md`
 3. `docs/TECH_STACK.md`
-4. Relevant file in `docs/plan/`
-5. Relevant checklist in `docs/qa/`
+4. `docs/contracts/` (in `docs/contracts/README.md` order — includes `TRACKING_CONTRACT.md` for anything touching shipments/tracking)
+5. Relevant file in `docs/plan/`
+6. Relevant checklist in `docs/qa/`
 
 ## Before changing code
 - Inspect the current repository and report what already exists.
@@ -46,4 +47,7 @@ A milestone is DONE only when:
 - Raw exception messages in UI.
 - Silent AI-generated order changes without validation.
 - Any backend, cloud database, cloud sync, account/auth system, or mandatory network dependency without explicit owner approval.
+- Courier APIs, third-party tracking APIs, scraped tracking pages, or browser automation for parcel status — tracking is local Smart Parcel Status only (`docs/contracts/TRACKING_CONTRACT.md`).
+- Treating a tracking number as a live status source, or labeling features "live"/"real-time" tracking.
+- Detected shipment status changes without source + confidence attribution and the required confirmation behavior.
 - Starting the next phase automatically after a gate passes — report and wait.

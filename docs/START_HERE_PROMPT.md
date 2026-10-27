@@ -12,9 +12,9 @@ Before coding, read in order:
 7. docs/plan/MASTER_PLAN.md
 8. docs/MEGAPLAN.md (umbrella) + docs/plan/MEGAPLAN_UIUX.md + docs/plan/MEGAPLAN_INTEGRATION.md
 9. docs/specs/*
-10. docs/qa/MASTER_QA_CHECKLIST.md
+10. docs/qa/MASTER_QA_CHECKLIST.md (+ docs/qa/TRACKING_QA.md for shipment/tracking work)
 11. UI/UX work: docs/uiux/README.md reading order
-12. Integration/contract work: docs/contracts/README.md reading order
+12. Integration/contract work: docs/contracts/README.md reading order (includes TRACKING_CONTRACT.md)
 
 Then audit the repository. If it is new, begin Phase 0/Phase 1A as applicable. If code already exists, determine the latest actually completed phase and repair incomplete foundation work first.
 

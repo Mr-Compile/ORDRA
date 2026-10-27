@@ -12,6 +12,7 @@ Routes:
 home
 orders
 orders/{orderId}
+orders/{orderId}/shipments/{shipmentId}/timeline
 orders/add
 orders/{orderId}/edit
 orders/filter

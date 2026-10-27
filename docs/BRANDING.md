@@ -40,15 +40,20 @@ Ordra uses a modern productivity/shopping identity rather than copying marketpla
 
 ## Status semantics
 Use status colors as chips, icons, indicators, or small accents. Do not flood entire cards with status colors.
+
+Order status:
 - Ordered: Indigo
 - Processing: Violet
 - Packed: Blue
 - Shipped: Cyan
-- Out for Delivery: Amber
 - Delivered: Mint/Green
 - Cancelled: Red
 - Returned: Orange
 - Refunded: Teal
+
+Shipment status (parcel movement): Preparing/Picked Up: Violet; In Transit: Cyan;
+Arrived at Hub: Blue; Out for Delivery: Amber; Delivered: Mint/Green;
+Delivery Failed/Returning: warm accent; Returned: Orange; Unknown: neutral.
 
 ## Logo direction
 The primary symbol should combine an **O** with a parcel/order cue and a subtle check/route concept. Keep geometry simple enough to remain recognizable as an Android launcher icon. Avoid generic standalone cardboard-box artwork.

@@ -14,6 +14,13 @@ Run at every phase gate.
 [ ] Migration tests pass when schema changes
 [ ] Money/date calculations verified
 [ ] Destructive actions confirmed
+[ ] Shipments/tracking events retain Order -> Shipment -> TrackingEvent integrity
+
+## Tracking (when shipment features are in scope)
+[ ] Detected statuses carry source + confidence; confidence gates enforced
+[ ] Manual shipment status always works; tracking survives with notification access off
+[ ] No courier API/third-party tracker/scraping dependency anywhere
+[ ] Checklist: docs/qa/TRACKING_QA.md
 
 ## UX
 [ ] Loading/empty/error states exist

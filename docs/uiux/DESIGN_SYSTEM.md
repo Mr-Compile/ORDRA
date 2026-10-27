@@ -30,15 +30,20 @@
 - outline #343640
 
 ## Status semantics
+Order status:
 - Ordered: Indigo
 - Processing: Violet
 - Packed: Blue
 - Shipped: Cyan
-- Out for Delivery: Amber
 - Delivered: Mint/Green
 - Cancelled: Error/Red
 - Returned: Orange
 - Refunded: Teal
+
+Shipment status (parcel movement): Preparing/Picked Up: Violet family; In Transit: Cyan;
+Arrived at Hub: Blue; Out for Delivery: Amber; Delivered: Mint/Green;
+Delivery Failed/Returning: warm accent; Returned: Orange; Unknown: neutral/outline.
+
 Use status color primarily on chip/icon/accent, never as a full-card background by default.
 
 ## Typography

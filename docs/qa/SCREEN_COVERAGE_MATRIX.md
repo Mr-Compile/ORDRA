@@ -10,6 +10,7 @@ Use during implementation. Mark each as NOT STARTED / IN PROGRESS / PASS / BLOCK
 - Edit Order
 - Order Review
 - Order Detail
+- Shipment Timeline
 - Search/Filters/Sort
 - Archive/History
 - COD Overview
@@ -19,7 +20,7 @@ Use during implementation. Mark each as NOT STARTED / IN PROGRESS / PASS / BLOCK
 - Smart Import Processing
 - Smart Import Review
 - Notification Assistance Permission
-- Notification Update Review
+- Status Suggestion Review
 - Insights
 - Return/Refund
 - Warranty

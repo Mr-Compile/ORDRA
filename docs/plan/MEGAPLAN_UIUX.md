@@ -38,7 +38,7 @@ scope passes `docs/qa/UI_UX_QA.md` and `docs/qa/SCREEN_COVERAGE_MATRIX.md` is up
 | UI-4 | Home + search + COD | Phase 1C/1D | F1/F2 | PENDING | Dashboard metrics via contracts |
 | UI-5 | Calendar + reminders | Phase 2 | F3 | PENDING | Local notifications only |
 | UI-6 | Smart Import | Phase 3/4 | F4 | PENDING | Offline fallback mandatory |
-| UI-7 | Platform assistance | Phase 5 | F5 | PENDING | Optional notification access |
+| UI-7 | Smart Parcel Status assistance | Phase 5 | F5 | PENDING | Optional notification access; confidence-gated suggestions |
 | UI-8 | Insights + advanced lifecycle | Phase 6/7 | F6/F7 | PENDING | Analytics is local-only |
 | UI-9 | Settings + backup + about | Phase 1E/8 | F2/F8 | PENDING | No account/cloud sections |
 | UI-10 | Polish & regression | Phase 9 | F9 | PENDING | Full-screen regression pass |
@@ -64,7 +64,8 @@ Implement once in `core/ui/` (or equivalent), reuse everywhere — no per-screen
 - Actions: `PrimaryButton`, `SecondaryButton`, `TextButton`, `DestructiveButton`,
   `ConfirmationDialog`, `Snackbar` conventions.
 - Order display: `OrderCard` (compact + regular), `UpcomingParcelCard`, `StatusChip`,
-  `PlatformBadge`, `CodChip`, `PaidChip`, `PaymentStatusChip`, `MoneyText`, `TimelineItem`.
+  `ShipmentStatusChip`, `PlatformBadge`, `CourierBadge`, `CodChip`, `PaidChip`,
+  `PaymentStatusChip`, `MoneyText`, `TimelineItem` (tracking events with source label).
 - Dashboard: `SummaryMetricCard` (Active, Arriving Soon, COD, monthly spend), `InsightCard`.
 - Discovery: `SearchBar`, `FilterChipRow`, `SortSheet`.
 - States: `EmptyState`, `ErrorState`, `OfflineBanner` (non-blocking), `LoadingSkeleton`
@@ -73,6 +74,9 @@ Implement once in `core/ui/` (or equivalent), reuse everywhere — no per-screen
   `StatusPicker`, `PaymentPicker`.
 - Import/assist: `ProductImagePicker`, `ReceiptAttachmentCard`, `ConfidenceField`,
   `SmartImportResultCard`, `PermissionExplainer`.
+- Tracking: `ShipmentCard` (courier, tracking number, status, detected-at + source),
+  `ShipmentTimelineItem` (status, timestamp, source attribution), `TrackingSuggestionCard`
+  (matched order, proposed status, confidence, Confirm/Ignore), `TrackExternallyAction`.
 
 Every component: light+dark themes, large-font tolerance, loading/disabled/error variants where
 applicable, Compose previews where practical, 48dp touch targets, semantics for TalkBack.
@@ -145,9 +149,13 @@ Deliverables per `docs/uiux/SCREEN_SPECS.md`:
   preserve input across navigation/config change (`isDirty` guard per
   `docs/contracts/UI_STATE_EVENT_CONTRACT.md`).
 - Order Review (pre-save summary) when flow requires explicit review step.
-- Order Detail: hero (title/platform/status/total), ETA+courier+tracking, items/pricing,
-  payment/COD, timeline, notes, attachments, warranty, return/refund entries; actions Edit,
-  status update, archive/restore, delete behind `ConfirmationDialog`.
+- Order Detail: hero (title/platform/status/total), ETA, **Shipment section** — per parcel:
+  courier, tracking number, `ShipmentStatusChip`, detected-at + source attribution,
+  actions View Timeline / Update Status / Track Externally; items/pricing, payment/COD,
+  notes, attachments, warranty, return/refund entries; actions Edit, status update,
+  archive/restore, delete behind `ConfirmationDialog`.
+- Shipment Timeline screen: ordered `TrackingEvent` list (status, occurred/detected time,
+  source attribution), manual Update Status entry point.
 - Archive/restore/history entry points with correct list-visibility rules.
 
 Acceptance: states Loading/Content/Empty/Error per screen; destructive actions confirmed;
@@ -205,19 +213,23 @@ Deliverables per `docs/contracts/SMART_IMPORT_CONTRACT.md`:
 Acceptance: full offline path works (OCR + manual review); Groq failure/offline states shown;
 critical flows 4–5 of `docs/qa/SCREEN_ACCEPTANCE.md` pass.
 
-## UI-7 — Platform assistance
+## UI-7 — Smart Parcel Status assistance
 
-**Objective:** share-to-Ordra UX and optional notification-assistance surfaces.
+**Objective:** share-to-Ordra UX and optional notification-assistance surfaces for
+shipment status detection (`docs/contracts/TRACKING_CONTRACT.md`).
 
 Deliverables:
 - Share intent receiving UX: lands in the safe import flow, returns to Ordra normally.
 - Notification Assistance: permission explainer first (why, privacy note, continue/not-now);
-  detected-update cards show source, matched order, proposed change, confidence/reason,
-  Confirm/Ignore; detection history where useful.
-- Never present uncertain matches as fact (`docs/contracts/REMINDERS_NOTIFICATION_CONTRACT.md`).
+  detected-update `TrackingSuggestionCard`s show source, matched order/shipment, proposed
+  `ShipmentStatus`, confidence/reason, Confirm/Ignore; detection history where useful.
+- Status wording always shows source + freshness ("Detected 8:42 AM · Shopee notification");
+  never "live"/"real-time" tracking copy.
+- Settings controls: marketplace notification detection, automatic high-confidence updates,
+  status-change notifications, per-marketplace toggles.
 
-Acceptance: permission optional and revocable path explained; no silent order mutation path
-exists in UI; flow 10 of `docs/qa/SCREEN_ACCEPTANCE.md` passes.
+Acceptance: permission optional and revocable path explained; no silent shipment mutation
+path exists in UI; flow 10 of `docs/qa/SCREEN_ACCEPTANCE.md` passes.
 
 ## UI-8 — Insights + advanced order lifecycle
 
@@ -264,7 +276,7 @@ Deliverables:
 - Light/dark, rotation/process-death state restoration, empty/error/offline/permission states
   on every relevant screen, navigation regression, performance pass.
 - `mockup/` synced to final UI.
-- Update `docs/qa/SCREEN_COVERAGE_MATRIX.md` to PASS/BLOCKED with evidence for all 27 rows;
+- Update `docs/qa/SCREEN_COVERAGE_MATRIX.md` to PASS/BLOCKED with evidence for all 28 rows;
   run `prompts/UI_AUDIT_PROMPT.md` end-to-end audit and repair findings.
 
 ## Screen coverage table (target state per `docs/qa/SCREEN_COVERAGE_MATRIX.md`)
@@ -279,6 +291,7 @@ Deliverables:
 | Edit Order | ✓ | n/a | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | Order Review | ✓ | n/a | ✓ | n/a | n/a | ✓ | ✓ | ✓ | ✓ |
 | Order Detail | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
+| Shipment Timeline | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | Search/Filters/Sort | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | Archive/History | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | COD Overview | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
@@ -288,7 +301,7 @@ Deliverables:
 | Smart Import Processing | ✓ | n/a | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | Smart Import Review | ✓ | n/a | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | Notification Assistance Permission | ✓ | n/a | n/a | n/a | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Notification Update Review | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Status Suggestion Review | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Insights | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | Return/Refund | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |
 | Warranty | ✓ | ✓ | ✓ | ✓ | n/a | ✓ | ✓ | ✓ | ✓ |

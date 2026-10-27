@@ -13,6 +13,25 @@ Conceptual responsibilities:
 - add/update/remove items
 - expose aggregate queries needed by dashboard/COD/analytics
 
+## ShipmentRepository / tracking boundary
+Dedicated boundary for parcels and timelines — do not grow `OrderRepository` into a God repository.
+
+Conceptual operations:
+- observeShipments(orderId)
+- observeShipment(shipmentId)
+- createShipment(input)
+- updateShipment(input)
+- updateShipmentStatus(shipmentId, status, source, confidence)
+- deleteShipment(id)
+- addTrackingEvent(event)
+- observeTrackingTimeline(shipmentId)
+- findShipmentByTrackingNumber(trackingNumber)
+- matchDetectionToShipment(extracted detection signals)
+- applyTrackingSuggestion(suggestion) / dismissTrackingSuggestion(suggestionId)
+
+Manual status updates go through `updateShipmentStatus` with `source = MANUAL`, which
+also writes the corresponding `TrackingEvent`.
+
 ## Supporting repositories
 Use focused repositories where justified:
 - ReminderRepository
@@ -41,6 +60,13 @@ Examples:
 - ConfirmSmartImportUseCase
 - CreateReturnUseCase
 - RestoreBackupUseCase
+- CreateShipmentUseCase
+- UpdateShipmentStatusUseCase
+- AddTrackingEventUseCase
+- NormalizeDetectedStatusUseCase
+- MatchDetectionToShipmentUseCase
+- ApplyTrackingSuggestionUseCase
+- NotifyShipmentStatusChangeUseCase
 
 ## Return types
 Prefer explicit success/failure domain results for operations that can fail. Do not expose SQLite, Retrofit, ML Kit, or Groq exceptions to ViewModels.

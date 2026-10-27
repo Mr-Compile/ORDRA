@@ -1,6 +1,6 @@
 # Data Model Specification
 
-Core aggregates: Order and OrderItem. Supporting models may include Category, Reminder, TrackingEvent, Attachment, ReturnRecord and WarrantyRecord as their phases arrive.
+Core aggregates: Order, OrderItem and Shipment. Supporting models may include TrackingEvent, Category, Reminder, Attachment, ReturnRecord and WarrantyRecord as their phases arrive.
 
 ## Order principles
 - Stable UUID/local ID.
@@ -8,8 +8,8 @@ Core aggregates: Order and OrderItem. Supporting models may include Category, Re
 - Money uses integer minor units or a decimal-safe representation with currency code.
 - Store timestamps consistently and format in UI; delivery dates may be date-only.
 - Soft archive is distinct from permanent delete.
-- Status history may be introduced when platform assistance/post-purchase requires it.
+- Shipment status history lives on the TrackingEvent timeline (Shipment 1→N TrackingEvent), attributed by source + confidence.
 - Imported/OCR/AI data first lives in OrderDraft; only validated user-confirmed data becomes Order.
 
 ## Relationships
-Order 1→N OrderItem. Order N↔N Category only if multi-category is retained; otherwise simplify to one category. Order 1→N Reminder/Attachment/TrackingEvent as features arrive.
+Order 1→N OrderItem. Order 1→N Shipment; Shipment 1→N TrackingEvent (events reference `shipmentId`, not `orderId`). Courier/tracking-number fields live on Shipment — an order can carry multiple parcels. Order N↔N Category only if multi-category is retained; otherwise simplify to one category. Order 1→N Reminder/Attachment as features arrive.

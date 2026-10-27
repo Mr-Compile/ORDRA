@@ -20,7 +20,9 @@ Hard rules:
 - Room is source of truth.
 - Core app offline.
 - No custom backend/accounts/cloud DB/cloud sync.
-- Groq is optional and the only planned online dependency.
+- Groq is optional and the only planned online service.
+- No courier APIs, third-party tracking APIs, or scraped tracking pages — tracking is local Smart Parcel Status (docs/contracts/TRACKING_CONTRACT.md).
+- Shipment is first-class: Order 1→N Shipment 1→N TrackingEvent; detected statuses carry source + confidence.
 - No real API key in source, docs, logs, tests, or Git.
 - UI cannot call DAO/network/WorkManager/NotificationListenerService directly.
 - Money uses integer minor units, never Float/Double.

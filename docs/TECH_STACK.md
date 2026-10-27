@@ -11,8 +11,8 @@
 - DataStore Preferences
 - WorkManager
 - Android Notification APIs
-- NotificationListenerService (later phase, explicit permission)
-- ML Kit Text Recognition for on-device OCR (smart import phase)
+- NotificationListenerService (explicit optional permission; primary automatic parcel-status assistance source)
+- ML Kit Text Recognition for on-device OCR (smart import and shipment-status screenshot detection)
 - Retrofit + OkHttp
 - Kotlinx Serialization
 - Coil
@@ -20,7 +20,8 @@
 - Gradle Kotlin DSL
 
 ## Optional online dependency
-- Groq API for Smart Import extraction/normalization. Direct app → Groq calls only; credential comes from local git-ignored config. Offline fallback to ML Kit OCR + manual review is mandatory.
+- Groq API for Smart Import interpretation enhancement. Direct app → Groq calls only; credential comes from local git-ignored config. Offline fallback to ML Kit OCR + manual review is mandatory.
+- No courier APIs, third-party parcel-tracking APIs (AfterShip, 17TRACK, EasyPost, Shippo, Parcel Monitor, unofficial courier APIs), scraped tracking pages, or reverse-engineered marketplace APIs. Tracking stays local-first: marketplace notifications + OCR + shared content + manual updates. A `TrackingProvider` abstraction remains as an extension point for any future official integration (see `docs/contracts/TRACKING_CONTRACT.md`); it is not implemented in v1.
 
 ## Explicitly not selected
 - Flutter
@@ -32,4 +33,5 @@
 
 ## Out of current scope / future consideration
 - A Groq backend/proxy for secret protection — reassess only if Ordra is ever publicly distributed. Not a current requirement.
+- Official courier TrackingProvider integrations — architecture supports them as extension points; not built in v1.
 - Cloud sync/accounts — post-launch decision only, never assumed.

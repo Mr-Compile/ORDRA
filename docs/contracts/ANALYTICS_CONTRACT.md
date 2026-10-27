@@ -11,6 +11,11 @@ Canonical metrics:
 - pending/active value
 - outstanding COD
 - average order value
+- shipment status counts: in transit, out for delivery, delivered today, delivery failed, returning
+
+Shipment metrics read `shipments.shipment_status` locally. Ordra stays a personal order
+manager — surface only what helps the individual user; do not build logistics-platform
+analytics.
 
 ## Rules
 - Use minor currency units.

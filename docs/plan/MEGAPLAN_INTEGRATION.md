@@ -9,11 +9,12 @@ Update the status table after each phase gate; a phase is DONE only when the con
 
 1. Read the contracts in canonical order (`docs/contracts/README.md`):
    `docs/contracts/CONTRACT_BIBLE.md` → `docs/contracts/DOMAIN_MODELS.md` →
-   `docs/contracts/DATABASE_CONTRACT.md` → `docs/contracts/REPOSITORY_USECASE_CONTRACT.md` →
+   `docs/contracts/DATABASE_CONTRACT.md` → `docs/contracts/TRACKING_CONTRACT.md` →
+   `docs/contracts/REPOSITORY_USECASE_CONTRACT.md` →
    `docs/contracts/UI_STATE_EVENT_CONTRACT.md` → `docs/contracts/SMART_IMPORT_CONTRACT.md` →
    `docs/contracts/REMINDERS_NOTIFICATION_CONTRACT.md` → `docs/contracts/ANALYTICS_CONTRACT.md` →
    `docs/contracts/BACKUP_RESTORE_CONTRACT.md` → `docs/contracts/ERROR_VALIDATION_CONTRACT.md` →
-   `docs/qa/INTEGRATION_TEST_MATRIX.md`
+   `docs/qa/INTEGRATION_TEST_MATRIX.md` → `docs/qa/TRACKING_QA.md`
    → `docs/plan/INTEGRATION_PHASES.md`.
 2. Product/engineering rules still govern: `docs/BIBLE.md`, `docs/RULES.md`,
    `docs/TECH_STACK.md`, `docs/specs/ARCHITECTURE.md`, `docs/specs/DATA_MODEL.md`.
@@ -33,6 +34,11 @@ Update the status table after each phase gate; a phase is DONE only when the con
 - All persisted mutations go through repositories/use cases; multi-table writes are transactional.
 - AI/OCR/notification outputs are drafts/suggestions — never silent authoritative mutations.
 - No committed/hardcoded Groq key; Groq optional and only for Smart Import.
+- No courier/third-party tracking APIs, no scraping, no reverse-engineered endpoints —
+  tracking is local Smart Parcel Status (`docs/contracts/TRACKING_CONTRACT.md`).
+- A tracking number is an identifier/matching signal only; every detected shipment
+  status carries `TrackingStatusSource` + `DetectionConfidence`; confidence decides
+  auto-apply vs. confirm vs. suggest-only; manual status always exists.
 - One canonical `docs/plan/` + `docs/qa/` structure — this file is the integration roadmap.
 
 ## Status key
@@ -49,7 +55,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | I3 | Reminders + calendar data | 2 | UI-5 | PENDING | WorkManager + channels |
 | I4 | OCR Smart Import | 3 | UI-6 | PENDING | ML Kit → parser → draft → review → save |
 | I5 | Groq enhancement | 4 | UI-6 | PENDING | DTO-validated, offline fallback |
-| I6 | Marketplace assistance | 5 | UI-7 | PENDING | Share intents + NotificationListener |
+| I6 | Smart Parcel Status assistance | 5 | UI-7 | PENDING | Share + NotificationListener + StatusNormalizer + confidence gates |
 | I7 | Advanced records | 7 | UI-8 | PENDING | Receipts/returns/refunds/warranties |
 | I8 | Backup/restore/export | 8 | UI-9 | PENDING | Versioned manifest, transactional restore |
 | I9 | Full integration audit | 9 | UI-10 | PENDING | `prompts/INTEGRATION_AUDIT_PROMPT.md` |
@@ -62,19 +68,37 @@ renames of `totalAmountMinor`).
 - **Order**: id, platform (`Platform`), customPlatformName?, sellerName?, status (`OrderStatus`),
   paymentMethod (`PaymentMethod`), paymentStatus (`PaymentStatus`), isCod, currencyCode,
   itemSubtotalMinor, shippingFeeMinor, discountMinor, totalAmountMinor, orderedDate?,
-  estimatedDeliveryStart?, estimatedDeliveryEnd?, deliveredAt?, courier?, trackingNumber?,
+  estimatedDeliveryStart?, estimatedDeliveryEnd?, deliveredAt?,
   notes?, productImageUri?, archivedAt?, createdAt, updatedAt.
   Invariants: totals non-negative; `isCod` consistent with payment semantics.
+  Courier/tracking live on `Shipment`, not on Order.
 - **OrderItem**: id, orderId, name, variant?, quantity, unitPriceMinor?, lineTotalMinor?,
   imageUri?, notes?
+- **Shipment**: id, orderId, courier? (`Courier`), customCourierName?, trackingNumber?,
+  shipmentStatus (`ShipmentStatus`), statusSource (`TrackingStatusSource`),
+  statusConfidence (`DetectionConfidence`), lastStatusAt?, lastDetectedAt?,
+  createdAt, updatedAt. Order 1→N Shipment.
 - **Platform**: SHOPEE, TIKTOK_SHOP, LAZADA, TEMU, AMAZON, FACEBOOK, INSTAGRAM, OTHER
   (`OTHER` requires `customPlatformName`).
-- **OrderStatus**: DRAFT, ORDERED, PROCESSING, PACKED, SHIPPED, OUT_FOR_DELIVERY, DELIVERED,
-  CANCELLED, RETURNED, REFUNDED.
+- **Courier**: SPX_EXPRESS, JNT_EXPRESS, NINJA_VAN, FLASH_EXPRESS, LBC, JRS_EXPRESS,
+  GOGO_XPRESS, ENTREGO, TWO_GO, DHL, OTHER, UNKNOWN (`OTHER` requires `customCourierName`).
+- **OrderStatus**: DRAFT, ORDERED, PROCESSING, PACKED, SHIPPED, DELIVERED,
+  CANCELLED, RETURNED, REFUNDED. Parcel-movement states are NOT here.
+- **ShipmentStatus**: UNKNOWN, PREPARING, PICKED_UP, IN_TRANSIT, ARRIVED_AT_HUB,
+  OUT_FOR_DELIVERY, DELIVERED, DELIVERY_FAILED, RETURNING, RETURNED.
+- **TrackingStatusSource**: MANUAL, MARKETPLACE_NOTIFICATION, SCREENSHOT_OCR,
+  SMART_IMPORT, SHARED_CONTENT, FUTURE_OFFICIAL_PROVIDER (extension point only).
+- **DetectionConfidence**: LOW, MEDIUM, HIGH (internal numeric 0.0–1.0 allowed).
 - **PaymentMethod**: COD, EWALLET, CARD, BANK_TRANSFER, CASH, OTHER, UNKNOWN.
 - **PaymentStatus**: UNPAID, PARTIALLY_PAID, PAID, REFUNDED, UNKNOWN.
 - **Category**: id, name, createdAt, updatedAt.
-- **TrackingEvent**: id, orderId, status?, title, description?, occurredAt, source.
+- **TrackingEvent**: id, shipmentId, shipmentStatus, title, description?, occurredAt,
+  detectedAt, source (`TrackingStatusSource`), confidence (`DetectionConfidence`),
+  rawReference?. References `shipmentId`, never only `orderId`.
+- **TrackingSuggestion**: id, detectionSource, candidateShipmentId?, candidateOrderId?,
+  proposedShipmentStatus?, proposedTrackingNumber?, confidence, explanation,
+  matchedSignals, requiresConfirmation. Transient — resolves to a TrackingEvent or nothing.
+  (Supersedes the former order-level NotificationSuggestion.)
 - **Reminder**: id, orderId?, type, scheduledAt, enabled, notificationId?, createdAt.
 - **Receipt**: id, orderId, localUri, displayName?, mimeType?, createdAt.
 - **Warranty**: id, orderId, title?, startDate?, endDate?, notes?, reminderEnabled.
@@ -85,8 +109,6 @@ renames of `totalAmountMinor`).
 - **ExtractionField\<T\>**: value?, confidence 0.0–1.0, source OCR|LOCAL_PARSER|GROQ|USER,
   evidence?, needsReview.
 - **SmartImportResult**: detectedPlatform?, draft, warnings, overallConfidence, usedGroq.
-- **NotificationSuggestion**: sourcePackage, candidateOrderId?, proposedStatus?,
-  proposedTrackingNumber?, confidence, explanation, requiresConfirmation.
 
 ## Canonical error taxonomy (per `docs/contracts/ERROR_VALIDATION_CONTRACT.md`)
 
@@ -120,14 +142,20 @@ Gate: report delivered; `docs/qa/CODEBASE_AUDIT.md` structure followed; build/te
 **Objective:** Orders list, Add/Edit, Detail wired end-to-end per contracts.
 
 Targets (create under `app/src/main/java/com/ordra/`):
-- `domain/model/` — Order, OrderItem, enums, OrderDraft (names per canonical table).
-- `data/db/` — `OrdraDatabase`, entities (orders, order_items, categories, order_categories,
-  tracking_events — add later tables only when their phase arrives), DAOs (`observeOrder`,
-  `observeOrders(filter/sort/query)`, `observeActiveOrders`, `observeArchivedOrders`,
-  `observeUpcomingDeliveries`, `observeOutstandingCod`, transactional order-with-relations load),
+- `domain/model/` — Order, OrderItem, Shipment, TrackingEvent, enums (OrderStatus,
+  ShipmentStatus, Courier, TrackingStatusSource, DetectionConfidence), OrderDraft
+  (names per canonical table).
+- `data/db/` — `OrdraDatabase`, entities (orders, order_items, shipments,
+  tracking_events, categories, order_categories — add later tables only when their
+  phase arrives), DAOs (`observeOrder`, `observeOrders(filter/sort/query)`,
+  `observeActiveOrders`, `observeArchivedOrders`, `observeUpcomingDeliveries`,
+  `observeOutstandingCod`, `observeShipments(orderId)`, `observeTrackingTimeline`,
+  `findShipmentByTrackingNumber`, transactional order-with-relations load),
   `data/mappers/` Entity↔Domain.
 - `data/repository/OrderRepositoryImpl` implementing domain `OrderRepository`
-  (observe/create/update/archive/restore/deletePermanently/updateStatus/items/aggregates).
+  (observe/create/update/archive/restore/deletePermanently/updateStatus/items/aggregates);
+  `ShipmentRepositoryImpl` for observe/create/update/updateShipmentStatus/
+  addTrackingEvent/timeline/findShipmentByTrackingNumber.
 - `domain/usecase/` — CreateOrderUseCase, UpdateOrderUseCase, ArchiveOrderUseCase,
   GetOrderDetailsUseCase, ObserveOrdersUseCase, UpdateOrderStatusUseCase.
 - `feature/orders/`, `feature/orderdetail/`, `feature/addedit/` — ViewModels exposing immutable
@@ -136,8 +164,11 @@ Targets (create under `app/src/main/java/com/ordra/`):
 - Transactions for order+items writes; cascade rules defined for permanent delete (no orphans);
   archive preferred for UX.
 
-Acceptance: create/edit/archive/restore/delete round-trip through Room; search/filter/sort
-deterministic; validation errors mapped to user-safe messages; test-matrix rows 1–5 executed.
+Acceptance: create/edit/archive/restore/delete round-trip through Room; shipments +
+tracking events persist with order relations (Order 1→N Shipment 1→N TrackingEvent);
+manual shipment-status update writes a `source = MANUAL` event; search/filter/sort
+deterministic (incl. tracking number); validation errors mapped to user-safe messages;
+test-matrix rows 1–5 + Shipment/Tracking rows executed.
 
 ## I2 — Dashboard, COD & analytics
 
@@ -164,7 +195,8 @@ Targets:
 - `data/db` reminders table + DAO; `domain` Reminder model; `ReminderRepository`.
 - `domain/usecase/ScheduleDeliveryReminderUseCase` (+ cancel/reschedule on status/ETA change).
 - `data/work/` — reminder Worker; boot/time-change rescheduling per platform behavior; stable
-  notification channels (delivery reminders; optional marketplace assistance later).
+  notification channels (delivery reminders; parcel-status updates + optional marketplace
+  assistance later).
 - Settings/defaults storage (DataStore) for reminder preferences.
 
 Acceptance: schedule → worker → notification intent/data verified; reminders reproducible from
@@ -201,19 +233,30 @@ Targets:
 Acceptance: Groq path adds value when available and disappears gracefully when not; no secret in
 source/tests/logs; test-matrix Groq rows executed.
 
-## I6 — Marketplace assistance
+## I6 — Smart Parcel Status assistance
 
-**Objective:** share-to-Ordra + optional NotificationListenerService → normalized suggestions.
+**Objective:** share-to-Ordra + optional NotificationListenerService → normalized,
+confidence-gated shipment status updates per `docs/contracts/TRACKING_CONTRACT.md`.
 
 Targets:
-- Share-intent receivers routing into Smart Import flow.
-- `data/notification/` — source-package filter, per-source adapters/parsers, matcher producing
-  `NotificationSuggestion` with confidence + explanation.
-- Confirmation flow → use case → repository; `TrackingEvent.source` recorded; no silent overwrite
-  of trusted fields on weak matches; unrelated notification content never stored.
+- Share-intent receivers routing into Smart Import flow / shipment detection.
+- `data/notification/` — source-package filter, per-source adapters/parsers extracting
+  tracking number, order reference, courier, raw status text, order hints.
+- `StatusNormalizer` — raw platform wording → canonical `ShipmentStatus` (single
+  dedicated layer; no scattered string matching).
+- Matching engine producing `TrackingSuggestion` with confidence + matched signals;
+  exact tracking-number match = strong confidence; never silently fuzzy-match
+  unrelated shipments.
+- Confidence gates: HIGH auto-applies only if user-enabled; MEDIUM shows
+  Confirm/Ignore; LOW suggests only. Confirmation flow → use case →
+  `ShipmentRepository` → `TrackingEvent` with source + confidence recorded.
+- Local status-change notification (dedupe per event); unrelated notification
+  content never stored.
+- "Track Externally" opens the official courier page only — never scraped.
 
-Acceptance: assistance fully optional; weak matches require confirmation; test-matrix
-Notification-assist row executed.
+Acceptance: assistance fully optional (revoke access → app unaffected); weak matches
+require confirmation; invalid transitions rejected/confirmed; test-matrix
+Notification-assist + Tracking rows executed.
 
 ## I7 — Advanced records
 
@@ -236,8 +279,9 @@ Warranty rows executed.
 
 Targets:
 - `data/backup/` + `BackupRepository`: manifest {schemaVersion, appVersion, exportedAt, payload
-  version} + full relational payload; ZIP incl. attachments if implemented; CSV export separate
-  (human-readable, not full-fidelity).
+  version} + full relational payload — orders, items, shipments, tracking events (with source,
+  confidence, timestamps) preserving Order → Shipment → TrackingEvent integrity; ZIP incl.
+  attachments if implemented; CSV export separate (human-readable, not full-fidelity).
 - Restore pipeline: select → validate type → parse manifest → version check → preview summary →
   explicit conflict strategy (replace-all / merge-by-stable-ID / import-as-new) → transactional
   restore → integrity verification → result.
@@ -281,10 +325,21 @@ Every phase must execute its matrix rows at the cheapest useful layer + critical
 create/edit/archive/delete, search/filter/sort, COD math, reminder scheduling, OCR→draft,
 Groq DTO/malformed/offline, review-wins-over-AI, notification confirm, analytics rules,
 returns/warranty, backup round-trip + rollback, schema migration preserving data, navigation
-IDs/back, dark/light rendering. No PASS claimed without executed evidence.
+IDs/back, dark/light rendering. Tracking scope additionally: shipment creation, multiple
+shipments per order, tracking-number matching (exact/ambiguous), status normalization,
+notification parser, OCR status extraction, manual update, event/timeline ordering, duplicate
+event prevention, confidence gates (auto-apply/confirm/reject), invalid transition, offline,
+Track Externally, backup/restore of shipments, migration, local status-change notification —
+checklist in `docs/qa/TRACKING_QA.md`. No PASS claimed without executed evidence.
 
 ## Known conflicts & open decisions
 
+- **Resolved (Smart Parcel Status update):** `Order.courier`/`Order.trackingNumber` and
+  `OrderStatus.OUT_FOR_DELIVERY` from the pre-tracking schema are superseded — courier/tracking
+  live on `Shipment`, parcel states on `ShipmentStatus`, `tracking_events.shipment_id`
+  references the shipment. Existing DB v1 data migrates: each order's courier/tracking fields
+  move into a default shipment row via an explicit versioned Migration (no destructive reset).
+  Early code carrying the old fields stays valid until the shipments migration phase.
 - `docs/specs/DATA_MODEL.md` vs `docs/contracts/DOMAIN_MODELS.md`: contract names win
   (`totalAmountMinor`, canonical enums). Align specs doc wording during I0 if it diverges.
 - `docs/specs/DATA_MODEL.md` allows N↔N Category "or simplify to one" — pick per

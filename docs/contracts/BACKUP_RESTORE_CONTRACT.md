@@ -8,7 +8,13 @@ Local-only backup package should contain a manifest with:
 - data payload version
 - records necessary to reconstruct relationships
 
-Attachments may be included in a ZIP backup if implemented; references must remain valid after restore.
+The payload must include `shipments` and `tracking_events` alongside orders/items —
+with status source, status confidence and all timestamps — so that
+Order → Shipment → TrackingEvent relationship integrity is preserved on restore.
+
+Attachments may be included in a ZIP backup if implemented; references (including
+`rawReference` pointers on tracking events) must remain valid after restore or be
+re-linked/dropped with a documented rule.
 
 ## Restore
 Restore flow:

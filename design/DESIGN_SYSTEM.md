@@ -9,7 +9,7 @@ Dark: background #101116, surface #18191F, surfaceVariant #212229, primary #8588
 Semantic: success #35D0A0, warning #FFB547, error #F05252.
 
 ## Status mapping
-Ordered=Indigo; Processing=Violet; Packed=Blue; Shipped=Cyan; OutForDelivery=Amber; Delivered=Mint; Cancelled=Red; Returned=Orange; Refunded=Teal. Use status color on chip/icon/accent, not whole card.
+Order: Ordered=Indigo; Processing=Violet; Packed=Blue; Shipped=Cyan; Delivered=Mint; Cancelled=Red; Returned=Orange; Refunded=Teal. Shipment (parcel movement per TRACKING_CONTRACT): Preparing/PickedUp=Violet; InTransit=Cyan; ArrivedAtHub=Blue; OutForDelivery=Amber; Delivered=Mint; DeliveryFailed/Returning=warm; Returned=Orange; Unknown=neutral. Use status color on chip/icon/accent, not whole card.
 
 ## Shape & spacing
 Use Material 3 shapes with consistent small/medium/large tokens. Base spacing grid 4dp; common gaps 8/12/16/24/32dp. Touch targets >=48dp.

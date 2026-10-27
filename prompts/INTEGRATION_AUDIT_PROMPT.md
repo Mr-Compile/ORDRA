@@ -16,6 +16,7 @@ Verify:
 - optional Groq behavior and offline fallback
 - no committed/hardcoded real Groq key
 - notification assistance is optional and confirmation-safe
+- tracking contract: shipments as first-class model, tracking_events.shipment_id, source+confidence on every detected status, confidence gates (auto-apply/confirm/suggest-only), StatusNormalizer single layer, no courier API/third-party tracker/scraping, no "live"/"real-time" labeling
 - local analytics rules
 - returns/refunds/warranty/receipts relationships
 - backup/restore round trip and versioning

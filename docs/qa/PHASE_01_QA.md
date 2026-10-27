@@ -12,7 +12,9 @@ Mark each item PASS / FAIL / BLOCKED with evidence.
 - [ ] Create an order with multiple items.
 - [ ] Edit order and verify persistence.
 - [ ] Archive and restore order.
-- [ ] Delete flow requires appropriate confirmation.
+- [ ] Create a shipment on an order and update its status manually (source = MANUAL event).
+- [ ] Multiple shipments per order persist correctly.
+- [ ] Delete flow requires appropriate confirmation (cascades items, shipments, events).
 - [ ] Restart app and verify data remains.
 - [ ] Money totals are correct and do not use unsafe floating-point persistence.
 

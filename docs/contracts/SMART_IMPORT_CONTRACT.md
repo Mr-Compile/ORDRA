@@ -1,7 +1,7 @@
 # Smart Import Contract
 
 ## Goal
-Convert an order screenshot into a reviewable OrderDraft without making AI the source of truth.
+Convert an order screenshot into a reviewable OrderDraft without making AI the source of truth. Screenshot scanning also detects shipment data — courier, tracking number, shipment status text, tracking events and delivery estimates — which flow through the StatusNormalizer and shipment-matching pipeline in `docs/contracts/TRACKING_CONTRACT.md` before suggesting a shipment update.
 
 ## Pipeline
 Image URI
@@ -9,18 +9,22 @@ Image URI
 -> ML Kit OCR
 -> normalized OCR text
 -> platform detection
--> deterministic/local parsing
+-> deterministic/local parsing (order fields + courier/tracking/status/events)
 -> optional Groq interpretation
 -> field-level merge
 -> validation/confidence
 -> Review UI
 -> user corrections
 -> ConfirmSmartImportUseCase
--> OrderRepository
+-> OrderRepository (+ shipment fields routed to ShipmentRepository)
 -> Room
 
+When a screenshot belongs to an already-saved shipment (e.g. a marketplace tracking
+page), parsing may instead produce a `TrackingSuggestion` -> normalized ShipmentStatus
+-> match -> review -> TrackingEvent, never a silent overwrite.
+
 ## Network policy
-Groq is optional and the only planned online dependency. No Groq availability means local OCR/manual review remains usable.
+Groq is optional and the only planned online service. No Groq availability means local OCR/manual review remains usable. Courier/third-party tracking APIs are never used for shipment status.
 
 ## Merge precedence
 User-confirmed values > deterministic high-confidence local values > Groq suggestions > weak OCR guesses.

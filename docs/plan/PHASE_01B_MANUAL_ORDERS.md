@@ -4,7 +4,8 @@
 Make Ordra useful offline without AI.
 
 ## Implement
-- Add Order flow with platform, seller, one or multiple items, quantity/variant, item price, shipping, discounts, total, payment/COD, courier, tracking number, order date, ETA range, notes and image URI.
+- Add Order flow with platform, seller, one or multiple items, quantity/variant, item price, shipping, discounts, total, payment/COD, order date, ETA range, notes and image URI.
+- Shipment management per order: one or more shipments with courier (enum + custom name), tracking number, manual shipment status, and TrackingEvent timeline. Manual updates create events with `source = MANUAL`.
 - Require only the minimum practical fields: order/product label, platform and total. Other fields remain optional unless logically required.
 - Review-before-save screen.
 - Edit, archive, restore and deliberate permanent-delete flow.
@@ -15,6 +16,8 @@ Make Ordra useful offline without AI.
 ## Exit criteria
 [ ] Create/edit/archive/restore survive app restart.
 [ ] Multi-item totals are correct.
+[ ] Orders can carry multiple shipments; each shipment has its own status + timeline.
+[ ] Manual shipment status updates create TrackingEvents and survive restart.
 [ ] Invalid/blank inputs cannot corrupt persistence.
 [ ] Back navigation preserves or warns about drafts.
 [ ] No technical exception text reaches users.

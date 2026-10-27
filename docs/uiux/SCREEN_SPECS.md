@@ -16,7 +16,10 @@ Search at top. Filter chips for status/platform/payment. Sort action. Scrollable
 Progressive sections: Platform; Order Items; Pricing; Payment; Delivery; Attachments; Notes. Minimum required input: recognizable order/product name, platform, total (unless draft behavior is explicitly enabled). Sticky Save/Review action where appropriate. Preserve entered data across navigation/config changes.
 
 ## Order Detail
-Hero: title/platform/status/total. Sections: ETA + courier/tracking, items/pricing breakdown, payment/COD, timeline/status, notes, attachments/receipt, warranty, return/refund. Actions: Edit, status update, archive; destructive delete behind confirmation.
+Hero: title/platform/status/total. Sections: ETA, **Shipment** (per parcel: courier, tracking number, shipment status, detected-at + source attribution, actions View Timeline / Update Status / Track Externally), items/pricing breakdown, payment/COD, notes, attachments/receipt, warranty, return/refund. Actions: Edit, status update, archive; destructive delete behind confirmation.
+
+## Shipment Timeline
+Ordered TrackingEvents: status title, occurred/detected time, source attribution (e.g. "Shopee notification", "Screenshot scan", "Manual"). Manual Update Status entry point. Empty state explains statuses appear as updates are detected or added.
 
 ## Search / Filters
 Search product, seller, tracking, platform, notes. Filters: platform, status, payment/COD, date, category. Sort: newest, oldest, delivery soonest, highest/lowest price. Show active filter count and clear-all.
@@ -39,8 +42,8 @@ Show actual stages: Preparing image -> Reading text -> Interpreting (online only
 ## Smart Import Review
 Editable detected fields with confidence emphasis. Highlight uncertain/missing values, not every field. Show source platform guess separately if uncertain. Save uses same OrderDraft validation as manual entry.
 
-## Notification Assistance
-Permission explainer first. Detected marketplace update cards show source, matched order, proposed change, confidence/reason, Confirm/Ignore. Never present uncertain match as fact.
+## Smart Parcel Status (Notification Assistance)
+Permission explainer first — why notification access helps, privacy note, continue/not-now — before linking to Android settings. Detected marketplace update cards show source, matched order/shipment, proposed ShipmentStatus, confidence/reason, Confirm/Ignore. Never present an uncertain match as fact, and never label status "live" or "real-time" — show detection source and freshness instead. Manual update path always available.
 
 ## Insights
 Local-only analytics: monthly/weekly spend, platform/category breakdown, order count, average order value, pending/delivered value, outstanding COD. Empty state explains insights appear after orders exist.
@@ -61,7 +64,7 @@ Local attachment management. Preview metadata, add/remove, privacy note. Do not 
 Separate cards for Create Backup, Restore Backup, Export CSV/compatible data. Before restore, preview backup metadata and warn about replacement/merge behavior according to data contract. Success/failure feedback must be explicit.
 
 ## Settings
-Appearance, currency, default platform/payment, reminders, Smart Import/Groq configuration, notification assistance, backup/export, privacy, About. No account/cloud-sync sections.
+Appearance, currency, default platform/payment, reminders, Smart Import/Groq configuration, Smart Parcel Status (marketplace notification detection, automatic high-confidence updates, status-change notifications, per-marketplace toggles), backup/export, privacy, About. No account/cloud-sync sections.
 
 ## About
 Ordra name, tagline, version, local-first description, privacy summary, licenses, project information.

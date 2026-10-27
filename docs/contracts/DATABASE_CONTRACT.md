@@ -4,9 +4,10 @@
 At minimum:
 - orders
 - order_items
+- shipments
+- tracking_events
 - categories
 - order_categories
-- tracking_events
 - reminders
 - receipts
 - warranties
@@ -17,13 +18,31 @@ Add tables only when a real feature requires them.
 
 ## Relationships
 - Order 1 -> many OrderItem
+- Order 1 -> many Shipment
+- Shipment 1 -> many TrackingEvent
 - Order many <-> many Category through order_categories
-- Order 1 -> many TrackingEvent
 - Order 1 -> many Reminder
 - Order 1 -> many Receipt
 - Order 1 -> zero/many Warranty records as defined by implementation
 - Order 1 -> zero/many ReturnRecord
 - Order 1 -> zero/many RefundRecord
+
+`tracking_events.shipment_id` is required — events belong to a parcel, not the order
+directly. `shipments.order_id` is required and indexed. Multiple shipments per order
+must be supported by schema even where UI commonly creates one.
+
+## Shipments & tracking schema notes
+- `shipments`: id, order_id (FK), courier?, custom_courier_name?, tracking_number?,
+  shipment_status, status_source, status_confidence, last_status_at?,
+  last_detected_at?, created_at, updated_at. Index order_id and tracking_number.
+- `tracking_events`: id, shipment_id (FK), shipment_status, title, description?,
+  occurred_at, detected_at, source, confidence, raw_reference?. Index shipment_id and
+  occurred_at for timeline ordering.
+- Timeline queries order by occurred_at; dedupe detections so the same detected
+  transition cannot create duplicate events.
+- Courier/tracking columns that existed on `orders` in early schemas migrate into a
+  default shipment row per affected order via an explicit versioned Migration —
+  no destructive reset, no data loss.
 
 ## DAO rules
 DAOs expose persistence primitives and observable queries. They do not contain UI formatting or Groq/OCR logic.
@@ -36,7 +55,11 @@ Useful query families:
 - observeUpcomingDeliveries()
 - observeOutstandingCod()
 - observeSpendingRange()
-- transactionally load an order with related records
+- observeShipments(orderId)
+- observeShipment(shipmentId)
+- observeTrackingTimeline(shipmentId)
+- findShipmentByTrackingNumber(trackingNumber)
+- transactionally load an order with related records (items, shipments, events)
 
 ## Transactions
 Saving an order with items, restoring a backup, and other multi-table atomic operations must use Room transactions.
@@ -51,4 +74,4 @@ Saving an order with items, restoring a backup, and other multi-table atomic ope
 Room entities stay in data layer. Map Entity <-> Domain explicitly. Do not leak Room annotations/entities into UI/domain.
 
 ## Deletion
-Prefer archive for normal UX. Permanent deletion must define cascade behavior for items, events, reminders, receipts metadata, warranties, returns, and refunds without leaving orphan rows.
+Prefer archive for normal UX. Permanent deletion must define cascade behavior for items, shipments, tracking events, reminders, receipts metadata, warranties, returns, and refunds without leaving orphan rows. Deleting a shipment cascades its tracking events.

@@ -4,7 +4,7 @@
 Audit current code/docs against this pack. Resolve naming/schema conflicts before feature expansion.
 
 ## I1 — Core vertical slice
-Wire Orders list, Add/Edit, Order Details through ViewModel/use cases/repository/Room. Verify CRUD, archive/restore, search/filter/sort.
+Wire Orders list, Add/Edit, Order Details through ViewModel/use cases/repository/Room, including shipments + tracking events (Order 1→N Shipment 1→N TrackingEvent) and manual shipment status. Verify CRUD, archive/restore, search/filter/sort.
 
 ## I2 — Dashboard/COD/analytics
 Connect Room aggregate queries/use cases to Home and Insights.
@@ -18,8 +18,8 @@ Connect image picker -> ML Kit -> local parser -> OrderDraft -> review -> save.
 ## I5 — Groq enhancement
 Add optional Groq interpretation with DTO validation, field confidence, offline fallback, and secret hygiene.
 
-## I6 — Marketplace assistance
-Connect Android share intents and optional NotificationListenerService to normalized suggestions and user-confirmed updates.
+## I6 — Smart Parcel Status assistance
+Connect Android share intents and optional NotificationListenerService to the tracking pipeline (TRACKING_CONTRACT): platform parsers → StatusNormalizer → shipment matching → confidence-gated TrackingSuggestion → confirm/apply → TrackingEvent + local notification.
 
 ## I7 — Advanced records
 Integrate receipts, returns/refunds, warranties, and their reminders.

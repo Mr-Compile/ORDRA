@@ -7,7 +7,8 @@
 - Database migration tests across released schema versions.
 - Performance profiling for startup, large lists, image/OCR flows.
 - Accessibility audit.
-- Privacy policy/data-safety inventory based on actual behavior.
+- Privacy policy/data-safety inventory based on actual behavior (incl. notification-listener data handling: parsed fields only, no raw notification storage).
+- Tracking audit per `docs/qa/TRACKING_QA.md`: no courier API/scraping dependency, confidence gates enforced, manual fallback verified.
 - Crash handling/telemetry decision with privacy review.
 - Signed release/AAB pipeline and versioning policy.
 - Groq key architecture decision resolved for the release channel: personal-only build keeps local-config keys; any public distribution requires the API-key reassessment defined in PHASE_04 and PRIVACY_SECURITY before release.

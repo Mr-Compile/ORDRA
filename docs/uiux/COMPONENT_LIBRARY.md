@@ -7,7 +7,12 @@ Canonical reusable Compose components:
 - PrimaryButton / SecondaryButton / TextButton / DestructiveButton.
 - OrderCard: image, title, platform, total/payment, ETA, status chip; compact and regular variants.
 - UpcomingParcelCard: prioritizes ETA and COD.
-- StatusChip: semantic status only.
+- StatusChip: semantic status only. ShipmentStatusChip for parcel status (distinct mapping).
+- ShipmentCard: courier, tracking number, shipment status, detected-at + source attribution.
+- ShipmentTimelineItem: event status, occurred/detected time, source label; for Shipment Timeline.
+- TrackingSuggestionCard: matched order/shipment, proposed status, confidence, Confirm/Ignore.
+- CourierBadge: courier label without copying courier visual identity.
+- TrackExternallyAction: opens the courier's official tracking page; never scrapes.
 - PlatformBadge: platform label/icon without copying marketplace visual identity.
 - CodChip / PaidChip / PaymentStatusChip.
 - MoneyText: locale/currency-safe price display.
@@ -24,7 +29,7 @@ Canonical reusable Compose components:
 - PermissionExplainer: reason, privacy note, continue/not-now.
 - ConfirmationDialog for destructive operations.
 - Snackbar for reversible/non-critical feedback.
-- TimelineItem for order status/history.
+- TimelineItem for order status/history (shipment timelines use ShipmentTimelineItem).
 - InsightCard for local analytics.
 
 Rules: components must support light/dark theme, large font sizes, loading/disabled/error states, and Compose previews where practical.

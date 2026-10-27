@@ -4,8 +4,8 @@
 1. Android only. Do not introduce Flutter, React Native, iOS, Electron, or desktop targets unless the owner explicitly changes scope.
 2. Kotlin + Jetpack Compose is the approved client stack.
 3. Room is the local source of truth for order data.
-4. The app must remain useful offline. Core order management, reminders, analytics, backup/restore, and basic screenshot OCR must work without internet.
-5. Never model the database around one marketplace. Use a universal Order/OrderItem model.
+4. The app must remain useful offline. Core order management, shipments, reminders, analytics, backup/restore, and basic screenshot OCR must work without internet.
+5. Never model the database around one marketplace. Use the universal Order / OrderItem / Shipment / TrackingEvent model.
 6. AI/OCR output is a draft/suggestion until validated and confirmed.
 7. Never hardcode production API keys, secrets, tokens, passwords, or credentials.
 8. Never commit `.env`, local secret files, signing keys, or credentials. Groq credentials live only in local git-ignored config (see `secrets.example.properties`).
@@ -14,7 +14,10 @@
 11. No backend. Do not add Ktor/Node/Express/Laravel/Django/FastAPI/Supabase/Firebase/REST/GraphQL servers. The app talks to Groq directly, and only for optional Smart Import.
 12. No account system. No login, registration, passwords, OAuth, social sign-in, remote profiles, user roles, or admin accounts. Ordra has one local owner: the person using the device.
 13. No cloud database or cloud sync. No Firestore/Realtime DB/Supabase/MongoDB Atlas/remote SQL. Backup is local export/import (JSON/ZIP/CSV) only.
-14. Groq is the only planned online dependency and only for Smart Import interpretation. It must degrade gracefully when unavailable; Smart Import falls back to OCR + manual review.
+14. Ordra is offline-first. All core order, shipment, reminder, analytics, backup, OCR, and manual tracking functionality must work locally. Groq is the only planned online service used directly by Ordra v1, for optional Smart Import enhancement only; it degrades to OCR + manual review. Courier tracking APIs and third-party tracking services are NOT used in Ordra v1. External official courier tracking pages may be opened by the user but are never scraped or treated as internal data sources.
+15. No courier/tracking data integrations in v1: no AfterShip, 17TRACK, EasyPost, Shippo, Parcel Monitor, unofficial courier APIs, reverse-engineered marketplace APIs, scraped courier pages, or browser automation against courier sites.
+16. A tracking number is an identifier and matching signal, never a live status source. Every shipment status carries a TrackingStatusSource and confidence; manual status updates must always be possible.
+17. Never present Ordra tracking as "live" or "real-time" courier tracking. Use Smart Parcel Status / Shipment Timeline wording and show detection source and freshness.
 
 ## Engineering rules
 - Prefer simple, testable code over premature abstraction.

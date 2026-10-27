@@ -15,6 +15,7 @@ Hard rules:
 - Core UI must work offline.
 - Groq-specific UI must have offline/failure fallback.
 - Do not silently accept uncertain AI/OCR/notification-derived changes.
+- Never label tracking "live"/"real-time"; show detection source + freshness. Confidence gates decide auto-apply vs confirm vs suggest-only.
 - Preserve predictable Android back behavior.
 - Support light/dark themes and accessibility.
 - Avoid placeholder screens presented as complete.

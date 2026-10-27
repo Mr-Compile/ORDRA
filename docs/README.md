@@ -34,7 +34,8 @@ repo root. Start with `docs/START_HERE_PROMPT.md`.
 ## docs/qa/ — gates, matrices, audits
 
 `docs/qa/MASTER_QA_CHECKLIST.md`, `docs/qa/PHASE_01_QA.md`, `docs/qa/RELEASE_QA.md`,
-`docs/qa/CODEBASE_AUDIT.md`, `docs/qa/SMART_IMPORT_QA.md`, `docs/qa/FRONTEND_QA.md`,
+`docs/qa/CODEBASE_AUDIT.md`, `docs/qa/SMART_IMPORT_QA.md`, `docs/qa/TRACKING_QA.md`,
+`docs/qa/FRONTEND_QA.md`,
 `docs/qa/SCREEN_ACCEPTANCE.md`, `docs/qa/UI_UX_QA.md`, `docs/qa/SCREEN_COVERAGE_MATRIX.md`,
 `docs/qa/INTEGRATION_TEST_MATRIX.md`.
 
@@ -57,6 +58,7 @@ Execution: `docs/plan/MEGAPLAN_UIUX.md`.
 Canonical wiring contracts (Compose → ViewModel → UseCase → Repository → Room/services).
 Read in the order listed in `docs/contracts/README.md`: `docs/contracts/CONTRACT_BIBLE.md`,
 `docs/contracts/DOMAIN_MODELS.md`, `docs/contracts/DATABASE_CONTRACT.md`,
+`docs/contracts/TRACKING_CONTRACT.md` (Smart Parcel Status — no-API tracking architecture),
 `docs/contracts/REPOSITORY_USECASE_CONTRACT.md`, `docs/contracts/UI_STATE_EVENT_CONTRACT.md`,
 `docs/contracts/SMART_IMPORT_CONTRACT.md`, `docs/contracts/REMINDERS_NOTIFICATION_CONTRACT.md`,
 `docs/contracts/ANALYTICS_CONTRACT.md`, `docs/contracts/BACKUP_RESTORE_CONTRACT.md`,

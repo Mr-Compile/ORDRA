@@ -10,7 +10,8 @@ Prevent drift between Compose UI, ViewModels, domain/use cases, repositories, Ro
 - Room/SQLite is the source of truth.
 - Core features work offline.
 - No accounts, cloud database, cloud sync, or custom backend.
-- Groq is the only planned online dependency and is optional.
+- Groq is the only planned online service and is optional.
+- No courier APIs, third-party tracking APIs, or scraped tracking pages — tracking is local Smart Parcel Status.
 - ML Kit OCR is local.
 - Never commit a real Groq API key.
 - UI never talks directly to Room, Retrofit, WorkManager, or NotificationListenerService.
@@ -27,13 +28,15 @@ Read the files in this order:
 1. docs/contracts/CONTRACT_BIBLE.md
 2. docs/contracts/DOMAIN_MODELS.md
 3. docs/contracts/DATABASE_CONTRACT.md
-4. docs/contracts/REPOSITORY_USECASE_CONTRACT.md
-5. docs/contracts/UI_STATE_EVENT_CONTRACT.md
-6. docs/contracts/SMART_IMPORT_CONTRACT.md
-7. docs/contracts/REMINDERS_NOTIFICATION_CONTRACT.md
-8. docs/contracts/ANALYTICS_CONTRACT.md
-9. docs/contracts/BACKUP_RESTORE_CONTRACT.md
-10. docs/contracts/ERROR_VALIDATION_CONTRACT.md
-11. docs/qa/INTEGRATION_TEST_MATRIX.md
-12. docs/plan/INTEGRATION_PHASES.md
-13. prompts/START_INTEGRATION_PROMPT.md
+4. docs/contracts/TRACKING_CONTRACT.md
+5. docs/contracts/REPOSITORY_USECASE_CONTRACT.md
+6. docs/contracts/UI_STATE_EVENT_CONTRACT.md
+7. docs/contracts/SMART_IMPORT_CONTRACT.md
+8. docs/contracts/REMINDERS_NOTIFICATION_CONTRACT.md
+9. docs/contracts/ANALYTICS_CONTRACT.md
+10. docs/contracts/BACKUP_RESTORE_CONTRACT.md
+11. docs/contracts/ERROR_VALIDATION_CONTRACT.md
+12. docs/qa/INTEGRATION_TEST_MATRIX.md
+13. docs/qa/TRACKING_QA.md
+14. docs/plan/INTEGRATION_PHASES.md
+15. prompts/START_INTEGRATION_PROMPT.md

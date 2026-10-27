@@ -2,7 +2,7 @@
 
 **Ordra** is an Android-only, local-only, offline-first universal order and parcel manager. Brand line: **All your orders. One place.**
 
-Architecture position: no backend, no accounts, no cloud database, no cloud sync. Room is the source of truth. The only online dependency is the optional Groq API for Smart Import, called directly from the app with a local git-ignored key, and it always degrades to offline OCR + manual review.
+Architecture position: no backend, no accounts, no cloud database, no cloud sync. Room is the source of truth. The only planned online service is the optional Groq API for Smart Import, called directly from the app with a local git-ignored key, and it always degrades to offline OCR + manual review. Parcel tracking is local-first **Smart Parcel Status**: orders own shipments, shipments own tracking-event timelines, and status awareness comes from supported marketplace notifications, on-device OCR, shared content and manual updates — never courier APIs, third-party trackers, or scraped tracking pages. See `docs/contracts/TRACKING_CONTRACT.md`.
 
 This pack is the start-to-finish planning source for the project. Begin with `docs/START_HERE_PROMPT.md`, then follow `docs/plan/MASTER_PLAN.md` and `docs/MEGAPLAN.md`. The coding agent must read `docs/BIBLE.md`, `docs/RULES.md`, `AGENTS.md`, `docs/TECH_STACK.md`, and `docs/BRANDING.md` before implementation.
 

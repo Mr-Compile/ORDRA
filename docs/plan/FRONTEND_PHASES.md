@@ -4,7 +4,7 @@
 Theme tokens, typography, shapes, icons, reusable components, navigation shell, state conventions.
 
 ## F1 Core offline UI
-Splash/onboarding, Home, Orders, Add/Edit, Order Detail, archive/delete/restore, empty/error/loading states.
+Splash/onboarding, Home, Orders, Add/Edit, Order Detail with shipment section (courier, tracking, status, timeline entry), archive/delete/restore, empty/error/loading states.
 
 ## F2 Discovery & organization
 Search, filters, sort, categories/tags, history, COD summary.
@@ -15,8 +15,8 @@ Calendar, reminder settings, notification permission UX, delivery/COD reminder s
 ## F4 Smart Import
 Scan landing, image picker, OCR progress/results, Groq state, offline fallback, confidence UI, duplicate warning, review/edit/save.
 
-## F5 Platform assistance
-Share-to-Ordra receiving UX, notification-access education, detected update suggestions, confirm/ignore.
+## F5 Smart Parcel Status assistance
+Share-to-Ordra receiving UX, notification-access education, shipment status suggestions with source + confidence, confirm/ignore, shipment timeline, Track Externally, status-change notifications.
 
 ## F6 Insights
 Spending dashboard, platform/category breakdown, monthly summaries, purchase history enhancements.

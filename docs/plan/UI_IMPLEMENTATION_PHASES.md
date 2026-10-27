@@ -21,8 +21,8 @@ Delivery calendar, day details, reminder configuration, notification permission 
 ## UI-6 Smart Import
 Image selection, processing, OCR/offline state, Groq state, confidence review, correction and save.
 
-## UI-7 Platform Assistance
-Share intent UX, notification access explanation, detected update review/confirm/ignore.
+## UI-7 Smart Parcel Status Assistance
+Share intent UX, notification access explanation, shipment status suggestions with source/confidence, review/confirm/ignore, shipment timeline, Track Externally, status notification settings.
 
 ## UI-8 Insights + Advanced Order Lifecycle
 Insights, returns/refunds, warranty, receipts and history.

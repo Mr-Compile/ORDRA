@@ -9,4 +9,4 @@
 - Establish patch/minor/major version policy and changelog.
 
 ## Post-launch backlog (OUT OF CURRENT SCOPE / FUTURE CONSIDERATION)
-Only after real usage and explicit owner approval: multi-device/cloud sync, richer courier integrations where legally/technically supported, improved parsers, widgets, and other enhancements justified by users. Before any public distribution, the Groq API-key architecture must be reassessed — secrets embedded in a distributed APK are not secure.
+Only after real usage and explicit owner approval: multi-device/cloud sync, official courier `TrackingProvider` integrations where legally/technically supported (extension point per TRACKING_CONTRACT — never scraped or unofficial APIs), improved parsers, widgets, and other enhancements justified by users. Before any public distribution, the Groq API-key architecture must be reassessed — secrets embedded in a distributed APK are not secure.

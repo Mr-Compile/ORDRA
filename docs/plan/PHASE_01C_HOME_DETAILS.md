@@ -7,7 +7,8 @@ Give users a clear daily view of their purchases.
 - Home summary: active orders, arriving soon, outstanding COD.
 - Upcoming and recent order sections.
 - Reusable OrderCard and status chips.
-- Order Detail as the canonical view for items, totals, payment, courier, tracking, ETA, notes and status.
+- Order Detail as the canonical view for items, totals, payment, ETA, notes, order status and a Shipment section (courier, tracking number, shipment status with detected-at + source, actions: View Timeline / Update Status / Track Externally).
+- Shipment Timeline screen showing ordered TrackingEvents with source attribution.
 - Quick status actions such as Mark Delivered with confirmation where destructive/irreversible.
 - Empty, loading and recoverable-error states.
 

@@ -34,7 +34,7 @@ Step-based or sectioned form:
 - Product image, name, variant, quantity.
 - Item price, shipping, discount/voucher, computed total with manual override rules.
 - Payment method/status and COD.
-- Courier/tracking.
+- Shipments: one or more parcels — courier/custom courier, tracking number, manual shipment status.
 - Order date, ETA start/end, delivered date.
 - Category/tags.
 - Notes.
@@ -45,12 +45,16 @@ Required minimum: name/order label, platform, total.
 - Hero summary and status chip.
 - Items and pricing breakdown.
 - Payment/COD.
-- Delivery ETA, courier, tracking.
-- Status timeline/events.
+- Delivery ETA.
+- Shipment section (one per parcel): courier, tracking number, shipment status chip, detected-at + source attribution. Actions: View Timeline, Update Status, Track Externally (official courier page, never scraped).
 - Notes/category/tags.
 - Attachments/receipt.
 - Actions: edit, change status, mark delivered, archive, restore, delete.
 - Return/refund/warranty entry points when relevant.
+
+## Shipment Timeline
+- Ordered tracking events: status, occurred/detected time, source attribution (Shopee notification / Screenshot scan / Manual).
+- Manual Update Status entry point.
 
 ## Search & Filter
 - Query suggestions/recent searches optional.
@@ -62,13 +66,13 @@ Required minimum: name/order label, platform, total.
 - Permission/photo picker state.
 - OCR processing.
 - Detected platform.
-- Extracted fields and confidence indicators.
+- Extracted fields and confidence indicators (order fields + courier/tracking/shipment status/events).
 - Groq smart-analysis state when online.
 - Offline fallback.
 - Error/retry.
 - Duplicate warning.
 - Review Import screen with editable fields.
-- Save as Order.
+- Save as Order (shipment detection on existing orders produces a reviewable suggestion).
 
 ## Calendar
 - Month/week/list modes as feasible.
@@ -113,13 +117,13 @@ Required minimum: name/order label, platform, total.
 - Export CSV/JSON where supported.
 - Explain local storage destination using Android picker.
 
-## Notification Assistance
-- Explain optional Notification Access.
-- Supported source status.
-- Detected update suggestions.
-- Match confidence.
-- Confirm/ignore update.
+## Smart Parcel Status (Notification Assistance)
+- Explain optional Notification Access before Android settings.
+- Supported marketplace source status (Shopee, Lazada, TikTok Shop…).
+- Detected shipment update suggestions with source, matched order/shipment, proposed status, confidence.
+- Confirm/ignore update; high-confidence auto-apply only when user-enabled.
 - Detection history where useful.
+- Manual status fallback always available.
 
 ## Settings
 - Theme: system/light/dark.
@@ -127,7 +131,7 @@ Required minimum: name/order label, platform, total.
 - Default platform/payment.
 - Reminder defaults.
 - Smart Import settings/Groq availability.
-- Notification assistance toggle/status.
+- Smart Parcel Status: marketplace notification detection, automatic high-confidence updates, status-change notifications.
 - Privacy/data controls.
 - Backup/export.
 - About.

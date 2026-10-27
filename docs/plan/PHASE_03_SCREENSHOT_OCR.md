@@ -10,7 +10,8 @@ Image Picker/Share → privacy-aware preprocessing → ML Kit Text Recognition �
 - Android Photo Picker for screenshots.
 - On-device OCR with ML Kit.
 - Platform hints for Shopee, TikTok Shop, Lazada and generic screenshots.
-- Extract candidate product names, quantities, amounts, seller, status, tracking and ETA when visible.
+- Extract candidate product names, quantities, amounts, seller, order status, courier, tracking number, shipment status text, tracking events and ETA when visible.
+- Route detected shipment data through the StatusNormalizer + shipment-matching pipeline (TRACKING_CONTRACT): a screenshot of an existing parcel's tracking page produces a TrackingSuggestion, not a silent update.
 - Field-level confidence and source text evidence internally.
 - Duplicate hints using tracking/order identifiers and fuzzy order metadata.
 - Multi-screenshot queue can be added only after single screenshot flow is stable.
@@ -20,5 +21,7 @@ Never silently save OCR output. Never assume OCR text is correct. Screenshot imp
 
 ## Exit criteria
 [ ] User can correct every detected field.
+[ ] Detected shipment status is normalized to ShipmentStatus and carries source + confidence.
 [ ] Failed OCR does not lose the screenshot/draft unexpectedly.
 [ ] No screenshot is uploaded unless an online feature explicitly requires it and the user is informed.
+[ ] All extraction works fully offline; Groq is optional enhancement only.

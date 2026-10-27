@@ -10,7 +10,7 @@ Help users prepare for expected deliveries without relying on marketplace APIs.
 - Daily optional summary of expected parcels and COD.
 - Delivery calendar/upcoming timeline.
 - Reschedule/cancel work when order dates/statuses change.
-- Notification channels and settings.
+- Notification channels and settings, including a parcel-status-update channel used by trusted shipment status changes (dedupe per TrackingEvent; see TRACKING_CONTRACT).
 - Handle reboot/timezone/date changes safely.
 
 ## Exit criteria

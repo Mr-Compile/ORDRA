@@ -24,7 +24,9 @@ UI and integration gates all pass.
 - No phase proceeds on a failed gate. No future-phase features early.
 - Architecture: Android-only, Kotlin + Compose M3, MVVM/Clean, Room source of truth,
   Hilt, DataStore, WorkManager, Nav Compose, Coil. Local-only: no backend/accounts/cloud.
-- Only online dependency: direct Groq API (Phase 4+), key in git-ignored `secrets.properties`.
+- Only online service: direct Groq API (Phase 4+), key in git-ignored `secrets.properties`.
+  Tracking is local-first Smart Parcel Status — no courier APIs, third-party trackers,
+  or scraped pages; shipments/events live in Room per `docs/contracts/TRACKING_CONTRACT.md`.
 - `mockup/` mirrors the live UI; update it with any UI change (drift = defect).
 
 ## Status key
@@ -34,14 +36,14 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 |---|---|---|---|---|
 | 0 | Product & branding foundation | F0 (partial) | DONE | Name, tagline, tokens, light/dark theme, adaptive icon, system splash, launcher branding |
 | 1A | Android foundation + persistence | F0 | DONE | Contract-aligned domain models, Room entities/DAO/db, repository + use cases, settings DS, nav shell, AppError model, 10 unit tests green, assembleDebug PASS |
-| 1B | Manual order management | F1 | PENDING | Add/edit multi-section form, review-before-save, archive/restore/delete |
-| 1C | Home & order details | F1 | PENDING | Home summary (active/arriving/COD), detail screen, status chips, mark-delivered |
+| 1B | Manual order + shipment management | F1 | PENDING | Add/edit multi-section form, shipments with courier/tracking/status, review-before-save, archive/restore/delete |
+| 1C | Home & order details | F1 | PENDING | Home summary (active/arriving/COD), detail screen w/ shipment section, status chips, mark-delivered, shipment timeline |
 | 1D | Search/filters/categories/COD | F2 | PENDING | Search items/seller/tracking/notes, filters+sort, categories, COD totals |
 | 1E | Settings, onboarding, polish, core QA | F2 | PENDING | Theme/currency/defaults, first-run onboarding, About, states polish, Phase-1 QA gate |
 | 2 | Reminders, calendar, notifications | F3 | PENDING | WorkManager scheduling, reminder types, daily summary, delivery calendar upgrades, channels |
-| 3 | Screenshot Smart Import (local) | F4 | PENDING | Photo picker, ML Kit OCR, deterministic parser, OrderDraft, confidence, review |
+| 3 | Screenshot Smart Import (local) | F4 | PENDING | Photo picker, ML Kit OCR, deterministic parser, OrderDraft + shipment detection, confidence, review |
 | 4 | Groq-assisted extraction | F4 | PENDING | Direct app→Groq (Retrofit/OkHttp/kotlinx), strict schema, graceful offline fallback |
-| 5 | Share-to-Ordra + notification assistance | F5 | PENDING | Share target, NotificationListenerService (optional), parsers, confirm suggestions |
+| 5 | Smart Parcel Status assistance | F5 | PENDING | Share target, NotificationListenerService (optional), parsers, StatusNormalizer, confidence-gated matching, confirm suggestions |
 | 6 | Spending analytics & history | F6 | PENDING | Monthly/weekly totals, platform/category breakdown, local-only |
 | 7 | Post-purchase tools | F7 | PENDING | Returns/refunds, warranties, receipts/attachments |
 | 8 | Backup, restore & export | F8 | PENDING | JSON/ZIP backup, CSV export, restore validation |

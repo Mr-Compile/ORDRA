@@ -8,9 +8,10 @@ Ordra should feel fast, calm, modern, trustworthy, and useful at a glance. It is
 2. Local-first confidence: offline is a normal state, not an error state.
 3. Progressive disclosure: show essential order information first; advanced fields remain available without overwhelming the user.
 4. Review before automation: OCR/Groq/notification-assisted changes must be reviewable when uncertain.
-5. Consistency: one status vocabulary, one component set, one spacing system, one navigation model.
-6. Accessible by default: readable contrast, scalable text, meaningful semantics, 48dp minimum touch targets.
-7. No marketplace imitation: Shopee/TikTok/Lazada may be identified by text/icon treatment, but Ordra keeps its own brand.
+5. Honest tracking: never label status "live" or "real-time" courier tracking — use Smart Parcel Status wording and show detection source + freshness (e.g. "Detected 8:42 AM · Shopee notification").
+6. Consistency: one status vocabulary, one component set, one spacing system, one navigation model.
+7. Accessible by default: readable contrast, scalable text, meaningful semantics, 48dp minimum touch targets.
+8. No marketplace imitation: Shopee/TikTok/Lazada may be identified by text/icon treatment, but Ordra keeps its own brand.
 
 ## Primary navigation
 Home, Orders, central Add/Scan action, Calendar, Insights. Settings is accessed from the top app bar/profile/settings action.

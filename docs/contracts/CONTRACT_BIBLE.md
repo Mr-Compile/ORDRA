@@ -33,5 +33,8 @@ Delete, restore, archive, backup restore, and overwrite operations require expli
 ## Smart systems
 OCR/Groq/notification parsing produce suggestions or drafts. They must not silently overwrite trusted user data when a match or extraction is uncertain.
 
+## Tracking
+Shipment tracking is local-first Smart Parcel Status (`docs/contracts/TRACKING_CONTRACT.md`). No courier/third-party tracking APIs, no scraping, no reverse-engineered endpoints. A tracking number is an identifier/matching signal only; every detected status carries a `TrackingStatusSource` and `DetectionConfidence`, and confidence decides auto-apply vs. confirm vs. suggest-only.
+
 ## Offline
 A network failure must never prevent reading or manually managing existing orders.
