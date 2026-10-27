@@ -189,4 +189,38 @@
     <string name="editor_add_category">Add</string>
     <string name="home_orders">All orders</string>
     <string name="home_cod">COD</string>
+    <string name="home_settings">Settings</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_defaults">Defaults</string>
+    <string name="settings_currency">Currency code</string>
+    <string name="settings_currency_hint">ISO 4217 — e.g. PHP, USD</string>
+    <string name="settings_default_platform">Default platform</string>
+    <string name="settings_default_payment">Default payment</string>
+    <string name="settings_none">None</string>
+    <string name="settings_app">App</string>
+    <string name="settings_about">About Ordra</string>
+    <string name="settings_privacy_note">Ordra is local-first: your orders stay on this device. Optional Groq analysis only reads screenshot text during Smart Import.</string>
+
+    <!-- Onboarding -->
+    <string name="onboard_skip">Skip</string>
+    <string name="onboard_next">Next</string>
+    <string name="onboard_start">Get started</string>
+    <string name="onboard_1_title">Every order, one place</string>
+    <string name="onboard_1_body">Save purchases from Shopee, TikTok Shop, Lazada and anywhere else — manually, no account needed.</string>
+    <string name="onboard_2_title">Know what to prepare</string>
+    <string name="onboard_2_body">Track statuses, ETAs and COD totals so cash is ready when the rider arrives.</string>
+    <string name="onboard_3_title">Local-first and private</string>
+    <string name="onboard_3_body">Your data stays on this device. Reminders and analytics work fully offline.</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_privacy">Ordra keeps orders, tracking numbers and receipts on your device. There is no account, no cloud sync, and no analytics collection. Smart Import can optionally use Groq to interpret screenshot text — nothing is sent without you asking.</string>
+    <string name="about_licenses">Built with Jetpack Compose, Room, Hilt, WorkManager, ML Kit and Coil. Open-source licenses apply to those libraries.</string>
 </resources>

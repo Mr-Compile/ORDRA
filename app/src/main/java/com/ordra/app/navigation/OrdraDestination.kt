@@ -12,6 +12,7 @@ object OrdraRoutes {
     const val ORDERS = "orders"
     const val COD = "cod"
     const val SETTINGS = "settings"
+    const val ABOUT = "about"
 
     const val ARG_ORDER_ID = "orderId"
     const val ARG_SHIPMENT_ID = "shipmentId"

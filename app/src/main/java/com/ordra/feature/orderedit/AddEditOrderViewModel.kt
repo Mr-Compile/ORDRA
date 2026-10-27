@@ -83,7 +83,8 @@ class AddEditOrderViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            val defaultCurrency = settingsRepository.settings.first().currencyCode
+            val defaults = settingsRepository.settings.first()
+            val defaultCurrency = defaults.currencyCode
             if (orderId != null) {
                 when (val result = getOrderDetails(orderId)) {
                     is AppResult.Success -> {
@@ -108,7 +109,12 @@ class AddEditOrderViewModel @Inject constructor(
             } else {
                 _uiState.update {
                     it.copy(
-                        form = it.form.copy(currencyCode = defaultCurrency),
+                        form = it.form.copy(
+                            currencyCode = defaultCurrency,
+                            platform = defaults.defaultPlatform,
+                            paymentMethod = defaults.defaultPaymentMethod
+                                ?: it.form.paymentMethod,
+                        ),
                         loaded = true,
                     )
                 }

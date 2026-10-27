@@ -39,7 +39,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | 1B | Manual order + shipment management | F1 | PENDING | Add/edit multi-section form, shipments with courier/tracking/status, review-before-save, archive/restore/delete |
 | 1C | Home & order details | F1 | DONE | Summary metrics + upcoming/recent, OrderCard+StatusChip, detail hero/shipment/items/payment, timeline screen, mark-delivered, track-external |
 | 1D | Search/filters/categories/COD | F2 | DONE | RawQuery search (title/seller/notes/items/tracking), platform/status/COD/category filters, 5 sorts, categories+junction (v3), COD overview (today/3d/all), 7 query tests |
-| 1E | Settings, onboarding, polish, core QA | F2 | PENDING | Theme/currency/defaults, first-run onboarding, About, states polish, Phase-1 QA gate |
+| 1E | Settings, onboarding, polish, core QA | F2 | DONE | Theme/currency/default platform+payment settings, 3-page onboarding gate, About w/ privacy+licenses, editor prefilled defaults |
 | 2 | Reminders, calendar, notifications | F3 | PENDING | WorkManager scheduling, reminder types, daily summary, delivery calendar upgrades, channels |
 | 3 | Screenshot Smart Import (local) | F4 | PENDING | Photo picker, ML Kit OCR, deterministic parser, OrderDraft + shipment detection, confidence, review |
 | 4 | Groq-assisted extraction | F4 | PENDING | Direct app→Groq (Retrofit/OkHttp/kotlinx), strict schema, graceful offline fallback |
@@ -68,7 +68,7 @@ spending, returns/warranty, backup, notification assistance.
 |---|---|---|
 | 0–1A | UI-0, UI-1 | I0, I1 |
 | 1B–1D | UI-2, UI-3, UI-4 | I1, I2 |
-| 1E | UI-9 (partial), UI-10 | I1 |
+| 1E | Settings, onboarding, polish, core QA | F2 | DONE | Theme/currency/default platform+payment settings, 3-page onboarding gate, About w/ privacy+licenses, editor prefilled defaults |
 | 2 | UI-5 | I3 |
 | 3–4 | UI-6 | I4, I5 |
 | 5 | UI-7 | I6 |

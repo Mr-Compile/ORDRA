@@ -11,6 +11,8 @@ import com.ordra.feature.detail.OrderDetailScreen
 import com.ordra.feature.home.HomeScreen
 import com.ordra.feature.orderedit.AddEditOrderScreen
 import com.ordra.feature.orders.OrdersScreen
+import com.ordra.feature.settings.AboutScreen
+import com.ordra.feature.settings.SettingsScreen
 import com.ordra.feature.timeline.ShipmentTimelineScreen
 
 @Composable
@@ -25,7 +27,17 @@ fun OrdraNavHost(navController: NavHostController) {
                 onOpenOrder = { id -> navController.navigate(OrdraRoutes.orderDetail(id)) },
                 onOpenOrders = { navController.navigate(OrdraRoutes.ORDERS) },
                 onOpenCod = { navController.navigate(OrdraRoutes.COD) },
+                onOpenSettings = { navController.navigate(OrdraRoutes.SETTINGS) },
             )
+        }
+        composable(OrdraRoutes.SETTINGS) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenAbout = { navController.navigate(OrdraRoutes.ABOUT) },
+            )
+        }
+        composable(OrdraRoutes.ABOUT) {
+            AboutScreen(onNavigateBack = { navController.popBackStack() })
         }
         composable(OrdraRoutes.ORDERS) {
             OrdersScreen(

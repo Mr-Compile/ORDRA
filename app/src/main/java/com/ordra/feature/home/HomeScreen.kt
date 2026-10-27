@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +61,7 @@ fun HomeScreen(
     onOpenOrder: (String) -> Unit,
     onOpenOrders: () -> Unit,
     onOpenCod: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -70,6 +72,7 @@ fun HomeScreen(
                 showingArchived = uiState.showingArchived,
                 onToggleArchived = viewModel::toggleArchived,
                 onOpenOrders = onOpenOrders,
+                onOpenSettings = onOpenSettings,
             )
         },
         floatingActionButton = {
@@ -106,6 +109,7 @@ private fun HomeTopBar(
     showingArchived: Boolean,
     onToggleArchived: () -> Unit,
     onOpenOrders: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -120,6 +124,12 @@ private fun HomeTopBar(
                 Icon(
                     Icons.Default.Search,
                     contentDescription = stringResource(R.string.home_orders),
+                )
+            }
+            IconButton(onClick = onOpenSettings) {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = stringResource(R.string.home_settings),
                 )
             }
             IconButton(onClick = onToggleArchived) {
