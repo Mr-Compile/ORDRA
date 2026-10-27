@@ -67,7 +67,7 @@ passes `docs/qa/FRONTEND_QA.md` and the applicable critical flows of
 | F6 | Insights | 6 | UI-8 | DONE | Spending analytics + monthly history (`a85a64b`) |
 | F7 | After-purchase | 7 | UI-8 | DONE | Returns/refunds/warranties/receipts + rating (`2883923`) |
 | F8 | Data portability | 8 | UI-9 | DONE | Versioned backup/restore + CSV via SAF (`2069037`) |
-| F9 | Polish | 9 | UI-10 | IN PROGRESS | Release hardening done (`0e154b9`); `prompts/FULL_FRONTEND_AUDIT.md` pass not yet run |
+| F9 | Polish | 9 | UI-10 | IN PROGRESS | Release hardening done (`0e154b9`) + code-level audit PASS; device pass pending owner |
 
 ## F0 — Design foundation
 

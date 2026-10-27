@@ -56,7 +56,7 @@ scope passes `docs/qa/UI_UX_QA.md` and `docs/qa/SCREEN_COVERAGE_MATRIX.md` is up
 | UI-7 | Smart Parcel Status assistance | Phase 5 | F5 | DONE | Listener opt-in, suggestion review + parcel pick (`2b0adf8`) |
 | UI-8 | Insights + advanced lifecycle | Phase 6/7 | F6/F7 | DONE | Analytics + post-purchase sections (`a85a64b`,`2883923`) |
 | UI-9 | Settings + backup + about | Phase 1E/8 | F2/F8 | DONE | Settings incl. backup/detections/AI toggles + About (`2069037`) |
-| UI-10 | Polish & regression | Phase 9 | F9 | PENDING | Full-screen regression pass not yet run |
+| UI-10 | Polish & regression | Phase 9 | F9 | IN PROGRESS | Code-level audit PASS (`docs/qa/POLISH_AUDIT_EVIDENCE.md`); device regression pass pending owner |
 
 ## Canonical navigation model (per `docs/uiux/NAVIGATION_UX.md`)
 
