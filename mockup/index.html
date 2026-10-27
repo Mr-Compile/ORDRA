@@ -36,6 +36,10 @@
     <button type="button" class="rail-link" data-goto="orders">Orders</button>
     <button type="button" class="rail-link" data-goto="detail">Order details</button>
     <button type="button" class="rail-link" data-goto="add">New order</button>
+    <button type="button" class="rail-link" data-goto="calendar">Delivery calendar</button>
+    <button type="button" class="rail-link" data-goto="detections">Detected updates</button>
+    <button type="button" class="rail-link" data-goto="import">Smart import</button>
+    <button type="button" class="rail-link" data-goto="analytics">Analytics</button>
     <button type="button" class="rail-link" data-goto="settings">Settings</button>
     <p class="rail-note">Everything inside the phone frame runs on the same data. Add, deliver, archive and delete orders to see the UI react.</p>
   </nav>
@@ -131,6 +135,36 @@
         </div>
       </section>
 
+      <!-- ============ DELIVERY CALENDAR ============ -->
+      <section class="screen" id="screen-calendar" data-screen="calendar">
+        <div class="scroll">
+          <div class="cal-head">
+            <button class="icon-btn" id="calPrev" type="button" aria-label="Previous month"><span class="mi">chevron_left</span></button>
+            <h3 id="calTitle"></h3>
+            <button class="icon-btn" id="calNext" type="button" aria-label="Next month"><span class="mi">chevron_right</span></button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="section-head" style="margin-top:14px"><h3 id="calDayTitle">Deliveries</h3></div>
+          <div id="calDayList" class="stack"></div>
+          <div class="scroll-pad"></div>
+        </div>
+      </section>
+
+      <!-- ============ DETECTED UPDATES ============ -->
+      <section class="screen" id="screen-detections" data-screen="detections">
+        <div class="scroll" id="detectionsBody"></div>
+      </section>
+
+      <!-- ============ SMART IMPORT ============ -->
+      <section class="screen" id="screen-import" data-screen="import">
+        <div class="scroll" id="importBody"></div>
+      </section>
+
+      <!-- ============ ANALYTICS ============ -->
+      <section class="screen" id="screen-analytics" data-screen="analytics">
+        <div class="scroll" id="analyticsBody"></div>
+      </section>
+
       <!-- ============ SETTINGS ============ -->
       <section class="screen" id="screen-settings" data-screen="settings">
         <div class="scroll">
@@ -158,10 +192,39 @@
 
           <div class="card">
             <h4 class="card-title">Notifications</h4>
-            <p class="card-sub">Delivery &amp; COD reminders — full scheduling arrives in Phase 2.</p>
+            <p class="card-sub">Delivery &amp; COD reminders via WorkManager — delivered/cancelled orders are skipped.</p>
             <label class="switch-row"><span><strong>Delivery reminders</strong><small>Day of, 1 and 2 days before ETA</small></span><input type="checkbox" class="switch" checked></label>
             <label class="switch-row"><span><strong>COD reminders</strong><small>Remind me to prepare exact cash</small></span><input type="checkbox" class="switch" checked></label>
             <label class="switch-row"><span><strong>Morning summary</strong><small>One digest for today's deliveries</small></span><input type="checkbox" class="switch"></label>
+          </div>
+
+          <div class="card">
+            <h4 class="card-title">Smart detection</h4>
+            <p class="card-sub">Optional — reads marketplace, courier and rider notifications on-device. Everything works without it.</p>
+            <button class="btn btn-outline" type="button" style="width:100%" onclick="toast('Opens system notification-access settings on device')"><span class="mi">notifications_paused</span>Notification access</button>
+            <label class="switch-row" style="margin-top:8px"><span><strong>Marketplace notifications</strong></span><input type="checkbox" class="switch" checked></label>
+            <label class="switch-row"><span><strong>Courier notifications</strong></span><input type="checkbox" class="switch" checked></label>
+            <label class="switch-row"><span><strong>Rider / messaging notifications</strong><small>Via notifications only — never inboxes</small></span><input type="checkbox" class="switch"></label>
+            <label class="switch-row"><span><strong>Auto-apply high-confidence</strong></span><input type="checkbox" class="switch"></label>
+            <button class="text-btn" type="button" data-goto="detections">Review detected updates →</button>
+            <button class="text-btn" type="button" data-goto="analytics" style="margin-top:2px">Spending analytics →</button>
+          </div>
+
+          <div class="card">
+            <h4 class="card-title">AI assistance</h4>
+            <p class="card-sub">Optional Groq-powered extraction. Key lives in local config only; screenshot text is minimized before sending.</p>
+            <label class="switch-row"><span><strong>Online AI analysis</strong><small>Strict JSON, falls back to local OCR</small></span><input type="checkbox" class="switch" id="aiToggle"></label>
+          </div>
+
+          <div class="card">
+            <h4 class="card-title">Backup &amp; export</h4>
+            <p class="card-sub">Local only — your data never leaves this device unless you share the file.</p>
+            <div class="action-col" style="margin-top:0">
+              <button class="btn btn-outline" type="button" id="backupExport"><span class="mi">backup</span>Export backup (JSON)</button>
+              <button class="btn btn-outline" type="button" id="backupImport"><span class="mi">restore</span>Restore backup</button>
+              <button class="btn btn-outline" type="button" id="csvExport"><span class="mi">table</span>Export CSV</button>
+              <input type="file" id="backupFile" accept=".json,application/json" hidden>
+            </div>
           </div>
 
           <div class="card about-card">

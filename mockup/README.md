@@ -14,14 +14,18 @@ Per `docs/RULES.md` → **UI mockup consistency**: this mockup mirrors the live 
 
 | Screen | Covers |
 | --- | --- |
-| Home | Summary stats (active, arriving soon, COD to prepare), arriving soon, recent orders |
+| Home | Summary stats (active, arriving soon, COD to prepare), Ordi AI banner, arriving soon, recent orders |
 | Orders | Search, platform/status/COD/archived filters, sorting, order cards |
-| Order details | Shipment section (courier, tracking, status + source), tracking timeline, items, price breakdown, payment/COD, notes, archive/delete, mark delivered |
-| New order | 5-step wizard: Platform → Details & items → Payment → Delivery → Review |
-| Settings | Theme (System/Light/Dark), default currency/platform/payment, notification placeholders, About |
+| Order details | Tracking timeline, items, price breakdown, payment/COD, notes, archive/delete, mark delivered, post-purchase (rating, favorite, returns/refunds/warranties/receipts) |
+| New order | 5-step wizard: Platform → Details & items → Payment → Delivery (incl. reminder chips) → Review |
+| Delivery calendar | Month grid with parcel/COD dots, per-day list |
+| Detected updates | Suggestion review — apply / ignore / pick-parcel, confidence chips |
+| Smart import | Screenshot pick → extracted-field review with confidence → save |
+| Analytics | Spend metrics, platform breakdown, monthly history |
+| Settings | Theme, defaults, reminders, smart-detection toggles, AI toggle, backup/restore/CSV, About |
 
-Sample data stands in for Room. Actions (add, deliver, archive, delete, search, theme) are functional in-page.
+Sample data stands in for Room. Actions (add, deliver, archive, delete, search, theme, apply detections, import, backup/export) are functional in-page — backup export produces a real `.json` download and restore parses it back.
 
 ## Scope
 
-Mockup follows Phase 1 scope (`docs/plan/PHASE_01B_MANUAL_ORDERS.md`): manual orders + shipments only. Smart import, reminders scheduling and Smart Parcel Status assistance are out of scope until those phases land.
+Mockup mirrors the app through Phase 9 (`docs/plan/IMPLEMENTATION_QUEUE.md`): manual orders, shipments, reminders, smart import (simulated OCR), detection review, post-purchase tools, analytics, backup/export. Groq calls and the real notification listener are device-side only — the mockup shows the review surfaces, not live AI.

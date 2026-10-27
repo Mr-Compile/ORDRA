@@ -95,6 +95,9 @@ let orders = [
     courier: "Ninja Van", tracking: "NVPH55021933", orderedAt: d(-9), etaStart: d(-2), etaEnd: d(-1), deliveredAt: d(-1),
     items: [{ name: "K870 mechanical keyboard", variant: "Hot-swap / Brown", qty: 1, priceMinor: 215000 }],
     shippingMinor: 0, discountMinor: 15000, notes: "", archived: false, createdAt: d(-9),
+    rating: 5, isFavorite: true,
+    warranties: [{ provider: "Keychron", start: d(-9), end: d(356) }],
+    receipts: [{ label: "Lazada invoice" }],
   },
   {
     id: "ord-8", platform: "SHOPEE", sellerName: "ClickCity", isCod: false,
@@ -102,6 +105,9 @@ let orders = [
     courier: "J&T Express", tracking: "JT820177455", orderedAt: d(-12), etaStart: d(-7), etaEnd: d(-6), deliveredAt: d(-6),
     items: [{ name: "Wireless mouse", variant: "Grey", qty: 1, priceMinor: 64900 }],
     shippingMinor: 3800, discountMinor: 0, notes: "Scroll wheel defective — returned, refund pending.", archived: false, createdAt: d(-12),
+    rating: 2, isFavorite: false,
+    returns: [{ status: "COMPLETED", reason: "Scroll wheel defective", at: d(-6) }],
+    refunds: [{ status: "PENDING", amountMinor: 64900, reason: "Defective item" }],
   },
   {
     id: "ord-9", platform: "AMAZON", sellerName: "Amazon", isCod: false,
@@ -109,6 +115,26 @@ let orders = [
     courier: "UPS", tracking: "1Z8842W3PH", orderedAt: d(-21), etaStart: d(-14), etaEnd: d(-12), deliveredAt: d(-13),
     items: [{ name: "The Design of Everyday Things", variant: "Paperback", qty: 1, priceMinor: 112000 }],
     shippingMinor: 0, discountMinor: 0, notes: "", archived: true, createdAt: d(-21),
+    rating: 5, isFavorite: true,
+  },
+];
+
+/* ---------- detection suggestions (Phase 5 mirrors) ---------- */
+let detections = [
+  {
+    id: "det-1", status: "OUT_FOR_DELIVERY", confidence: "MEDIUM",
+    source: "Shopee notification", summary: "Your parcel SPX71200843 is out for delivery today",
+    orderId: "ord-3", detectedAt: d(0),
+  },
+  {
+    id: "det-2", status: "DELIVERED", confidence: "HIGH",
+    source: "J&T Express notification", summary: "JT824011592PH delivered, signed by receiver",
+    orderId: "ord-1", detectedAt: d(0),
+  },
+  {
+    id: "det-3", status: "IN_TRANSIT", confidence: "LOW",
+    source: "Messenger rider chat", summary: "padala niyo po on the way na sir, ETA biyernes",
+    orderId: null, ambiguous: true, detectedAt: d(-1),
   },
 ];
 
@@ -145,6 +171,10 @@ function showScreen(name, opts = {}) {
   if (name === "orders") renderOrders();
   if (name === "detail") renderDetail();
   if (name === "add" && (opts.fresh || !draft)) startWizard();
+  if (name === "calendar") renderCalendar();
+  if (name === "detections") renderDetections();
+  if (name === "import") renderImport();
+  if (name === "analytics") renderAnalytics();
 }
 
 function renderAppbar() {
@@ -155,11 +185,25 @@ function renderAppbar() {
   switch (state.screen) {
     case "home":
       appbar.innerHTML = `${logo}
-        <button class="icon-btn" type="button" aria-label="Notifications" onclick="toast('Reminders land in Phase 2')"><span class="mi">notifications</span><span class="badge-dot"></span></button>`;
+        <button class="icon-btn" type="button" aria-label="Smart import" data-goto="import"><span class="mi">photo_camera</span></button>
+        <button class="icon-btn" type="button" aria-label="Delivery calendar" data-goto="calendar"><span class="mi">calendar_month</span></button>
+        <button class="icon-btn" type="button" aria-label="Detected updates" data-goto="detections"><span class="mi">notifications</span><span class="badge-dot" ${detections.length ? "" : "hidden"}></span></button>`;
       break;
     case "orders":
       appbar.innerHTML = `<span class="appbar-title">Orders</span>
-        <button class="icon-btn" type="button" aria-label="Notifications" onclick="toast('Reminders land in Phase 2')"><span class="mi">notifications</span></button>`;
+        <button class="icon-btn" type="button" aria-label="Detected updates" data-goto="detections"><span class="mi">notifications</span></button>`;
+      break;
+    case "calendar":
+      appbar.innerHTML = `${back}<span class="appbar-title">Delivery calendar</span>`;
+      break;
+    case "detections":
+      appbar.innerHTML = `${back}<span class="appbar-title">Detected updates</span>`;
+      break;
+    case "import":
+      appbar.innerHTML = `${back}<span class="appbar-title">Smart import</span>`;
+      break;
+    case "analytics":
+      appbar.innerHTML = `${back}<span class="appbar-title">Spending analytics</span>`;
       break;
     case "detail": {
       const o = orders.find(x => x.id === state.detailId);
@@ -383,6 +427,8 @@ function renderDetail() {
 
     ${o.notes ? `<div class="card"><h4 class="card-title">Notes</h4><p style="font-size:13.5px;color:var(--text-2);margin:0;line-height:1.55">${esc(o.notes)}</p></div>` : ""}
 
+    ${postPurchaseHtml(o)}
+
     <div class="action-col">
       ${!TERMINAL.includes(o.status) ? `<button class="btn btn-fill" type="button" onclick="markDelivered('${o.id}')"><span class="mi">check_circle</span>Mark as delivered</button>` : ""}
       <button class="btn btn-tonal" type="button" onclick="toggleArchive('${o.id}')"><span class="mi">${o.archived ? "unarchive" : "archive"}</span>${o.archived ? "Restore order" : "Archive order"}</button>
@@ -431,6 +477,7 @@ function startWizard() {
     shippingMinor: 0, discountMinor: 0,
     paymentMethod: "COD", paymentStatus: "UNPAID", isCod: true,
     courier: "", tracking: "", orderedAt: d(0), etaStart: "", etaEnd: "", notes: "",
+    reminders: ["dayof"],
   };
   renderWizard();
 }
@@ -509,7 +556,12 @@ function renderWizard() {
         <span><p class="field-label">ETA to</p><input class="field" id="wEtaB" type="date" value="${dr.etaEnd}"></span>
       </div>
       <p class="field-label">Notes — optional</p>
-      <input class="field" id="wNotes" placeholder="e.g. Rider calls first" value="${esc(dr.notes)}">`;
+      <input class="field" id="wNotes" placeholder="e.g. Rider calls first" value="${esc(dr.notes)}">
+      <p class="field-label">Reminders</p>
+      <div class="chip-row" style="padding-top:0" id="wRemindChips">
+        ${[["dayof", "Delivery day"], ["minus1", "1 day before"], ["minus2", "2 days before"]].map(([k, l]) =>
+          `<button class="chip ${dr.reminders?.includes(k) ? "is-on" : ""}" data-rem="${k}" type="button">${l}</button>`).join("")}
+      </div>`;
   }
   if (dr.step === 4) {
     const p = dr.platform ? platOf({ platform: dr.platform }) : null;
@@ -582,6 +634,13 @@ function wireWizardInputs() {
   document.querySelectorAll('input[name="wPay"]').forEach(r => r.onchange = () => {
     dr.paymentMethod = r.value; dr.isCod = r.value === "COD"; collectDraft(); renderWizard();
   });
+  document.querySelectorAll("[data-rem]").forEach(b => b.onclick = () => {
+    dr.reminders = dr.reminders || [];
+    dr.reminders = dr.reminders.includes(b.dataset.rem)
+      ? dr.reminders.filter(x => x !== b.dataset.rem)
+      : [...dr.reminders, b.dataset.rem];
+    b.classList.toggle("is-on");
+  });
   ["wSeller", "wShip", "wDisc"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.oninput = () => { collectDraft(); const t = $("#wTotal"); if (t) t.textContent = peso(draftTotal(dr)); };
@@ -623,6 +682,307 @@ function wizBack() {
   renderWizard();
 }
 
+/* ---------- delivery calendar (Phase 2) ---------- */
+let calCursor = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`; })();
+let calSel = d(0);
+
+function renderCalendar() {
+  const [Y, M] = calCursor.split("-").map(Number);
+  $("#calTitle").textContent = new Date(Y, M - 1, 1).toLocaleDateString("en-PH", { month: "long", year: "numeric" });
+  const first = new Date(Y, M - 1, 1).getDay();
+  const daysIn = new Date(Y, M, 0).getDate();
+  const byDay = {};
+  orders.filter(o => !o.archived).forEach(o => {
+    [o.etaStart, o.etaEnd, o.deliveredAt].filter(Boolean).forEach(dt => {
+      (byDay[dt] = byDay[dt] || []).push(o);
+    });
+  });
+  const dows = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  let html = dows.map(x => `<div class="cal-dow">${x}</div>`).join("");
+  for (let i = 0; i < first; i++) html += `<div class="cal-day is-out"></div>`;
+  for (let day = 1; day <= daysIn; day++) {
+    const iso = `${calCursor}-${String(day).padStart(2, "0")}`;
+    const its = byDay[iso] || [];
+    const cod = its.filter(isPendingCod).reduce((s, o) => s + orderTotal(o), 0);
+    html += `<button class="cal-day ${iso === d(0) ? "is-today" : ""} ${iso === calSel ? "is-sel" : ""}" data-cal="${iso}" type="button">
+      <span class="n">${day}</span>
+      <span class="cal-dots">${its.slice(0, 3).map(o => `<span class="cal-dot ${isPendingCod(o) ? "cod" : ""}"></span>`).join("")}</span>
+      ${cod ? `<span class="cal-amt">${peso(cod)}</span>` : ""}
+    </button>`;
+  }
+  $("#calGrid").innerHTML = html;
+  const its = byDay[calSel] || [];
+  $("#calDayTitle").textContent = its.length ? `${its.length} on ${fmtDate(calSel)}` : `Nothing on ${fmtDate(calSel)}`;
+  $("#calDayList").innerHTML = its.length
+    ? its.map(orderCard).join("")
+    : `<div class="empty"><span class="mi">event_available</span><p>No parcels due this day.</p></div>`;
+}
+
+/* ---------- detected updates (Phase 5) ---------- */
+function renderDetections() {
+  const body = $("#detectionsBody");
+  body.innerHTML = `
+    <div class="banner info" style="margin-top:10px"><span class="mi">verified_user</span>
+      Detected from notifications on this device. Confirm before a status changes — nothing is applied silently.
+    </div>
+    ${detections.length ? `<div class="stack" style="margin-top:12px">${detections.map(det => {
+      const o = orders.find(x => x.id === det.orderId);
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <strong style="font-size:14px">${esc(STATUSES[det.status]?.label || det.status)}</strong>
+          <span class="conf-chip conf-${det.confidence.toLowerCase()}">${det.confidence}</span>
+        </div>
+        <p style="font-size:12.5px;color:var(--text-2);margin:6px 0 0;line-height:1.5">${esc(det.summary)}</p>
+        <p class="det-src">${esc(det.source)} · ${o ? "matched: " + esc(itemsSummary(o)) : "ambiguous — pick a parcel"} · ${fmtDate(det.detectedAt)}</p>
+        <div class="dialog-actions" style="margin-top:10px">
+          <button class="btn btn-text" type="button" onclick="dismissDet('${det.id}')">Ignore</button>
+          ${o
+            ? `<button class="btn btn-tonal" type="button" onclick="applyDet('${det.id}')">Apply</button>`
+            : `<button class="btn btn-tonal" type="button" onclick="pickDet('${det.id}')">Pick parcel</button>`}
+        </div>
+      </div>`;
+    }).join("")}</div>`
+    : `<div class="empty"><span class="mi">notifications_off</span><p>No detected parcel updates right now.</p></div>`}
+    <div class="scroll-pad"></div>`;
+}
+
+function applyDet(id) {
+  const det = detections.find(x => x.id === id);
+  const o = det && orders.find(x => x.id === det.orderId);
+  if (!o) return;
+  o.status = det.status;
+  if (det.status === "DELIVERED") { o.deliveredAt = d(0); if (o.isCod) o.paymentStatus = "PAID"; }
+  detections = detections.filter(x => x.id !== id);
+  renderDetections(); renderAppbar();
+  toast(`${esc(STATUSES[det.status].label)} applied to ${itemsSummary(o)}`);
+}
+function dismissDet(id) {
+  detections = detections.filter(x => x.id !== id);
+  renderDetections(); renderAppbar();
+  toast("Suggestion ignored");
+}
+function pickDet(id) {
+  const active = orders.filter(o => !o.archived && !TERMINAL.includes(o.status));
+  const det = detections.find(x => x.id === id);
+  if (!det) return;
+  $("#detectionsBody").innerHTML = `
+    <div class="card" style="margin-top:10px"><h4 class="card-title">Which parcel is this for?</h4>
+      <p class="card-sub">${esc(det.summary)}</p>
+      <div class="stack">${active.map(o => `
+        <button class="order-card" type="button" onclick="assignDet('${id}','${o.id}')">
+          <span class="plat-badge" style="background:${platOf(o).color}">${platOf(o).initial}</span>
+          <span class="order-main"><span class="order-title">${esc(itemsSummary(o))}</span>
+          <span class="order-sub">${esc(o.sellerName)} · ${esc(o.courier || "No courier")}</span></span>
+        </button>`).join("")}
+      </div>
+      <div class="dialog-actions"><button class="btn btn-text" type="button" onclick="renderDetections()">Cancel</button></div>
+    </div>`;
+}
+function assignDet(detId, orderId) {
+  const det = detections.find(x => x.id === detId);
+  if (det) { det.orderId = orderId; det.ambiguous = false; }
+  applyDet(detId);
+}
+
+/* ---------- smart import (Phases 3–4) ---------- */
+let importStep = 0;
+let importDraft = null;
+
+function renderImport() {
+  const body = $("#importBody");
+  if (importStep === 0) {
+    body.innerHTML = `
+      <div class="banner info" style="margin-top:10px"><span class="mi">photo_scan</span>
+        Import a marketplace screenshot — on-device OCR extracts the details for your review. Nothing saves until you confirm.
+      </div>
+      <label class="import-photo" style="margin-top:14px">
+        <input type="file" accept="image/*" id="importFile">
+        <span class="mi">add_photo_alternate</span>
+        <strong>Pick a screenshot</strong><br><small>Shopee, TikTok Shop, Lazada or any order page</small>
+      </label>
+      <button class="btn btn-tonal" type="button" style="width:100%;margin-top:12px" onclick="simulateImport()">
+        <span class="mi">auto_awesome</span>Try with sample screenshot data
+      </button>
+      <div class="scroll-pad"></div>`;
+    $("#importFile").onchange = () => simulateImport();
+    return;
+  }
+  const f = importDraft;
+  body.innerHTML = `
+    <div class="banner warn" style="margin-top:10px"><span class="mi">fact_check</span>
+      Review before saving — every extracted field is a suggestion you can correct.
+    </div>
+    <div class="card" style="margin-top:12px"><h4 class="card-title">Extracted fields</h4>
+      <div class="conf-row">${Object.entries(f.conf).map(([k, v]) => `<span class="conf-chip conf-${v}">${k} · ${v}</span>`).join("")}</div>
+      <p class="field-label">Product name</p><input class="field" id="iName" value="${esc(f.name)}">
+      <div class="field-row">
+        <span><p class="field-label">Seller</p><input class="field" id="iSeller" value="${esc(f.seller)}"></span>
+        <span><p class="field-label">Total ₱</p><input class="field" id="iTotal" type="number" step="0.01" value="${(f.totalMinor / 100).toFixed(2)}"></span>
+      </div>
+      <div class="field-row">
+        <span><p class="field-label">Platform</p>
+          <select class="field" id="iPlat">${Object.keys(PLATFORMS).map(k => `<option value="${k}" ${f.platform === k ? "selected" : ""}>${PLATFORMS[k].label}</option>`).join("")}</select></span>
+        <span><p class="field-label">Courier</p>
+          <select class="field" id="iCourier">${["", ...COURIERS].map(c => `<option ${f.courier === c ? "selected" : ""}>${c || "Not set"}</option>`).join("")}</select></span>
+      </div>
+      <p class="field-label">Tracking</p><input class="field" id="iTracking" value="${esc(f.tracking)}">
+    </div>
+    <div class="action-col">
+      <button class="btn btn-fill" type="button" onclick="saveImport()"><span class="mi">check</span>Save order</button>
+      <button class="btn btn-text" type="button" onclick="importStep=0;renderImport()">Discard</button>
+    </div>
+    <div class="scroll-pad"></div>`;
+}
+
+function simulateImport() {
+  importDraft = {
+    name: "Soundcore R50i earbuds", seller: "AudioHub PH", totalMinor: 129900,
+    platform: "SHOPEE", courier: "J&T Express", tracking: "JT824011593PH",
+    conf: { product: "high", seller: "high", amount: "medium", platform: "high", tracking: "low" },
+  };
+  importStep = 1;
+  toast("OCR extracted 5 fields");
+  renderImport();
+}
+
+function saveImport() {
+  const o = {
+    id: `ord-${nextId++}`,
+    platform: $("#iPlat").value, sellerName: $("#iSeller").value || "Imported order",
+    isCod: true, paymentMethod: "COD", paymentStatus: "UNPAID", status: "ORDERED",
+    courier: $("#iCourier").value === "Not set" ? "" : $("#iCourier").value,
+    tracking: $("#iTracking").value.trim(),
+    orderedAt: d(0), etaStart: "", etaEnd: "", deliveredAt: null,
+    items: [{ name: $("#iName").value || "Imported item", variant: "", qty: 1,
+      priceMinor: Math.round((parseFloat($("#iTotal").value) || 0) * 100) }],
+    shippingMinor: 0, discountMinor: 0, notes: "Imported from screenshot", archived: false, createdAt: d(0),
+  };
+  orders.unshift(o);
+  importStep = 0; importDraft = null;
+  state.detailId = o.id;
+  showScreen("detail");
+  toast("Order imported — review complete");
+}
+
+/* ---------- analytics (Phase 6) ---------- */
+function renderAnalytics() {
+  const spendable = orders.filter(o => !["CANCELLED", "REFUNDED"].includes(o.status));
+  const spend = o => orderTotal(o);
+  const delivered = spendable.filter(o => o.status === "DELIVERED").reduce((s, o) => s + spend(o), 0);
+  const pending = spendable.filter(o => !TERMINAL.includes(o.status)).reduce((s, o) => s + spend(o), 0);
+  const total = spendable.reduce((s, o) => s + spend(o), 0);
+  const avg = spendable.length ? Math.round(total / spendable.length) : 0;
+  const cod = spendable.filter(isPendingCod).reduce((s, o) => s + spend(o), 0);
+  const byPlat = {};
+  spendable.forEach(o => { byPlat[o.platform] = (byPlat[o.platform] || 0) + spend(o); });
+  const platRows = Object.entries(byPlat).sort((a, b) => b[1] - a[1]);
+  const maxPlat = platRows[0]?.[1] || 1;
+  const byMonth = {};
+  spendable.filter(o => o.orderedAt).forEach(o => {
+    const m = o.orderedAt.slice(0, 7);
+    byMonth[m] = (byMonth[m] || 0) + spend(o);
+  });
+  const months = Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 6);
+  const maxM = months[0]?.[1] || 1;
+
+  $("#analyticsBody").innerHTML = `
+    <div class="stat-row" style="grid-template-columns:1fr 1fr;margin-top:10px">
+      <div class="stat-card"><div class="stat-num money">${peso(total)}</div><div class="stat-label">Total spent</div></div>
+      <div class="stat-card"><div class="stat-num money">${peso(avg)}</div><div class="stat-label">Avg order</div></div>
+      <div class="stat-card"><div class="stat-num money">${peso(pending)}</div><div class="stat-label">Pending spend</div></div>
+      <div class="stat-card"><div class="stat-num money">${peso(cod)}</div><div class="stat-label">COD outstanding</div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h4 class="card-title">By platform</h4>
+      ${platRows.map(([k, v]) => `<div class="bar-row">
+        <div class="bar-meta"><span>${PLATFORMS[k].label}</span><span>${peso(v)}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v / maxPlat * 100)}%"></div></div>
+      </div>`).join("")}
+    </div>
+    <div class="card" style="margin-top:14px"><h4 class="card-title">Monthly history</h4>
+      ${months.map(([m, v]) => {
+        const label = new Date(m + "-01T00:00:00").toLocaleDateString("en-PH", { month: "long", year: "numeric" });
+        return `<div class="bar-row">
+          <div class="bar-meta"><span>${label}</span><span>${peso(v)}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v / maxM * 100)}%"></div></div>
+        </div>`;
+      }).join("") || `<p class="card-sub">No spending data yet.</p>`}
+    </div>
+    <div class="banner info" style="margin-top:14px"><span class="mi">info</span>Computed locally — cancelled and refunded orders are excluded.</div>
+    <div class="scroll-pad"></div>`;
+}
+
+/* ---------- post-purchase (Phase 7) ---------- */
+function postPurchaseHtml(o) {
+  const stars = `<div class="rate-stars">${[1, 2, 3, 4, 5].map(i =>
+    `<button type="button" onclick="setRating('${o.id}',${i})" aria-label="${i} star${i > 1 ? "s" : ""}">${(o.rating || 0) >= i ? "★" : "☆"}</button>`).join("")}
+    <button class="chip ${o.isFavorite ? "is-on" : ""}" style="margin-left:auto" type="button" onclick="toggleFav('${o.id}')">Favorite</button>
+  </div>`;
+  const lines = [
+    ...(o.returns || []).map(r => `<div class="kv-row"><span class="k">Return — ${r.reason || "no reason"}</span><span class="v">${r.status.toLowerCase().replace("_", " ")}</span></div>`),
+    ...(o.refunds || []).map(r => `<div class="kv-row"><span class="k">Refund ${r.amountMinor ? peso(r.amountMinor) : ""}</span><span class="v">${r.status.toLowerCase()}</span></div>`),
+    ...(o.warranties || []).map(w => `<div class="kv-row"><span class="k">Warranty ${w.provider || ""}</span><span class="v">${fmtDate(w.start)} → ${fmtDate(w.end)}</span></div>`),
+    ...(o.receipts || []).map(r => `<div class="kv-row"><span class="k">Receipt</span><span class="v">${esc(r.label || "attached")}</span></div>`),
+  ].join("");
+  return `<div class="card"><h4 class="card-title">Post-purchase</h4>
+    ${stars}
+    ${lines ? `<hr class="hr">${lines}` : ""}
+    <div class="dialog-actions" style="margin-top:10px;justify-content:flex-start;flex-wrap:wrap">
+      <button class="btn btn-text" type="button" onclick="ppAdd('${o.id}','return')">Return</button>
+      <button class="btn btn-text" type="button" onclick="ppAdd('${o.id}','refund')">Refund</button>
+      <button class="btn btn-text" type="button" onclick="ppAdd('${o.id}','warranty')">Warranty</button>
+      <button class="btn btn-text" type="button" onclick="ppAdd('${o.id}','receipt')">Receipt</button>
+    </div>
+  </div>`;
+}
+function setRating(id, n) { const o = orders.find(x => x.id === id); o.rating = o.rating === n ? null : n; renderDetail(); }
+function toggleFav(id) { const o = orders.find(x => x.id === id); o.isFavorite = !o.isFavorite; renderDetail(); toast(o.isFavorite ? "Added to favorites" : "Removed from favorites"); }
+function ppAdd(id, kind) {
+  const o = orders.find(x => x.id === id);
+  const reason = prompt(kind === "warranty" ? "Provider (end = +1 year):" : "Reason (optional):", "") ?? "";
+  if (kind === "return") (o.returns = o.returns || []).push({ status: "REQUESTED", reason, at: d(0) });
+  if (kind === "refund") (o.refunds = o.refunds || []).push({ status: "PENDING", amountMinor: orderTotal(o), reason });
+  if (kind === "warranty") (o.warranties = o.warranties || []).push({ provider: reason || "Seller", start: d(0), end: d(365) });
+  if (kind === "receipt") (o.receipts = o.receipts || []).push({ label: "Photo attached" });
+  renderDetail();
+  toast(`${kind[0].toUpperCase() + kind.slice(1)} saved — warranty end dates create a reminder`);
+}
+
+/* ---------- backup / export (Phase 8) ---------- */
+function download(name, mime, text) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+function exportBackup() {
+  download("ordra-backup.json", "application/json", JSON.stringify({
+    schemaVersion: 1, exportedAt: Date.now(), orders, detections,
+  }, null, 2));
+  toast("Backup exported");
+}
+function exportCsv() {
+  const esc2 = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const rows = [["id", "title", "platform", "status", "payment_method", "is_cod", "total_minor", "ordered_date"]
+    .join(","), ...orders.map(o => [o.id, esc2(itemsSummary(o)), o.platform, o.status, o.paymentMethod, o.isCod ? 1 : 0, orderTotal(o), o.orderedAt].join(","))];
+  download("ordra-orders.csv", "text/csv", rows.join("\n"));
+  toast("CSV exported");
+}
+function importBackupFile(file) {
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const doc = JSON.parse(r.result);
+      if (doc.schemaVersion > 1 || !Array.isArray(doc.orders)) throw new Error("bad");
+      doc.orders.forEach(no => {
+        const i = orders.findIndex(o => o.id === no.id);
+        if (i >= 0) orders[i] = no; else orders.push(no);
+      });
+      toast(`Restored ${doc.orders.length} orders`);
+      showScreen("home");
+    } catch { toast("That file isn't a valid Ordra backup"); }
+  };
+  r.readAsText(file);
+}
+
 /* ---------- theme ---------- */
 function applyTheme(mode) {
   state.theme = mode;
@@ -662,6 +1022,28 @@ $("#dlgCancel").addEventListener("click", () => { $("#dialogOverlay").hidden = t
 $("#dlgConfirm").addEventListener("click", confirmDelete);
 $("#dialogOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) { e.currentTarget.hidden = true; pendingDelete = null; } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#dialogOverlay").hidden = true; pendingDelete = null; } });
+$("#calPrev").addEventListener("click", () => {
+  const [Y, M] = calCursor.split("-").map(Number);
+  const p = new Date(Y, M - 2, 1);
+  calCursor = `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, "0")}`;
+  renderCalendar();
+});
+$("#calNext").addEventListener("click", () => {
+  const [Y, M] = calCursor.split("-").map(Number);
+  const p = new Date(Y, M, 1);
+  calCursor = `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, "0")}`;
+  renderCalendar();
+});
+document.addEventListener("click", e => {
+  const cell = e.target.closest("[data-cal]");
+  if (cell) { calSel = cell.dataset.cal; renderCalendar(); }
+});
+$("#backupExport").addEventListener("click", exportBackup);
+$("#csvExport").addEventListener("click", exportCsv);
+$("#backupImport").addEventListener("click", () => $("#backupFile").click());
+$("#backupFile").addEventListener("change", e => { if (e.target.files[0]) importBackupFile(e.target.files[0]); });
+$("#aiToggle").addEventListener("change", e =>
+  toast(e.target.checked ? "Online AI analysis on — Groq assists extraction" : "Back to local-only OCR"));
 $("#stageThemeBtn").addEventListener("click", () => applyTheme(device.dataset.theme === "dark" ? "light" : "dark"));
 document.querySelectorAll("#themeSeg .seg").forEach(s => s.addEventListener("click", () => applyTheme(s.dataset.themeOpt)));
 $("#defPlatform").innerHTML = Object.values(PLATFORMS).map(p => `<option>${p.label}</option>`).join("");

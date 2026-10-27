@@ -536,6 +536,52 @@ button { font-family: inherit; cursor: pointer; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ---------- responsive / motion ---------- */
+/* ---------- calendar ---------- */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 10px 2px 8px; }
+.cal-head h3 { font-size: 15.5px; font-weight: 700; margin: 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { font-size: 10.5px; font-weight: 700; color: var(--text-2); text-align: center; padding: 4px 0; }
+.cal-day {
+  aspect-ratio: 1; border: 1px solid var(--outline); border-radius: 10px; background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font: inherit; color: var(--text); cursor: pointer; padding: 2px; position: relative;
+}
+.cal-day.is-out { opacity: .35; }
+.cal-day.is-today { border-color: var(--primary); color: var(--primary); font-weight: 800; }
+.cal-day.is-sel { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.cal-day .n { font-size: 12px; font-weight: 600; }
+.cal-dots { display: flex; gap: 2px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
+.cal-dot.cod { background: var(--amber); }
+.cal-amt { font-size: 8.5px; font-weight: 700; color: var(--amber); }
+
+/* ---------- analytics ---------- */
+.bar-row { margin-top: 10px; }
+.bar-meta { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
+.bar-meta span:last-child { color: var(--text-2); font-weight: 700; }
+.bar-track { height: 7px; border-radius: 4px; background: var(--surface-var); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #5B5FEF, #7C5CFC); }
+
+/* ---------- detections ---------- */
+.conf-chip { font-size: 10.5px; font-weight: 800; letter-spacing: .04em; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; }
+.conf-high { background: var(--mint-bg, #D9F5EC); color: #0FA881; }
+.conf-medium { background: var(--amber-bg); color: var(--amber); }
+.conf-low { background: var(--surface-var); color: var(--text-2); }
+.det-src { font-size: 11px; color: var(--text-2); margin-top: 3px; }
+
+/* ---------- post-purchase / import ---------- */
+.rate-stars { display: flex; gap: 2px; align-items: center; }
+.rate-stars button { border: 0; background: none; font-size: 20px; color: var(--amber); cursor: pointer; padding: 2px; }
+.field-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.conf-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.import-photo {
+  border: 2px dashed var(--outline); border-radius: 14px; padding: 26px 16px; text-align: center;
+  color: var(--text-2); cursor: pointer; display: block;
+}
+.import-photo:hover { border-color: var(--primary); }
+.import-photo .mi { font-size: 34px; display: block; margin-bottom: 6px; }
+.import-photo input { display: none; }
+
 @media (max-width: 720px) {
   .stage-rail { display: none; }
 }
