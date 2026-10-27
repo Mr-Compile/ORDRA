@@ -1,11 +1,20 @@
 # ORDRA Motion & Feedback
 
-Motion is functional, subtle, and short. Use Material motion patterns; avoid decorative delays.
+Motion is functional, quick and purposeful. Use Material motion patterns and the duration
+tokens in `docs/uiux/DESIGN_SYSTEM.md` (micro 100–150ms, standard 200–300ms, emphasis
+<=400ms). Decorative animation that slows routine tasks is a defect; performance wins over
+animation.
 
-- Navigation: standard Compose/Material transitions.
-- Status update: subtle chip/content transition plus snackbar confirmation.
-- Add/Scan sheet: standard modal bottom sheet motion.
-- Smart Import: stage transitions without fake progress percentages unless measurable.
-- Save: immediate progress only if needed, then success/navigation.
-- Destructive actions: confirmation + clear completion feedback.
-- Haptics: optional and restrained for important confirmations; never required for understanding.
+Approved microinteractions:
+- Navigation: standard Compose/Material transitions; tab changes settle instantly.
+- Tracking progress advancing and status-chip transitions (subtle, <=300ms).
+- Parcel added / order saved confirmation (snackbar + card appearance).
+- Delivered confirmation moment (the one allowed emphasis animation).
+- Pull-to-refresh only where a real refresh operation exists.
+- Bottom-sheet open/close; snackbar/Toast feedback; skeleton-to-content fade.
+- Button/press feedback via standard ripple; optional restrained haptics for important
+  confirmations — never required for understanding.
+- Smart Import: real stage transitions; no fake progress percentages.
+
+Reduced-motion settings replace movement with instant/fade equivalents; every state change
+must still be communicated by color/icon/label when animation does not run.

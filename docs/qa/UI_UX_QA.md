@@ -20,4 +20,17 @@ For each implemented screen verify:
 - Smart/AI results are editable/reviewable
 - Core app remains usable without Groq/network
 
-Final UI acceptance additionally checks every screen in docs/uiux/SCREEN_SPECS.md is either implemented or explicitly marked out-of-scope by owner approval. Coverage is tracked in docs/qa/SCREEN_COVERAGE_MATRIX.md.
+v1.1 design-direction checks:
+- Visual formula respected: Bento only on dashboard/summary surfaces; glass only on floating
+  chrome/overlays; gradients only on brand moments — never behind dense text or tracking data
+- Every status renders as icon + text + semantic color (no color-only meaning)
+- Marketplace and courier are visually and structurally distinct; neither is presented as a
+  status
+- Tracking detail answers "where is my parcel now?" in the first viewport
+- Skeleton loaders match real layouts; no blank screens or fake progress
+- Reduced-motion and readability fallbacks hold for glass/translucent surfaces
+- Touch targets and focus states pass on every interactive control
+
+Final UI acceptance additionally checks every screen in docs/uiux/SCREEN_SPECS.md is either
+implemented or explicitly marked out-of-scope by owner approval. Coverage is tracked in
+docs/qa/SCREEN_COVERAGE_MATRIX.md.

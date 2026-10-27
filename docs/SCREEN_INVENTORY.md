@@ -1,5 +1,10 @@
 # Complete Screen Inventory
 
+> Note: original full inventory. Canonical per-screen specs live in
+> `docs/uiux/SCREEN_SPECS.md` (v1.1); where they diverge — e.g. bottom-nav destinations,
+> Add/Scan sheet — follow the UIUX pack. Screen audit verdicts:
+> `docs/plan/MEGAPLAN_UIUX.md` → Screen audit.
+
 ## Entry
 - Splash: Ordra branding, fast handoff.
 - First-run Onboarding: local-only promise, smart import, reminders, privacy; skip/continue.

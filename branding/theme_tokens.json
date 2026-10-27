@@ -7,7 +7,8 @@
     "primaryDark": "#3F43C7",
     "success": "#35D0A0",
     "warning": "#FFB547",
-    "error": "#F05252"
+    "error": "#F05252",
+    "gradient": ["#5B5FEF", "#7C5CFC"]
   },
   "light": {
     "background": "#F8F9FD",
@@ -29,5 +30,33 @@
     "textPrimary": "#F5F5FA",
     "textSecondary": "#B2B3C1",
     "outline": "#343640"
+  },
+  "radius": {
+    "small": 8,
+    "medium": 12,
+    "large": 16,
+    "xl": 20
+  },
+  "spacing": [4, 8, 12, 16, 20, 24, 32],
+  "motion": {
+    "micro": 150,
+    "standard": 250,
+    "emphasis": 400
+  },
+  "glass": {
+    "surfaceAlpha": 0.84,
+    "outlineAlpha": 0.2
+  },
+  "status": {
+    "ordered": "#5B5FEF",
+    "processing": "#7C5CFC",
+    "packed": "#3B82F6",
+    "shipped": "#06B6D4",
+    "outForDelivery": "#FFB547",
+    "delivered": "#35D0A0",
+    "cancelled": "#F05252",
+    "returned": "#F97316",
+    "refunded": "#14B8A6",
+    "unknown": "#666979"
   }
 }

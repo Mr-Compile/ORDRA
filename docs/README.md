@@ -45,13 +45,14 @@ repo root. Start with `docs/START_HERE_PROMPT.md`.
 `docs/specs/UX_DESIGN_SYSTEM.md`, `docs/specs/ASSET_MANIFEST.md` (required brand assets from
 the UI/UX Pack).
 
-## docs/uiux/ — UI/UX Complete Pack v1
+## docs/uiux/ — UI/UX Complete Pack v1.1
 
-Canonical UI spec docs. Read in the order listed in `docs/uiux/README.md`:
+Canonical UI spec docs (hybrid direction: 70% Minimal/Material, 20% Bento, 10% glass/
+gradient/aurora). Read in the order listed in `docs/uiux/README.md`:
 `docs/uiux/UI_UX_BIBLE.md`, `docs/uiux/DESIGN_SYSTEM.md`, `docs/uiux/COMPONENT_LIBRARY.md`,
 `docs/uiux/SCREEN_SPECS.md`, `docs/uiux/NAVIGATION_UX.md`, `docs/uiux/ACCESSIBILITY.md`,
 `docs/uiux/MOTION_AND_FEEDBACK.md`, `docs/uiux/BRANDING_UI.md`.
-Execution: `docs/plan/MEGAPLAN_UIUX.md`.
+Execution: `docs/plan/MEGAPLAN_UIUX.md` (includes screen audit + migration checklist).
 
 ## docs/contracts/ — Integration & Data Contract Pack v1
 

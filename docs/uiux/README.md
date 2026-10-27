@@ -1,11 +1,20 @@
-# ORDRA UI/UX Complete Pack v1
+# ORDRA UI/UX Complete Pack v1.1
 
-This pack is the canonical UI/UX specification for Ordra, an Android-only, local-first personal order and parcel manager.
+This pack is the canonical UI/UX specification for Ordra, an Android-only, local-first
+personal order and parcel manager.
 
-Use it together with the Ordra Complete Project Pack and Frontend Complete Pack. This pack defines how every planned feature should look, behave, scale, and handle states. It does not replace architecture or data contracts (`docs/contracts/`).
+Use it together with the Ordra Complete Project Pack and Frontend Complete Pack. This pack
+defines how every planned feature should look, behave, scale, and handle states. It does not
+replace architecture or data contracts (`docs/contracts/`).
+
+v1.1 adopts the official hybrid visual direction: 70% Minimalism + Material-inspired UI,
+20% Bento grid (dashboards/summaries), 10% restrained glass/gradient/aurora (branding +
+floating chrome). Canonical tokens: `docs/uiux/DESIGN_SYSTEM.md`. Migration:
+`docs/plan/MEGAPLAN_UIUX.md`.
 
 Pack files live in `docs/uiux/`; its plan/qa/prompt files were merged into the canonical
-`docs/plan/`, `docs/qa/` and `prompts/` folders. Execution roadmap: `docs/plan/MEGAPLAN_UIUX.md`.
+`docs/plan/`, `docs/qa/` and `prompts/` folders. Execution roadmap:
+`docs/plan/MEGAPLAN_UIUX.md`.
 
 ## Canonical product
 - Name: ORDRA
@@ -24,6 +33,7 @@ Pack files live in `docs/uiux/`; its plan/qa/prompt files were merged into the c
 5. docs/uiux/NAVIGATION_UX.md
 6. docs/uiux/ACCESSIBILITY.md
 7. docs/uiux/MOTION_AND_FEEDBACK.md
-8. docs/plan/UI_IMPLEMENTATION_PHASES.md
-9. docs/qa/UI_UX_QA.md + docs/qa/SCREEN_COVERAGE_MATRIX.md
-10. prompts/START_UI_IMPLEMENTATION_PROMPT.md
+8. docs/uiux/BRANDING_UI.md
+9. docs/plan/UI_IMPLEMENTATION_PHASES.md
+10. docs/qa/UI_UX_QA.md + docs/qa/SCREEN_COVERAGE_MATRIX.md
+11. prompts/START_UI_IMPLEMENTATION_PROMPT.md
