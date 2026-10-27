@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface ShipmentRepository {
     fun observePrimaryShipment(orderId: String): Flow<Shipment?>
     fun observeEvents(shipmentId: String): Flow<List<TrackingEvent>>
+    fun observeAttentionShipmentCount(): Flow<Int>
     suspend fun getPrimaryShipment(orderId: String): Shipment?
     suspend fun saveShipment(shipment: Shipment)
     suspend fun updateShipmentStatus(

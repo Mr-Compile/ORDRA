@@ -508,4 +508,11 @@ its mapped phase; unchecked items are open work, not new phases.
   `feature/detail/`, `feature/timeline/`); the variant system (`ParcelCard` compact/standard/
   featured/delivered/problem), `TrackingProgress`, badges and icon+text status chips are the
   UI-2 scope. None of this is a new defect.
+- **ORDRA AI companion (v1.2, done)**: `core/ui/ai/` ships `CompanionState`, `CompanionVariant`,
+  `CompanionTokens`, procedural `CompanionAvatar` (Ordi) and `OrdraAiBanner`; Home shows the
+  banner driven by real order/shipment aggregates (`resolveCompanionBanner`), Ordi appears in
+  Home/Orders empty states, Onboarding heroes and About. "Ask ORDRA" is intentionally unwired —
+  no AI destination exists until Phase 4; the banner's AI_UNAVAILABLE kind is reserved for that.
+  Final artwork replaces the procedural painter slot later. See DESIGN_SYSTEM §AI tokens,
+  COMPONENT_LIBRARY §ORDRA AI companion, BRANDING_UI §Ordi, MOTION_AND_FEEDBACK §Companion.
 - Do not "resolve" these by silently rewriting — record decision in this file when owner rules.

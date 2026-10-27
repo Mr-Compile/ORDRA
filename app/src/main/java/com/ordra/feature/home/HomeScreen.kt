@@ -36,6 +36,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
 import com.ordra.core.common.MoneyFormat
+import com.ordra.core.ui.ai.CompanionAvatar
+import com.ordra.core.ui.ai.CompanionState
+import com.ordra.core.ui.ai.CompanionVariant
+import com.ordra.core.ui.ai.OrdraAiBanner
 import com.ordra.core.ui.components.OrderCard
 import com.ordra.domain.model.Order
 import java.time.format.DateTimeFormatter
@@ -96,7 +100,9 @@ fun HomeScreen(
             HomeContent(
                 state = uiState,
                 onOpenOrder = onOpenOrder,
+                onOpenOrders = onOpenOrders,
                 onOpenCod = onOpenCod,
+                onAddOrder = onAddOrder,
                 modifier = Modifier.padding(innerPadding),
             )
         }
@@ -148,7 +154,9 @@ private fun HomeTopBar(
 private fun HomeContent(
     state: HomeUiState,
     onOpenOrder: (String) -> Unit,
+    onOpenOrders: () -> Unit,
     onOpenCod: () -> Unit,
+    onAddOrder: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -156,6 +164,14 @@ private fun HomeContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        item {
+            OrdraAiBanner(
+                data = state.banner,
+                onViewParcels = onOpenOrders,
+                onAddOrder = onAddOrder,
+            )
+            Spacer(Modifier.height(8.dp))
+        }
         item {
             SummaryRow(state = state, onOpenCod = onOpenCod)
             Spacer(Modifier.height(8.dp))
@@ -289,6 +305,11 @@ private fun EmptyState(showingArchived: Boolean = false, modifier: Modifier = Mo
             ),
         ) {
             Column(Modifier.padding(20.dp)) {
+                CompanionAvatar(
+                    state = CompanionState.EMPTY,
+                    variant = CompanionVariant.EMPTY_STATE,
+                )
+                Spacer(Modifier.height(12.dp))
                 Text(
                     text = stringResource(
                         if (showingArchived) R.string.home_archived_empty else R.string.home_empty_title,

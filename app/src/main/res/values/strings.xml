@@ -191,6 +191,34 @@
     <string name="home_cod">COD</string>
     <string name="home_settings">Settings</string>
 
+    <!-- ORDRA AI companion -->
+    <string name="ai_brand">ORDRA AI</string>
+    <string name="ai_greeting_morning">Good morning</string>
+    <string name="ai_greeting_afternoon">Good afternoon</string>
+    <string name="ai_greeting_evening">Good evening</string>
+    <plurals name="ai_msg_attention">
+        <item quantity="one">%d parcel needs attention</item>
+        <item quantity="other">%d parcels need attention</item>
+    </plurals>
+    <plurals name="ai_msg_arriving">
+        <item quantity="one">%d parcel is expected today</item>
+        <item quantity="other">%d parcels are expected today</item>
+    </plurals>
+    <plurals name="ai_msg_delivered">
+        <item quantity="one">A parcel was delivered recently</item>
+        <item quantity="other">%d parcels were delivered recently</item>
+    </plurals>
+    <plurals name="ai_msg_active">
+        <item quantity="one">You have %d active delivery</item>
+        <item quantity="other">You have %d active deliveries</item>
+    </plurals>
+    <string name="ai_msg_empty">No active parcels right now.</string>
+    <string name="ai_msg_unavailable">ORDRA AI isn\'t available right now.</string>
+    <string name="ai_action_ask">Ask ORDRA</string>
+    <string name="ai_action_view_parcels">View parcels</string>
+    <string name="ai_action_add_first">Add your first order</string>
+    <string name="cd_ordi">Ordi, your ORDRA AI companion</string>
+
     <!-- Settings -->
     <string name="settings_title">Settings</string>
     <string name="settings_appearance">Appearance</string>
@@ -212,7 +240,7 @@
     <string name="onboard_next">Next</string>
     <string name="onboard_start">Get started</string>
     <string name="onboard_1_title">Every order, one place</string>
-    <string name="onboard_1_body">Save purchases from Shopee, TikTok Shop, Lazada and anywhere else — manually, no account needed.</string>
+    <string name="onboard_1_body">Save purchases from Shopee, TikTok Shop, Lazada and anywhere else — manually, no account needed. Ordi, your ORDRA AI companion, helps you spot what needs attention.</string>
     <string name="onboard_2_title">Know what to prepare</string>
     <string name="onboard_2_body">Track statuses, ETAs and COD totals so cash is ready when the rider arrives.</string>
     <string name="onboard_3_title">Local-first and private</string>
@@ -223,4 +251,6 @@
     <string name="about_version">Version %1$s</string>
     <string name="about_privacy">Ordra keeps orders, tracking numbers and receipts on your device. There is no account, no cloud sync, and no analytics collection. Smart Import can optionally use Groq to interpret screenshot text — nothing is sent without you asking.</string>
     <string name="about_licenses">Built with Jetpack Compose, Room, Hilt, WorkManager, ML Kit and Coil. Open-source licenses apply to those libraries.</string>
+    <string name="about_ai_title">Ordi &amp; ORDRA AI</string>
+    <string name="about_ai_body">Ordi is the companion face of ORDRA AI, Ordra\'s optional smart layer for features like screenshot import. Ordi only reflects your real order data — it never invents tracking updates or order details.</string>
 </resources>

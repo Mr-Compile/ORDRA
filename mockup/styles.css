@@ -29,6 +29,9 @@
   --shadow: 0 1px 3px rgba(23, 24, 33, .07), 0 6px 20px rgba(91, 95, 239, .06);
   --appbar-bg: rgba(248, 249, 253, .88);
   --nav-bg: #FFFFFF;
+  --ai-surface: rgba(255, 255, 255, .78);
+  --ai-border: rgba(91, 95, 239, .22);
+  --ai-accent: #5B5FEF;
 }
 .device[data-theme="dark"] {
   --bg: #101116;
@@ -50,6 +53,9 @@
   --shadow: 0 1px 3px rgba(0, 0, 0, .4);
   --appbar-bg: rgba(16, 17, 22, .88);
   --nav-bg: #18191F;
+  --ai-surface: rgba(24, 25, 31, .60);
+  --ai-border: rgba(133, 136, 255, .28);
+  --ai-accent: #A48BFF;
 }
 
 * { box-sizing: border-box; }
@@ -171,6 +177,39 @@ button { font-family: inherit; cursor: pointer; }
   border: 0; background: none; color: var(--primary);
   font-size: 13px; font-weight: 600; padding: 4px 6px; border-radius: 8px;
 }
+
+/* ---------- ORDRA AI banner + Ordi (mirrors core/ui/ai) ---------- */
+.ai-banner {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 16px; padding: 16px 14px 14px 16px;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 160% at 100% 0%, rgba(124,92,252,.16), transparent 55%),
+    radial-gradient(120% 160% at 0% 100%, rgba(53,208,160,.10), transparent 55%),
+    var(--ai-surface);
+  border: 1px solid var(--ai-border);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(63,67,199,.12);
+}
+.ai-banner-text { flex: 1; min-width: 0; }
+.ai-eyebrow {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .12em;
+  color: var(--ai-accent); margin: 0 0 4px;
+}
+.ai-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: linear-gradient(135deg, #5B5FEF, #35D0A0);
+  box-shadow: 0 0 8px rgba(53,208,160,.5);
+}
+.ai-greet { font-size: 15.5px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.ai-msg { font-size: 13px; color: var(--text-2); margin: 3px 0 0; line-height: 1.4; }
+.ai-msg-sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; opacity: .85; }
+.ai-actions { display: flex; gap: 8px; margin-top: 10px; }
+.ordi { width: 76px; height: 76px; flex: 0 0 auto; animation: ordi-float 4.6s ease-in-out infinite alternate; }
+@keyframes ordi-float { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .ordi { animation: none; } }
 
 /* ---------- home stats ---------- */
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }

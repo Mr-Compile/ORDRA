@@ -97,3 +97,22 @@ Every component: light+dark themes, large-font tolerance, loading/disabled/error
 where applicable, 48dp touch targets, TalkBack semantics, Compose previews where practical.
 Component states to support: default, hover, focus, pressed, selected, disabled, loading,
 error, success.
+
+## ORDRA AI companion (implemented — `core/ui/ai/`)
+- `CompanionState` enum: IDLE, GREETING, HAPPY, THINKING, WORKING, SUCCESS, DELIVERY,
+  ATTENTION, WARNING, EMPTY, ERROR, OFFLINE. All states render today; states must only ever
+  be driven by real app state (never fake intelligence to change expressions).
+- `CompanionVariant`: AVATAR 40dp, COMPACT 56dp, EMPTY_STATE 88dp, BANNER 104dp,
+  ONBOARDING 120dp.
+- `CompanionAvatar(state, variant, size, painter?, animated)`: procedural 2D Ordi (rounded
+  parcel body, brand indigo→violet gradient, signal antenna, expressive eyes/mouth, one
+  state accessory). Passing a `Painter` replaces the built-in art — final SVG/PNG/Lottie
+  assets can land later without touching call sites. Asset chain: painter → procedural
+  art → callers may still degrade to the Ordra icon / text-only surface.
+- `OrdraAiBanner(data, onViewParcels, onAskAi?, onAddOrder?)`: Home glass banner.
+  `CompanionBannerData`/`CompanionBannerKind` + pure `resolveCompanionBanner()` own the
+  message priority; `onAskAi` is nullable so the CTA only exists when a real AI surface
+  is wired (Phase 4+).
+- Reuse rule: companion visuals go through `CompanionAvatar`; do not draw a second mascot.
+- Used in: Home banner + Home empty state (EMPTY_STATE variant), Orders empty state,
+  Onboarding heroes (ONBOARDING), About screen (COMPACT).

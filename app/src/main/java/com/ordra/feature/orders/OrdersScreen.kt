@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,6 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
+import com.ordra.core.ui.ai.CompanionAvatar
+import com.ordra.core.ui.ai.CompanionState
+import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.components.OrderCard
 import com.ordra.core.ui.orderStatusLabel
 import com.ordra.core.ui.platformLabel
@@ -158,6 +162,11 @@ fun OrdersScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    CompanionAvatar(
+                        state = CompanionState.EMPTY,
+                        variant = CompanionVariant.EMPTY_STATE,
+                    )
+                    Spacer(Modifier.height(12.dp))
                     Text(
                         stringResource(
                             if (uiState.query.hasActiveFilters) R.string.orders_no_results

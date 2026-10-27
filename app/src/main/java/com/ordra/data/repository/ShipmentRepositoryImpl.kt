@@ -28,6 +28,9 @@ class ShipmentRepositoryImpl @Inject constructor(
     override fun observeEvents(shipmentId: String): Flow<List<TrackingEvent>> =
         trackingEventDao.observeEvents(shipmentId).map { list -> list.map(ShipmentMapper::toDomain) }
 
+    override fun observeAttentionShipmentCount(): Flow<Int> =
+        shipmentDao.observeAttentionShipmentCount()
+
     override suspend fun getPrimaryShipment(orderId: String): Shipment? =
         shipmentDao.getPrimaryShipment(orderId)?.let(ShipmentMapper::toDomain)
 

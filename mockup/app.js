@@ -205,6 +205,42 @@ function orderCard(o) {
 const isActive = o => !o.archived && !TERMINAL.includes(o.status);
 const isPendingCod = o => o.isCod && o.paymentStatus !== "PAID" && o.status !== "CANCELLED";
 
+/* ---------- ordi companion (mirrors core/ui/ai/Companion.kt) ---------- */
+function ordiSvg(state = "idle") {
+  const faces = {
+    open: `<circle cx="38" cy="56" r="6.4" fill="#F5F5FA"/><circle cx="62" cy="56" r="6.4" fill="#F5F5FA"/><circle cx="38" cy="56" r="3" fill="#14164D"/><circle cx="62" cy="56" r="3" fill="#14164D"/>`,
+    happy: `<path d="M32.6 54.6 A5.4 4.6 0 0 1 43.4 54.6" stroke="#F5F5FA" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M56.6 54.6 A5.4 4.6 0 0 1 67.4 54.6" stroke="#F5F5FA" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+    dot: `<circle cx="38" cy="56" r="3.6" fill="#F5F5FA"/><circle cx="62" cy="56" r="3.6" fill="#F5F5FA"/>`,
+    sleep: `<path d="M32.6 54.6 A5.4 4.6 0 0 0 43.4 54.6" stroke="#F5F5FA" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M56.6 54.6 A5.4 4.6 0 0 0 67.4 54.6" stroke="#F5F5FA" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+  };
+  const mouths = {
+    smile: `<path d="M45 73.5 A5 3.5 0 0 0 55 73.5" stroke="#F5F5FA" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+    big: `<path d="M43 72.5 A7 5 0 0 0 57 72.5" stroke="#F5F5FA" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+    flat: `<line x1="46" y1="74" x2="54" y2="74" stroke="#F5F5FA" stroke-width="2" stroke-linecap="round"/>`,
+    none: ``,
+  };
+  const look = {
+    idle: [faces.open, mouths.smile], delivery: [faces.open, mouths.smile],
+    happy: [faces.happy, mouths.big], success: [faces.happy, mouths.big],
+    attention: [faces.dot, mouths.flat], warning: [faces.dot, mouths.flat],
+    empty: [faces.open, mouths.smile], offline: [faces.sleep, mouths.none],
+  }[state] || [faces.open, mouths.smile];
+  const badge = state === "attention" || state === "warning"
+    ? `<circle cx="24" cy="18" r="8" fill="#FFB547"/><line x1="24" y1="14" x2="24" y2="19.6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="24" cy="22.6" r="1.4" fill="#fff"/>` : "";
+  const parcel = state === "delivery"
+    ? `<rect x="38" y="80" width="24" height="16" rx="4" fill="#35D0A0"/><line x1="50" y1="80" x2="50" y2="96" stroke="#fff" stroke-width="2"/>` : "";
+  const check = state === "success"
+    ? `<circle cx="78" cy="18" r="8" fill="#35D0A0"/><path d="M74 18 L77 21.4 L82.6 14.6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : "";
+  return `<svg class="ordi" viewBox="0 0 100 100" role="img" aria-label="Ordi, your ORDRA AI companion">
+    <rect x="12" y="22" width="76" height="72" rx="26" fill="url(#lg)"/>
+    <line x1="16" y1="40" x2="84" y2="40" stroke="rgba(255,255,255,.25)" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="50" y1="22" x2="50" y2="40" stroke="rgba(255,255,255,.25)" stroke-width="3.2" stroke-linecap="round"/>
+    <line x1="70" y1="22" x2="74" y2="12" stroke="#7C5CFC" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="75" cy="9" r="3.4" fill="${state === "offline" ? "none" : "#35D0A0"}" ${state === "offline" ? `stroke="#14164D" stroke-width="1.6"` : ""}/>
+    ${look[0]}${look[1]}${badge}${parcel}${check}
+  </svg>`;
+}
+
 /* ---------- home ---------- */
 function renderHome() {
   const h = new Date().getHours();
@@ -213,6 +249,37 @@ function renderHome() {
   const active = orders.filter(isActive);
   const soon = active.filter(o => o.etaEnd && o.etaEnd <= d(3)).sort((a, b) => a.etaEnd.localeCompare(b.etaEnd));
   const codDue = orders.filter(isPendingCod).reduce((s, o) => s + orderTotal(o), 0);
+
+  // AI banner — same priority resolver as HomeViewModel (attention > today > delivered > active > empty).
+  const today = d(0);
+  const attention = active.filter(o => o.etaEnd && o.etaEnd < today).length;
+  const arrivingToday = active.filter(o => (o.etaStart || o.etaEnd) === today).length;
+  const deliveredRecent = active.filter(o => o.status === "DELIVERED" && o.deliveredAt && o.deliveredAt >= d(-2)).length;
+  const banner = attention > 0 ? { kind: "attention", n: attention, extra: arrivingToday, state: "attention" }
+    : arrivingToday > 0 ? { kind: "arriving", n: arrivingToday, state: "delivery" }
+    : deliveredRecent > 0 ? { kind: "delivered", n: deliveredRecent, state: "success" }
+    : active.length > 0 ? { kind: "active", n: active.length, state: "idle" }
+    : { kind: "empty", n: 0, state: "empty" };
+  const msgs = {
+    attention: n => `${n} parcel${n === 1 ? "" : "s"} need${n === 1 ? "s" : ""} attention`,
+    arriving: n => `${n} parcel${n === 1 ? " is" : "s are"} expected today`,
+    delivered: n => n === 1 ? "A parcel was delivered recently" : `${n} parcels were delivered recently`,
+    active: n => `You have ${n} active deliver${n === 1 ? "y" : "ies"}`,
+    empty: () => "No active parcels right now.",
+  };
+  $("#aiBanner").innerHTML = `
+    <div class="ai-banner">
+      <div class="ai-banner-text">
+        <p class="ai-eyebrow"><span class="ai-dot"></span>ORDRA AI</p>
+        <p class="ai-greet">${h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"}</p>
+        <p class="ai-msg">${msgs[banner.kind](banner.n)}</p>
+        ${banner.extra ? `<p class="ai-msg-sub">${msgs.arriving(banner.extra)}</p>` : ""}
+        <div class="ai-actions">
+          <button class="btn btn-tonal" type="button" data-goto="orders">View parcels</button>
+        </div>
+      </div>
+      ${ordiSvg(banner.state)}
+    </div>`;
 
   $("#statRow").innerHTML = `
     <div class="stat-card"><span class="stat-ico indigo"><span class="mi">package_2</span></span><div class="stat-num">${active.length}</div><div class="stat-label">Active orders</div></div>

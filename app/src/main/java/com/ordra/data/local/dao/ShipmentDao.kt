@@ -39,6 +39,13 @@ interface ShipmentDao {
         detectedAt: Long?,
     )
 
+    /** Parcels on non-archived orders currently in a problem state. */
+    @Query(
+        "SELECT COUNT(*) FROM shipments s INNER JOIN orders o ON s.orderId = o.id " +
+            "WHERE o.archivedAt IS NULL AND s.shipmentStatus IN ('DELIVERY_FAILED', 'RETURNING')",
+    )
+    fun observeAttentionShipmentCount(): Flow<Int>
+
     @Query("DELETE FROM shipments WHERE id = :shipmentId")
     suspend fun deleteShipment(shipmentId: String)
 }

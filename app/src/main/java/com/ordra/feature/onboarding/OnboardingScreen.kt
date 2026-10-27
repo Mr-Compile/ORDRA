@@ -8,15 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,15 +22,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ordra.R
+import com.ordra.core.ui.ai.CompanionAvatar
+import com.ordra.core.ui.ai.CompanionState
+import com.ordra.core.ui.ai.CompanionVariant
 import kotlinx.coroutines.launch
 
 /** First-run onboarding: 3 concise pages + skip. No account creation. */
 @Composable
 fun OnboardingScreen(onFinish: () -> Unit) {
     val pages = listOf(
-        Triple(Icons.Default.ShoppingCart, R.string.onboard_1_title, R.string.onboard_1_body),
-        Triple(Icons.Default.CheckCircle, R.string.onboard_2_title, R.string.onboard_2_body),
-        Triple(Icons.Default.DateRange, R.string.onboard_3_title, R.string.onboard_3_body),
+        Triple(CompanionState.GREETING, R.string.onboard_1_title, R.string.onboard_1_body),
+        Triple(CompanionState.DELIVERY, R.string.onboard_2_title, R.string.onboard_2_body),
+        Triple(CompanionState.IDLE, R.string.onboard_3_title, R.string.onboard_3_body),
     )
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
@@ -54,17 +51,15 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             state = pagerState,
             modifier = Modifier.weight(1f),
         ) { page ->
-            val (icon, titleRes, bodyRes) = pages[page]
+            val (companionState, titleRes, bodyRes) = pages[page]
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(72.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                CompanionAvatar(
+                    state = companionState,
+                    variant = CompanionVariant.ONBOARDING,
                 )
                 Spacer(Modifier.height(24.dp))
                 Text(

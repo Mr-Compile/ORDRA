@@ -13,3 +13,5 @@ Shipment section: no shipment; single shipment; multiple shipments; no tracking 
 Shipment Timeline: empty; single event; ordered multi-source events.
 Status Suggestion: high confidence; medium confidence confirm/ignore; low confidence suggestion; dismissed.
 Settings: system/light/dark; Groq configured/unavailable; permissions on/off; marketplace detection/auto-update/status-notification toggles.
+ORDRA AI banner (Home): attention; arriving today; delivered recently; active; empty; AI unavailable (reserved — no remote AI yet). Ask ORDRA hidden until an AI destination exists.
+Companion (Ordi): idle; greeting; happy; thinking; working; success; delivery; attention; warning; empty; error; offline — long-message/wide-screen/reduced-motion/missing-asset fallbacks apply wherever used.

@@ -16,6 +16,12 @@ reminders/privacy. Gradient/aurora hero accents allowed. Skip available. No acco
 ## Home
 Bento dashboard built from `BentoGrid` + `BentoCard`, not a uniform list.
 - Top bar with Ordra/title and settings.
+- `OrdraAiBanner` directly below the top bar (the one allowed glass/AI surface on Home):
+  ORDRA AI eyebrow, time-of-day greeting, highest-priority context message, optional
+  secondary line, Ordi (`CompanionAvatar`, BANNER variant) on the trailing side, View
+  Parcels CTA (+ Add Order when empty). "Ask ORDRA" renders only when an AI destination
+  exists. Priority: attention > arriving today > delivered recently > active > empty —
+  see `resolveCompanionBanner` in `core/ui/ai/OrdraAiBanner.kt`.
 - Featured `ParcelCard` (featured variant) for the most important current shipment — largest
   visual emphasis, compact `TrackingProgress`, ETA.
 - Bento metrics: `SummaryMetricCard`s for Active Parcels, Arriving Today/Soon, COD to

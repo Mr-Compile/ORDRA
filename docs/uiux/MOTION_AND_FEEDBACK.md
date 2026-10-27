@@ -18,3 +18,12 @@ Approved microinteractions:
 
 Reduced-motion settings replace movement with instant/fade equivalents; every state change
 must still be communicated by color/icon/label when animation does not run.
+
+## Companion (Ordi) motion rules (implemented)
+- Idle/greeting/delivery: 2.2px breathing bob on a 2600ms alternate loop — the only ambient
+  motion.
+- THINKING: staggered thinking dots pulse (1500ms); WORKING: mint orbit sweep around the
+  antenna (1800ms). SUCCESS/ATTENTION use a static badge, no loop.
+- OFFLINE suppresses breathing (asleep); reduced motion (`ANIMATOR_DURATION_SCALE=0`)
+  disables all loops — faces/badges still communicate the state.
+- Never: bouncing, particle effects, constant glow, motion required to convey meaning.

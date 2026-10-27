@@ -30,6 +30,14 @@ v1.1 design-direction checks:
 - Skeleton loaders match real layouts; no blank screens or fake progress
 - Reduced-motion and readability fallbacks hold for glass/translucent surfaces
 - Touch targets and focus states pass on every interactive control
+- ORDRA AI companion/banner checks:
+  - Banner message priority: attention > arriving today > delivered > active > empty
+    (unit-tested in CompanionBannerTest)
+  - Banner counts come only from real order/shipment data (no fabricated AI output)
+  - Ordi decorative semantics: contentDescription set; state never the sole carrier of meaning
+  - Reduced motion: Ordi static, banner content unchanged
+  - Light + dark glass readable; missing companion asset degrades to icon/text surface
+  - Ask ORDRA absent (no AI destination yet) — acceptable; must not fake a feature
 
 Final UI acceptance additionally checks every screen in docs/uiux/SCREEN_SPECS.md is either
 implemented or explicitly marked out-of-scope by owner approval. Coverage is tracked in

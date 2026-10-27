@@ -26,6 +26,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ordra.BuildConfig
 import com.ordra.R
+import com.ordra.core.ui.ai.CompanionAvatar
+import com.ordra.core.ui.ai.CompanionState
+import com.ordra.core.ui.ai.CompanionVariant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +85,23 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             Text(
                 stringResource(R.string.about_licenses),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(24.dp))
+            CompanionAvatar(
+                state = CompanionState.IDLE,
+                variant = CompanionVariant.COMPACT,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.about_ai_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.about_ai_body),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,

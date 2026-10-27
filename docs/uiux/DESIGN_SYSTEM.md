@@ -146,3 +146,14 @@ Do not stretch the phone layout; do not add desktop/web targets (`docs/RULES.md`
 Material Symbols Rounded everywhere; custom SVG only for the Ordra mark/brand illustration.
 No emoji as production icons. Informative icons get content descriptions; decorative icons
 stay silent.
+
+## AI / companion tokens
+Live in `core/ui/ai/Companion.kt` → `CompanionTokens` (keep values there, not in screens):
+- Glass surface alpha: 0.80 light / 0.58 dark; border alpha 0.24; aurora alpha 0.14 light /
+  0.20 dark (violet top-end + mint bottom-end radial glows inside `OrdraAiBanner`).
+- Motion: breathe 2600ms, dot pulse 1500ms, working sweep 1800ms — all gated by the system
+  animator-duration scale (reduced motion → static).
+- Companion sizes come from `CompanionVariant`; the banner shrinks Ordi to 72dp below
+  ~380dp width.
+- AI surfaces stay in the ~10% accent layer: translucent surface + thin outline + restrained
+  aurora + soft indigo shadow. Text stays fully opaque; status is always icon+text.
