@@ -49,7 +49,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 
 | I-phase | Scope | Master map | UI map | Status | Notes |
 |---|---|---|---|---|---|
-| I0 | Contract alignment audit | all | all | PENDING | Run `prompts/START_INTEGRATION_PROMPT.md`; report, don't expand |
+| I0 | Contract alignment audit | all | all | DONE | `docs/qa/INTEGRATION_AUDIT_EVIDENCE.md` — zero contract violations |
 | I1 | Core order vertical slice | 1A–1D | UI-2/3/4 | DONE | Orders list/Add-Edit/Detail end-to-end (`a3c469a`,`d728a30`) |
 | I2 | Dashboard/COD/analytics | 1C/1D/6 | UI-4/8 | DONE | Aggregate queries → Home + Analytics (`a85a64b`) |
 | I3 | Reminders + calendar data | 2 | UI-5 | DONE | WorkManager + channels + ETA sync (`32284ff`) |
@@ -58,7 +58,7 @@ DONE / IN PROGRESS / PENDING / DEFERRED / BLOCKED
 | I6 | Smart Parcel Status assistance | 5 | UI-7 | DONE | Share + listener + parser/matcher/confidence gates + review (`2b0adf8`) |
 | I7 | Advanced records | 7 | UI-8 | DONE | Receipts/returns/refunds/warranties via Room v6 (`2883923`) |
 | I8 | Backup/restore/export | 8 | UI-9 | DONE | Versioned manifest + transactional restore + CSV (`2069037`) |
-| I9 | Full integration audit | 9 | UI-10 | PENDING | `prompts/INTEGRATION_AUDIT_PROMPT.md` |
+| I9 | Full integration audit | 9 | UI-10 | DONE | PASS — `docs/qa/INTEGRATION_AUDIT_EVIDENCE.md` |
 
 ## Canonical domain naming (per `docs/contracts/DOMAIN_MODELS.md`)
 
