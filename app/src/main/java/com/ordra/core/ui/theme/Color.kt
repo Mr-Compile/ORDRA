@@ -2,7 +2,7 @@ package com.ordra.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Brand palette — branding/theme_tokens.json and BRANDING.md
+// Brand palette — branding/theme_tokens.json and docs/BRANDING.md
 val OrdraIndigo = Color(0xFF5B5FEF)
 val OrdraViolet = Color(0xFF7C5CFC)
 val OrdraDeepIndigo = Color(0xFF3F43C7)

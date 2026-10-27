@@ -1,6 +1,6 @@
 # Copy/Paste — Phase Execution Prompt
 
-Read README.md, BIBLE.md, RULES.md, AGENTS.md, TECH_STACK.md, BRANDING.md, docs/plan/MASTER_PLAN.md, the target phase plan, relevant specs, and QA files before modifying code.
+Read README.md, docs/BIBLE.md, docs/RULES.md, AGENTS.md, docs/TECH_STACK.md, docs/BRANDING.md, docs/plan/MASTER_PLAN.md, the target phase plan, relevant specs, contracts (docs/contracts/*) and QA files before modifying code.
 
 Implement ONLY the target phase. First audit the existing codebase and reuse/repair valid work rather than duplicating it. Do not hallucinate files, APIs, platform capabilities or completion. Preserve working behavior outside scope.
 

@@ -1,6 +1,6 @@
 # Copy/Paste — Full Codebase Audit Prompt
 
-Audit Ordra against BIBLE.md, RULES.md, AGENTS.md, TECH_STACK.md, BRANDING.md, docs/specs/* and docs/plan/*. Determine the latest genuinely completed phase from evidence, not filenames.
+Audit Ordra against docs/BIBLE.md, docs/RULES.md, AGENTS.md, docs/TECH_STACK.md, docs/BRANDING.md, docs/specs/*, docs/contracts/* and docs/plan/*. Determine the latest genuinely completed phase from evidence, not filenames.
 
 Check architecture, database/migrations, navigation, state handling, errors, accessibility, security/privacy, secrets, Android permissions, tests, dead/duplicate code, placeholders, TODOs, Groq/OCR implementation, notification scheduling/listening and release readiness as applicable.
 

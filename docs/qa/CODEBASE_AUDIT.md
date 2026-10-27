@@ -1,6 +1,6 @@
 # Codebase Audit Prompt
 
-Before each new milestone, audit the repository against BIBLE.md, RULES.md and the active phase.
+Before each new milestone, audit the repository against docs/BIBLE.md, docs/RULES.md, docs/contracts/* and the active phase.
 
 Report:
 1. What is implemented and verified.

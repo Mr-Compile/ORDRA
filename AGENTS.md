@@ -3,9 +3,9 @@
 You are working on Ordra, an Android-only local-first parcel/order manager.
 
 ## Mandatory reading order
-1. `BIBLE.md`
-2. `RULES.md`
-3. `TECH_STACK.md`
+1. `docs/BIBLE.md`
+2. `docs/RULES.md`
+3. `docs/TECH_STACK.md`
 4. Relevant file in `docs/plan/`
 5. Relevant checklist in `docs/qa/`
 

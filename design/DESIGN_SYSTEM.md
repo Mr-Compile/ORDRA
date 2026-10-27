@@ -1,5 +1,8 @@
 # Ordra Design System
 
+> Note: superseded by `docs/uiux/DESIGN_SYSTEM.md` (UI/UX Pack v1), which is canonical.
+> This file is kept for reference from the Frontend Pack.
+
 ## Colors
 Light: background #F8F9FD, surface #FFFFFF, surfaceVariant #F0F1F8, primary #5B5FEF, secondary #7C5CFC, textPrimary #171821, textSecondary #666979, outline #DADCE8.
 Dark: background #101116, surface #18191F, surfaceVariant #212229, primary #8588FF, secondary #A48BFF, textPrimary #F5F5FA, textSecondary #B2B3C1, outline #343640.

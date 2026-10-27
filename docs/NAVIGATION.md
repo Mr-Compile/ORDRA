@@ -1,5 +1,10 @@
 # Navigation & Routing
 
+> Note: superseded by `docs/uiux/NAVIGATION_UX.md` (UI/UX Pack v1), which replaces the
+> Scan/More tabs with Home | Orders | Calendar | Insights plus a central Add/Scan sheet.
+> This file remains as the original route list; treat NAVIGATION_UX as canonical for the
+> navigation model until owner confirms. Tracked in `docs/plan/MEGAPLAN_UIUX.md` → Conflicts.
+
 Root: Splash -> Onboarding (first run only) -> MainShell.
 MainShell tabs: Home | Orders | Scan | Calendar | More.
 

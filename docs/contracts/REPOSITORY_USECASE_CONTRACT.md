@@ -1,0 +1,49 @@
+# Repository & Use Case Contract
+
+## OrderRepository
+Conceptual responsibilities:
+- observeOrder(id)
+- observeOrders(filter, sort, query)
+- createOrder(draft/domain input)
+- updateOrder(...)
+- archiveOrder(id)
+- restoreOrder(id)
+- deleteOrderPermanently(id)
+- updateStatus(id, status)
+- add/update/remove items
+- expose aggregate queries needed by dashboard/COD/analytics
+
+## Supporting repositories
+Use focused repositories where justified:
+- ReminderRepository
+- ReceiptRepository
+- WarrantyRepository
+- ReturnRefundRepository
+- SettingsRepository
+- BackupRepository
+- SmartImportRepository/Service boundary
+
+Avoid a single God repository.
+
+## Use cases
+Use cases own application rules, validation orchestration, and multi-repository coordination.
+
+Examples:
+- CreateOrderUseCase
+- UpdateOrderUseCase
+- ArchiveOrderUseCase
+- GetOrderDetailsUseCase
+- ObserveOrdersUseCase
+- UpdateOrderStatusUseCase
+- CalculateCodSummaryUseCase
+- ScheduleDeliveryReminderUseCase
+- AnalyzeScreenshotUseCase
+- ConfirmSmartImportUseCase
+- CreateReturnUseCase
+- RestoreBackupUseCase
+
+## Return types
+Prefer explicit success/failure domain results for operations that can fail. Do not expose SQLite, Retrofit, ML Kit, or Groq exceptions to ViewModels.
+
+## Flow
+Use Flow for observable local data. One-shot operations may be suspend functions.

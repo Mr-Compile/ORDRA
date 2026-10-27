@@ -1,7 +1,23 @@
 # Ordra Megaplan
 
-Merged execution roadmap across the Foundation Pack, Complete Project Pack (v2) and Frontend Pack.
+Merged execution roadmap across the Foundation Pack, Complete Project Pack (v2), Frontend Pack,
+UI/UX Complete Pack and Integration & Data Contract Pack.
 One source of truth for phase order and status. Update status after each phase gate.
+
+All canonical docs live under `docs/` (see `docs/README.md` for the index). README.md and
+AGENTS.md remain at the repo root.
+
+## Pack megaplans
+
+- `docs/plan/MEGAPLAN_UIUX.md` — exhaustive UI/UX execution plan (phases UI-0 → UI-10:
+  design foundation, nav shell, components, all screens, states, a11y, polish).
+- `docs/plan/MEGAPLAN_INTEGRATION.md` — exhaustive integration/data-contract plan
+  (phases I0 → I9: contract alignment, orders slice, analytics, reminders, OCR/Groq import,
+  assistance, advanced records, backup, full audit).
+
+Both track the same phases below through their own lenses: UI-x covers screens/components/states;
+I-x covers contracts/wiring/data correctness. A master phase is fully DONE only when its product,
+UI and integration gates all pass.
 
 ## Rules of execution
 - Workflow per phase: Plan → Implement → Test → Audit → Repair → Verify → Commit.
@@ -40,3 +56,20 @@ spending, returns/warranty, backup, notification assistance.
 ## Deferred decisions (owner)
 - Public distribution → Groq key architecture reassessment (Phase 9).
 - minSdk 26 confirmed; revisit to 24 only if install-base demands it.
+- Navigation spec conflict: `docs/NAVIGATION.md` (Scan/More tabs) vs
+  `docs/uiux/NAVIGATION_UX.md` (Home|Orders|Calendar|Insights + central Add/Scan) —
+  UIUX pack treated as canonical pending confirmation.
+
+## Cross-pack phase tracks
+
+| Master phase | UI track (`docs/plan/MEGAPLAN_UIUX.md`) | Integration track (`docs/plan/MEGAPLAN_INTEGRATION.md`) |
+|---|---|---|
+| 0–1A | UI-0, UI-1 | I0, I1 |
+| 1B–1D | UI-2, UI-3, UI-4 | I1, I2 |
+| 1E | UI-9 (partial), UI-10 | I1 |
+| 2 | UI-5 | I3 |
+| 3–4 | UI-6 | I4, I5 |
+| 5 | UI-7 | I6 |
+| 6–7 | UI-8 | I2, I7 |
+| 8 | UI-9 | I8 |
+| 9–10 | UI-10 | I9 |

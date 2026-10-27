@@ -1,5 +1,5 @@
 /* Ordra UI mockup — tokens from branding/theme_tokens.json.
-   Keep these in sync with the Compose theme (RULES.md → UI mockup consistency). */
+   Keep these in sync with the Compose theme (docs/RULES.md → UI mockup consistency). */
 
 :root {
   --font: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;

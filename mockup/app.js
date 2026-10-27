@@ -1,6 +1,6 @@
 /* Ordra interactive mockup.
    Sample data stands in for Room. When the live app UI changes, update this
-   file and index.html in the same change (RULES.md → UI mockup consistency). */
+   file and index.html in the same change (docs/RULES.md → UI mockup consistency). */
 
 /* ---------- reference data (mirrors domain enums) ---------- */
 const PLATFORMS = {

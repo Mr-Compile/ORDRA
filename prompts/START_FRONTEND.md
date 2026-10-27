@@ -1,6 +1,6 @@
 # Copy/Paste: Start Ordra Frontend
 
-Read the existing Ordra BIBLE, RULES, AGENTS, TECH_STACK and all docs first. Then read this frontend pack completely.
+Read the existing Ordra docs/BIBLE.md, docs/RULES.md, AGENTS.md, docs/TECH_STACK.md and all docs first. Then read this frontend pack (docs/FRONTEND_BIBLE.md, docs/FRONTEND_RULES.md, docs/SCREEN_INVENTORY.md, docs/NAVIGATION.md) and the UI/UX pack under docs/uiux/ completely.
 
 Implement only the next incomplete frontend phase from docs/plan/FRONTEND_PHASES.md. Do not build all screens at once. Reuse existing domain/data architecture and do not duplicate repositories or models.
 
