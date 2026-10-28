@@ -742,6 +742,16 @@ button.stat-card { border: 0; cursor: pointer; font: inherit; text-align: left; 
 }
 .chat-input input:focus { border-color: var(--primary); background: var(--surface); }
 .chat-input .send { color: var(--primary); }
+.chat-hist {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  border: 1px solid var(--outline); border-radius: 12px; padding: 10px 12px;
+  background: var(--surface); cursor: pointer; font: inherit; color: var(--text);
+}
+.chat-hist:hover { border-color: var(--primary); }
+.chat-hist .mi { color: var(--primary); font-size: 19px; }
+.chat-hist strong { font-size: 13px; display: block; }
+.chat-hist small { font-size: 11px; color: var(--text-2); }
+.icon-btn.is-on { color: var(--primary); background: var(--surface-var); }
 
 @media (max-width: 720px) {
   .stage-rail { display: none; }

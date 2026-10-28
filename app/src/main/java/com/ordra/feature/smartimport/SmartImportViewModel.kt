@@ -61,9 +61,7 @@ class SmartImportViewModel @Inject constructor(
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        SmartImportUiState(aiConfigured = groqExtractor.isConfigured),
-    )
+    private val _uiState = MutableStateFlow(SmartImportUiState())
     val uiState: StateFlow<SmartImportUiState> = _uiState.asStateFlow()
 
     private val _effects = MutableSharedFlow<SmartImportEffect>()
@@ -72,7 +70,12 @@ class SmartImportViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             settingsRepository.settings.collect {
-                _uiState.update { s -> s.copy(onlineAnalysisEnabled = it.onlineAnalysisEnabled) }
+                _uiState.update { s ->
+                    s.copy(
+                        onlineAnalysisEnabled = it.onlineAnalysisEnabled,
+                        aiConfigured = groqExtractor.isConfigured(it.groqApiKey),
+                    )
+                }
             }
         }
     }

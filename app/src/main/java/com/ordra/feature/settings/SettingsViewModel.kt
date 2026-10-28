@@ -53,6 +53,10 @@ class SettingsViewModel @Inject constructor(
         repository.setOnlineAnalysisEnabled(enabled)
     }
 
+    fun setGroqApiKey(key: String) = viewModelScope.launch {
+        repository.setGroqApiKey(key)
+    }
+
     fun setDetectionMarketplace(v: Boolean) = viewModelScope.launch {
         repository.setDetectionMarketplace(v)
     }

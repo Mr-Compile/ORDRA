@@ -127,8 +127,9 @@ fun CompanionAvatar(
 // expressive eyes, a mouth, and one state accessory at most.
 // ---------------------------------------------------------------------------
 
-private val BodyGradientStart = OrdraIndigo
-private val BodyGradientEnd = OrdraViolet
+private val BodyHi = Color(0xFF8F92FF)
+private val BodyGradientStart = Color(0xFF6B6FF2)
+private val BodyGradientEnd = Color(0xFF3F43C7)
 private val FaceWhite = Color(0xFFF5F5FA)
 private val FaceDark = Color(0xFF14164D)
 private val SeamColor = Color(0x40FFFFFF)
@@ -191,18 +192,46 @@ private fun OrdiArt(state: CompanionState, animated: Boolean, modifier: Modifier
 
         val bob = if (animate && state != CompanionState.OFFLINE) breathe * u(2.2f) else 0f
 
+        // Ground shadow — outside the bob transform so the body floats above it.
+        drawOval(
+            color = FaceDark.copy(alpha = 0.28f),
+            topLeft = at(20f, 91f),
+            size = Size(u(60f), u(8.8f)),
+        )
+
         withTransform({ translate(0f, -bob) }) {
-            // Body: soft parcel silhouette.
+            // Body: soft parcel silhouette — 3-stop gradient for depth.
             val body = Rect(u(12f), u(22f), u(88f), u(94f))
             drawRoundRect(
                 brush = Brush.linearGradient(
-                    colors = listOf(BodyGradientStart, BodyGradientEnd),
-                    start = at(12f, 22f),
-                    end = at(88f, 94f),
+                    colorStops = arrayOf(
+                        0f to BodyHi,
+                        0.45f to BodyGradientStart,
+                        1f to BodyGradientEnd,
+                    ),
+                    start = at(26f, 18f),
+                    end = at(80f, 98f),
                 ),
                 topLeft = body.topLeft,
                 size = body.size,
                 cornerRadius = CornerRadius(u(26f)),
+            )
+            // Bottom shade — grounds the body.
+            drawRoundRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, FaceDark.copy(alpha = 0.38f)),
+                    startY = u(58f),
+                    endY = u(94f),
+                ),
+                topLeft = body.topLeft,
+                size = body.size,
+                cornerRadius = CornerRadius(u(26f)),
+            )
+            // Top-left highlight — the 3D "lit" edge.
+            drawOval(
+                color = Color.White.copy(alpha = 0.20f),
+                topLeft = at(20f, 26f),
+                size = Size(u(44f), u(18f)),
             )
             // Parcel seam + tape hint — subtle, not a literal box.
             drawLine(

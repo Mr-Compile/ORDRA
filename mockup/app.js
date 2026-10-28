@@ -1037,7 +1037,7 @@ function renderDetections() {
   const body = $("#detectionsBody");
   body.innerHTML = `
     <div class="banner info" style="margin-top:10px"><span class="mi">verified_user</span>
-      Detected from notifications on this device. Confirm before a status changes — nothing is applied silently.
+      Detected from notifications on this device. High-confidence matches apply automatically — anything uncertain waits here for your review.
     </div>
     ${detections.length ? `<div class="stack" style="margin-top:12px">${detections.map(det => {
       const o = orders.find(x => x.id === det.orderId);
@@ -1365,7 +1365,20 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if
 
 /* ---------- Ordi chat (companion surface — answers reflect local data only, mirroring the "no invented updates" rule) ---------- */
 const ORDI_PROMPTS = ["What's arriving?", "COD to prepare", "Anything late?", "Detected updates", "How much did I spend?"];
-let chatLog = [];
+let chats = JSON.parse(localStorage.getItem("ordra_chats") || "[]"); // [{id,title,msgs:[{who,text}]}]
+let chatIdx = -1;              // -1 = not started; index into chats once first message lands
+let chatLog = [];              // active chat messages (mirrors chats[chatIdx].msgs)
+let chatMode = "chat";         // "chat" | "history"
+
+function saveChats() {
+  if (chatIdx >= 0 && chats[chatIdx]) chats[chatIdx].msgs = chatLog;
+  localStorage.setItem("ordra_chats", JSON.stringify(chats));
+}
+function startNewChat() {
+  chatIdx = -1; chatLog = []; chatMode = "chat";
+  const active = orders.filter(isActive);
+  pushMsg("or", `Hey, I'm Ordi — your ORDRA AI companion. You've got ${active.length} active deliver${active.length === 1 ? "y" : "ies"} right now. What do you want to know?`, true);
+}
 
 function ordiReply(q) {
   const t = q.toLowerCase(), active = orders.filter(isActive), today = d(0);
@@ -1401,23 +1414,46 @@ function ordiReply(q) {
 function openChat() {
   $("#chatOverlay").hidden = false;
   $("#chatHead").hidden = true;
-  if (!chatLog.length) {
-    const active = orders.filter(isActive);
-    pushMsg("or", `Hey, I'm Ordi — your ORDRA AI companion. You've got ${active.length} active deliver${active.length === 1 ? "y" : "ies"} right now. What do you want to know?`);
-  }
+  if (chatMode === "chat" && chatIdx < 0 && !chatLog.length) startNewChat();
   $("#chatPrompts").innerHTML = ORDI_PROMPTS.map(p => `<button class="chip" type="button" data-qp="${esc(p)}">${esc(p)}</button>`).join("");
   renderChat();
 }
-function closeChat() { $("#chatOverlay").hidden = true; $("#chatHead").hidden = false; }
-function pushMsg(who, text) {
+function closeChat() { $("#chatOverlay").hidden = true; $("#chatHead").hidden = false; saveChats(); }
+function pushMsg(who, text, silent) {
   chatLog.push({ who, text });
-  renderChat();
+  if (!silent) {
+    if (chatIdx < 0) {
+      const title = who === "me" ? text.slice(0, 34) : "New chat";
+      chats.unshift({ id: `c${Date.now()}`, title: who === "me" ? title : "New chat", msgs: [] });
+      chatIdx = 0;
+    }
+    if (chats[chatIdx].title === "New chat" && who === "me") chats[chatIdx].title = text.slice(0, 34);
+    saveChats();
+  }
+  if (chatMode === "chat") renderChat();
 }
 function renderChat() {
   const box = $("#chatMsgs");
+  if (chatMode === "history") {
+    box.innerHTML = chats.length
+      ? chats.map((c, i) => `
+        <button class="chat-hist" type="button" data-chat="${i}">
+          <span class="mi">forum</span>
+          <span style="flex:1;min-width:0;text-align:left"><strong>${esc(c.title || "Chat")}</strong>
+          <small>${c.msgs.length} message${c.msgs.length === 1 ? "" : "s"}</small></span>
+        </button>`).join("")
+      : `<div class="empty"><span class="mi">forum</span><p>No past chats yet.</p></div>`;
+    $("#chatPrompts").innerHTML = "";
+    return;
+  }
   box.innerHTML = chatLog.map(m =>
     `<div class="chat-msg ${m.who === "me" ? "me" : "or"}">${m.who === "or" ? `<span class="chat-avatar">${ordiSvg("idle")}</span>` : ""}<p>${esc(m.text)}</p></div>`).join("");
   box.scrollTop = box.scrollHeight;
+}
+function toggleChatMode() {
+  chatMode = chatMode === "chat" ? "history" : "chat";
+  $("#chatHistBtn").classList.toggle("is-on", chatMode === "history");
+  renderChat();
 }
 
 $("#chatHead").addEventListener("click", openChat);
@@ -1434,6 +1470,15 @@ $("#chatForm").addEventListener("submit", e => {
 document.addEventListener("click", e => {
   const qp = e.target.closest("[data-qp]");
   if (qp) { pushMsg("me", qp.dataset.qp); setTimeout(() => pushMsg("or", ordiReply(qp.dataset.qp)), 350); }
+  const hc = e.target.closest("[data-chat]");
+  if (hc) {
+    chatIdx = +hc.dataset.chat;
+    chatLog = chats[chatIdx]?.msgs || [];
+    chatMode = "chat";
+    $("#chatHistBtn").classList.remove("is-on");
+    $("#chatPrompts").innerHTML = ORDI_PROMPTS.map(p => `<button class="chip" type="button" data-qp="${esc(p)}">${esc(p)}</button>`).join("");
+    renderChat();
+  }
 });
 $("#chatHead").innerHTML = ordiSvg("idle");
 $("#chatOrdi").innerHTML = ordiSvg("happy");
@@ -1480,11 +1525,16 @@ function renderOnboard() {
       ${ordiSvg(p.or)}
       <h2>${esc(p.title)}</h2>
       <p>${esc(p.body)}</p>
+      ${obPage === OB_PAGES.length - 1 ? `
+        <input class="field" id="obKey" type="password" placeholder="Groq API key — optional" style="margin-top:16px" autocomplete="off">
+        <p style="font-size:11.5px;color:var(--text-2);margin-top:6px">Paste a Groq key to enable online AI analysis for Smart Import. It stays on this device. Leave blank for fully local mode.</p>` : ""}
     </div>`;
   $("#obDots").innerHTML = OB_PAGES.map((_, i) => `<span class="ob-dot ${i === obPage ? "is-on" : ""}"></span>`).join("");
   $("#obNext").textContent = obPage === OB_PAGES.length - 1 ? "Get started" : "Next";
 }
 function finishOnboard() {
+  const key = $("#obKey")?.value.trim();
+  if (key) { localStorage.setItem("ordra_groq_key", key); const g = $("#groqKey"); if (g) g.value = key; }
   localStorage.setItem("ordra_onboarded", "1");
   $("#onboard").hidden = true;
 }

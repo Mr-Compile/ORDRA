@@ -239,6 +239,11 @@
     <string name="onboard_skip">Skip</string>
     <string name="onboard_next">Next</string>
     <string name="onboard_start">Get started</string>
+    <string name="onboard_api_key">Groq API key — optional</string>
+    <string name="onboard_api_key_hint">Paste a Groq key to enable online AI analysis for Smart Import. It stays on this device. Leave blank for fully local mode.</string>
+    <string name="settings_api_key">Groq API key</string>
+    <string name="settings_api_key_hint">Stored locally on this device; used only for Smart Import online analysis.</string>
+    <string name="settings_api_key_save">Save key</string>
     <string name="onboard_1_title">Every order, one place</string>
     <string name="onboard_1_body">Save purchases from Shopee, TikTok Shop, Lazada and anywhere else — manually, no account needed. Ordi, your ORDRA AI companion, helps you spot what needs attention.</string>
     <string name="onboard_2_title">Know what to prepare</string>

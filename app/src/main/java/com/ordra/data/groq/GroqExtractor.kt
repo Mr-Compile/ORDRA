@@ -1,7 +1,9 @@
 package com.ordra.data.groq
 
 import com.ordra.BuildConfig
+import com.ordra.domain.repository.SettingsRepository
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.serialization.json.Json
@@ -20,12 +22,13 @@ sealed interface GroqResult {
  * output is candidate fields only; the user always reviews before saving.
  */
 @Singleton
-class GroqExtractor @Inject constructor() {
+class GroqExtractor @Inject constructor(
+    private val settingsRepository: SettingsRepository,
+) {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val api: GroqApi? by lazy {
-        if (BuildConfig.GROQ_API_KEY.isBlank()) return@lazy null
+    private val api: GroqApi by lazy {
         val client = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
@@ -38,7 +41,12 @@ class GroqExtractor @Inject constructor() {
             .create(GroqApi::class.java)
     }
 
-    val isConfigured: Boolean get() = api != null
+    /** User-entered key (Settings/onboarding) takes precedence; BuildConfig key is the fallback. */
+    private suspend fun resolveKey(): String =
+        settingsRepository.settings.first().groqApiKey.ifBlank { BuildConfig.GROQ_API_KEY }
+
+    fun isConfigured(userKey: String): Boolean =
+        userKey.isNotBlank() || BuildConfig.GROQ_API_KEY.isNotBlank()
 
     private val SYSTEM_PROMPT = """
 You extract order details from OCR text of a marketplace order screenshot.
@@ -54,10 +62,11 @@ Never invent values. If unsure, return null.
 """.trimIndent()
 
     suspend fun extract(redactedOcrText: String): GroqResult {
-        val client = api ?: return GroqResult.Unavailable
+        val key = resolveKey()
+        if (key.isBlank()) return GroqResult.Unavailable
         return runCatching {
-            val response = client.chat(
-                authorization = "Bearer ${BuildConfig.GROQ_API_KEY}",
+            val response = api.chat(
+                authorization = "Bearer $key",
                 request = GroqChatRequest(
                     messages = listOf(
                         GroqMessage("system", SYSTEM_PROMPT),

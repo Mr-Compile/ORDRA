@@ -28,6 +28,7 @@ class SettingsRepositoryImpl @Inject constructor(
         val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
         val DAILY_SUMMARY = booleanPreferencesKey("daily_summary_enabled")
         val ONLINE_ANALYSIS = booleanPreferencesKey("online_analysis_enabled")
+        val GROQ_API_KEY = stringPreferencesKey("groq_api_key")
         val DETECTION_MARKETPLACE = booleanPreferencesKey("detection_marketplace")
         val DETECTION_COURIER = booleanPreferencesKey("detection_courier")
         val DETECTION_RIDER = booleanPreferencesKey("detection_rider")
@@ -46,10 +47,11 @@ class SettingsRepositoryImpl @Inject constructor(
             defaultPaymentMethod = prefs.enumOrNull<PaymentMethod>(Keys.DEFAULT_PAYMENT),
             dailySummaryEnabled = prefs[Keys.DAILY_SUMMARY] ?: false,
             onlineAnalysisEnabled = prefs[Keys.ONLINE_ANALYSIS] ?: false,
+            groqApiKey = prefs[Keys.GROQ_API_KEY] ?: "",
             detectionMarketplace = prefs[Keys.DETECTION_MARKETPLACE] ?: false,
             detectionCourier = prefs[Keys.DETECTION_COURIER] ?: false,
             detectionRider = prefs[Keys.DETECTION_RIDER] ?: false,
-            autoApplyHighConfidence = prefs[Keys.AUTO_APPLY_HIGH] ?: false,
+            autoApplyHighConfidence = prefs[Keys.AUTO_APPLY_HIGH] ?: true,
             aiAssistedDetection = prefs[Keys.AI_ASSISTED_DETECTION] ?: false,
             onboardingComplete = prefs[Keys.ONBOARDING_COMPLETE] ?: false,
         )
@@ -99,6 +101,10 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setOnlineAnalysisEnabled(enabled: Boolean) {
         dataStore.edit { it[Keys.ONLINE_ANALYSIS] = enabled }
+    }
+
+    override suspend fun setGroqApiKey(key: String) {
+        dataStore.edit { it[Keys.GROQ_API_KEY] = key.trim() }
     }
 
     override suspend fun setDailySummaryEnabled(enabled: Boolean) {

@@ -177,6 +177,9 @@
           <div class="card">
             <h4 class="card-title">AI assistance</h4>
             <label class="switch-row"><span><strong>Online AI analysis</strong><small>Optional Groq assist for Smart Import — screenshot text is minimized first; falls back to local OCR</small></span><input type="checkbox" class="switch" id="aiToggle"></label>
+            <p class="field-label" style="margin-top:8px">Groq API key</p>
+            <input class="field" id="groqKey" type="password" placeholder="gsk_… — optional" autocomplete="off">
+            <p class="card-sub" style="margin:6px 0 0">Stored locally on this device; used only for Smart Import online analysis.</p>
           </div>
 
           <div class="card">
@@ -186,7 +189,7 @@
             <label class="switch-row" style="margin-top:8px"><span><strong>Marketplace notifications</strong></span><input type="checkbox" class="switch" checked></label>
             <label class="switch-row"><span><strong>Courier notifications</strong></span><input type="checkbox" class="switch" checked></label>
             <label class="switch-row"><span><strong>Rider / messaging notifications</strong><small>Via notifications only — never inboxes</small></span><input type="checkbox" class="switch"></label>
-            <label class="switch-row"><span><strong>Auto-apply high-confidence</strong></span><input type="checkbox" class="switch"></label>
+            <label class="switch-row"><span><strong>Auto-apply high-confidence</strong></span><input type="checkbox" class="switch" checked></label>
             <button class="nav-row" type="button" data-goto="detections"><span>Review detected updates</span><span class="mi">chevron_right</span></button>
           </div>
 
@@ -257,6 +260,8 @@
             <strong style="font-size:14px">Ordi</strong>
             <small style="display:block;font-size:11px;color:var(--text-2)">ORDRA AI · answers from your local data only</small>
           </div>
+          <button class="icon-btn" id="chatHistBtn" type="button" aria-label="Chat history" onclick="toggleChatMode()"><span class="mi">history</span></button>
+          <button class="icon-btn" id="chatNewBtn" type="button" aria-label="New chat" onclick="startNewChat()"><span class="mi">add</span></button>
           <button class="icon-btn" id="chatClose" type="button" aria-label="Close chat"><span class="mi">close</span></button>
         </div>
         <div class="chat-msgs" id="chatMsgs"></div>

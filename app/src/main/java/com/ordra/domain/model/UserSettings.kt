@@ -9,10 +9,11 @@ data class UserSettings(
     val defaultPaymentMethod: PaymentMethod? = null,
     val dailySummaryEnabled: Boolean = false,
     val onlineAnalysisEnabled: Boolean = false,
+    val groqApiKey: String = "",
     val detectionMarketplace: Boolean = false,
     val detectionCourier: Boolean = false,
     val detectionRider: Boolean = false,
-    val autoApplyHighConfidence: Boolean = false,
+    val autoApplyHighConfidence: Boolean = true,
     val aiAssistedDetection: Boolean = false,
     val onboardingComplete: Boolean = false,
 )

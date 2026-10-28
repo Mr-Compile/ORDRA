@@ -12,13 +12,19 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ordra.R
@@ -29,7 +35,8 @@ import kotlinx.coroutines.launch
 
 /** First-run onboarding: 3 concise pages + skip. No account creation. */
 @Composable
-fun OnboardingScreen(onFinish: () -> Unit) {
+fun OnboardingScreen(onFinish: (groqApiKey: String) -> Unit) {
+    var apiKey by remember { mutableStateOf("") }
     val pages = listOf(
         Triple(CompanionState.GREETING, R.string.onboard_1_title, R.string.onboard_1_body),
         Triple(CompanionState.DELIVERY, R.string.onboard_2_title, R.string.onboard_2_body),
@@ -43,7 +50,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            TextButton(onClick = onFinish) {
+            TextButton(onClick = { onFinish(apiKey) }) {
                 Text(stringResource(R.string.onboard_skip))
             }
         }
@@ -74,6 +81,18 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
+                if (page == pages.lastIndex) {
+                    Spacer(Modifier.height(20.dp))
+                    OutlinedTextField(
+                        value = apiKey,
+                        onValueChange = { apiKey = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.onboard_api_key)) },
+                        supportingText = { Text(stringResource(R.string.onboard_api_key_hint)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                    )
+                }
             }
         }
         Row(
@@ -93,7 +112,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 if (pagerState.currentPage < pages.lastIndex) {
                     scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                 } else {
-                    onFinish()
+                    onFinish(apiKey)
                 }
             },
             modifier = Modifier.fillMaxWidth(),

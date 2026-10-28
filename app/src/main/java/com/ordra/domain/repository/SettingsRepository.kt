@@ -18,6 +18,7 @@ interface SettingsRepository {
     suspend fun setAutoApplyHighConfidence(enabled: Boolean)
     suspend fun setAiAssistedDetection(enabled: Boolean)
     suspend fun setOnlineAnalysisEnabled(enabled: Boolean)
+    suspend fun setGroqApiKey(key: String)
     suspend fun setDailySummaryEnabled(enabled: Boolean)
     suspend fun setOnboardingComplete(complete: Boolean)
 }

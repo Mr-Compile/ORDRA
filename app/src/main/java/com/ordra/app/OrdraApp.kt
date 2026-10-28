@@ -32,8 +32,11 @@ fun OrdraApp(settingsRepository: SettingsRepository) {
     OrdraTheme(darkTheme = darkTheme) {
         if (!current.onboardingComplete) {
             OnboardingScreen(
-                onFinish = {
-                    scope.launch { settingsRepository.setOnboardingComplete(true) }
+                onFinish = { apiKey ->
+                    scope.launch {
+                        if (apiKey.isNotBlank()) settingsRepository.setGroqApiKey(apiKey)
+                        settingsRepository.setOnboardingComplete(true)
+                    }
                 },
             )
         } else {

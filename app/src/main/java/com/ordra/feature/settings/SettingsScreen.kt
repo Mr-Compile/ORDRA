@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -209,6 +210,20 @@ fun SettingsScreen(
                             onCheckedChange = { viewModel.setOnlineAnalysis(it) },
                         )
                     }
+                    var apiKey by remember(s.groqApiKey) { mutableStateOf(s.groqApiKey) }
+                    OutlinedTextField(
+                        value = apiKey,
+                        onValueChange = { apiKey = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.settings_api_key)) },
+                        supportingText = { Text(stringResource(R.string.settings_api_key_hint)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                    )
+                    TextButton(
+                        onClick = { viewModel.setGroqApiKey(apiKey) },
+                        enabled = apiKey != s.groqApiKey,
+                    ) { Text(stringResource(R.string.settings_api_key_save)) }
                 }
             }
 
