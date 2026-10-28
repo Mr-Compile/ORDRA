@@ -16,8 +16,10 @@ Per `docs/RULES.md` → **UI mockup consistency**: this mockup mirrors the live 
 | --- | --- |
 | Home | Summary stats (active, arriving soon, COD to prepare), Ordi AI banner, arriving soon, recent orders |
 | Orders | Search, platform/status/COD/archived filters, sorting, order cards |
-| Order details | Tracking timeline, items, price breakdown, payment/COD, notes, archive/delete, mark delivered, post-purchase (rating, favorite, returns/refunds/warranties/receipts) |
-| New order | 5-step wizard: Platform → Details & items → Payment → Delivery (incl. reminder chips) → Review |
+| Order details | Shipment section (View timeline / Update status / Track externally, source attribution), items, price breakdown, payment/COD, notes, archive/delete, mark delivered, post-purchase (rating, favorite, returns/refunds/warranties/receipts) |
+| Tracking timeline | Standalone shipment timeline screen (mirrors `ShipmentTimelineScreen`) |
+| COD overview | Pending COD totals, due today / next 3 days / all lists (mirrors `CodOverviewScreen`) |
+| New order | Form → Review flow (mirrors `AddEditOrderScreen`: Platform, Items, Pricing, Payment, Delivery + reminders, Notes sections → review → save) |
 | Delivery calendar | Month grid with parcel/COD dots, per-day list |
 | Detected updates | Suggestion review — apply / ignore / pick-parcel, confidence chips |
 | Smart import | Screenshot pick → extracted-field review with confidence → save |

@@ -38,7 +38,7 @@ const peso = minor => "₱" + (minor / 100).toLocaleString("en-PH", { maximumFra
 const fmtDate = iso => iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const orderTotal = o => o.items.reduce((s, i) => s + i.qty * i.priceMinor, 0) + o.shippingMinor - o.discountMinor;
-const itemsSummary = o => o.items.length === 1 ? o.items[0].name : `${o.items[0].name} + ${o.items.length - 1} more`;
+const itemsSummary = o => o.title || (o.items.length === 1 ? o.items[0].name : `${o.items[0].name} + ${o.items.length - 1} more`);
 
 /* ---------- sample data ---------- */
 let nextId = 10;
@@ -175,6 +175,8 @@ function showScreen(name, opts = {}) {
   if (name === "detections") renderDetections();
   if (name === "import") renderImport();
   if (name === "analytics") renderAnalytics();
+  if (name === "timeline") renderTimeline();
+  if (name === "cod") renderCod();
 }
 
 function renderAppbar() {
@@ -185,13 +187,21 @@ function renderAppbar() {
   switch (state.screen) {
     case "home":
       appbar.innerHTML = `${logo}
+        <button class="icon-btn" type="button" aria-label="Orders" data-goto="orders"><span class="mi">package_2</span></button>
         <button class="icon-btn" type="button" aria-label="Smart import" data-goto="import"><span class="mi">photo_camera</span></button>
         <button class="icon-btn" type="button" aria-label="Delivery calendar" data-goto="calendar"><span class="mi">calendar_month</span></button>
-        <button class="icon-btn" type="button" aria-label="Detected updates" data-goto="detections"><span class="mi">notifications</span><span class="badge-dot" ${detections.length ? "" : "hidden"}></span></button>`;
+        <button class="icon-btn" type="button" aria-label="Settings" data-goto="settings"><span class="mi">settings</span></button>`;
       break;
     case "orders":
       appbar.innerHTML = `<span class="appbar-title">Orders</span>
-        <button class="icon-btn" type="button" aria-label="Detected updates" data-goto="detections"><span class="mi">notifications</span></button>`;
+        <button class="icon-btn" type="button" aria-label="COD overview" data-goto="cod"><span class="mi">payments</span></button>
+        <button class="icon-btn" type="button" aria-label="Detected updates" data-goto="detections"><span class="mi">notifications</span><span class="badge-dot" ${detections.length ? "" : "hidden"}></span></button>`;
+      break;
+    case "timeline":
+      appbar.innerHTML = `${back}<span class="appbar-title">Tracking</span>`;
+      break;
+    case "cod":
+      appbar.innerHTML = `${back}<span class="appbar-title">COD overview</span>`;
       break;
     case "calendar":
       appbar.innerHTML = `${back}<span class="appbar-title">Delivery calendar</span>`;
@@ -419,10 +429,17 @@ function renderDetail() {
       ${o.isCod && o.paymentStatus !== "PAID" ? `<div class="banner warn" style="margin-top:8px"><span class="mi">payments</span>Prepare ${peso(orderTotal(o))} cash for the rider.</div>` : ""}
     </div>
 
-    <div class="card"><h4 class="card-title">Delivery</h4>
+    <div class="card"><h4 class="card-title">Shipment</h4>
       <div class="kv-row"><span class="k">Courier</span><span class="v">${esc(o.courier || "Not set")}</span></div>
       <div class="kv-row"><span class="k">Tracking</span><span class="v">${o.tracking ? `<span class="mono">${esc(o.tracking)}</span> <button class="copy-btn" type="button" aria-label="Copy tracking number" onclick="navigator.clipboard?.writeText('${esc(o.tracking)}');toast('Tracking number copied')"><span class="mi">content_copy</span></button>` : "—"}</span></div>
+      <div class="kv-row"><span class="k">Status</span><span class="v">${statusChip(o.status)}</span></div>
       <div class="kv-row"><span class="k">Estimated delivery</span><span class="v">${o.etaStart ? `${fmtDate(o.etaStart)} – ${fmtDate(o.etaEnd)}` : "—"}</span></div>
+      <div class="kv-row"><span class="k">Source</span><span class="v">Manual · updated ${fmtDate(o.createdAt)}</span></div>
+      <div class="dialog-actions" style="margin-top:8px;justify-content:flex-start">
+        <button class="btn btn-text" type="button" onclick="showScreen('timeline')">View timeline</button>
+        <button class="btn btn-text" type="button" onclick="markDelivered('${o.id}')">Update status</button>
+        <button class="btn btn-text" type="button" onclick="toast('Opens ${esc(o.courier || "courier")} tracking on device')">Track externally</button>
+      </div>
     </div>
 
     ${o.notes ? `<div class="card"><h4 class="card-title">Notes</h4><p style="font-size:13.5px;color:var(--text-2);margin:0;line-height:1.55">${esc(o.notes)}</p></div>` : ""}
@@ -467,35 +484,58 @@ function confirmDelete() {
   toast("Order deleted");
 }
 
-/* ---------- add-order wizard ---------- */
-const WIZ_STEPS = ["Platform", "Details & items", "Payment", "Delivery", "Review"];
+/* ---------- add/edit order — FORM → REVIEW (mirrors AddEditOrderScreen) ---------- */
+let editStep = "form"; // "form" | "review" — mirrors EditorStep
 
 function startWizard() {
+  editStep = "form";
   draft = {
-    step: 0, platform: null, customPlatformName: "", sellerName: "",
+    platform: null, customPlatformName: "", title: "", sellerName: "",
     items: [{ name: "", variant: "", qty: 1, priceMinor: 0 }],
     shippingMinor: 0, discountMinor: 0,
     paymentMethod: "COD", paymentStatus: "UNPAID", isCod: true,
     courier: "", tracking: "", orderedAt: d(0), etaStart: "", etaEnd: "", notes: "",
-    reminders: ["dayof"],
+    reminders: ["dayof"], status: "ORDERED",
   };
-  renderWizard();
+  renderEdit();
 }
 
 const draftTotal = dr => dr.items.reduce((s, i) => s + i.qty * i.priceMinor, 0) + dr.shippingMinor - dr.discountMinor;
 
-function renderWizard() {
+function renderEdit() {
   const dr = draft;
-  $("#stepLabel").textContent = `Step ${dr.step + 1} of 5`;
-  $("#stepName").textContent = WIZ_STEPS[dr.step];
-  $("#progressFill").style.width = `${((dr.step + 1) / 5) * 100}%`;
-  $("#wizBack").textContent = dr.step === 0 ? "Cancel" : "Back";
-  $("#wizNext").innerHTML = dr.step === 4 ? `<span class="mi">check</span>Save order` : "Continue";
+  $("#editBack").textContent = editStep === "form" ? "Cancel" : "Back to edit";
+  $("#editNext").innerHTML = editStep === "form" ? "Review" : `<span class="mi">check</span>Save order`;
+  const body = $("#editBody");
 
-  const body = $("#wizardBody");
-  if (dr.step === 0) {
+  if (editStep === "review") {
+    const p = dr.platform ? platOf({ platform: dr.platform }) : null;
     body.innerHTML = `
-      <p class="field-label">Where did you order?</p>
+      <div class="card" style="margin-top:10px"><h4 class="card-title">Review order</h4>
+        <div class="kv-row"><span class="k">Platform</span><span class="v">${p ? esc(dr.customPlatformName || p.label) : "—"}</span></div>
+        <div class="kv-row"><span class="k">Title</span><span class="v">${esc(dr.title) || "—"}</span></div>
+        <div class="kv-row"><span class="k">Seller</span><span class="v">${esc(dr.sellerName) || "—"}</span></div>
+        <hr class="hr">
+        ${dr.items.filter(i => i.name).map(i => `<div class="item-row"><span><div class="item-name">${esc(i.name)}</div>${i.variant ? `<div class="item-var">${esc(i.variant)}</div>` : ""}</span><span class="item-price">${i.qty} × ${peso(i.priceMinor)}</span></div>`).join("")}
+        <hr class="hr">
+        <div class="kv-row"><span class="k">Shipping</span><span class="v">${peso(dr.shippingMinor)}</span></div>
+        <div class="kv-row"><span class="k">Discount</span><span class="v">−${peso(dr.discountMinor)}</span></div>
+        <div class="kv-row total"><span class="k">Total</span><span class="v">${peso(draftTotal(dr))}</span></div>
+        <hr class="hr">
+        <div class="kv-row"><span class="k">Payment</span><span class="v">${dr.paymentMethod} · ${dr.paymentStatus === "PAID" ? "Paid" : dr.paymentStatus === "PARTIAL" ? "Partial" : "Unpaid"}</span></div>
+        <div class="kv-row"><span class="k">Status</span><span class="v">${STATUSES[dr.status].label}</span></div>
+        <div class="kv-row"><span class="k">Courier</span><span class="v">${esc(dr.courier) || "Not set"}</span></div>
+        <div class="kv-row"><span class="k">ETA</span><span class="v">${dr.etaStart ? `${fmtDate(dr.etaStart)} – ${fmtDate(dr.etaEnd)}` : "—"}</span></div>
+        <div class="kv-row"><span class="k">Reminders</span><span class="v">${dr.reminders.length ? dr.reminders.map(r => ({ dayof: "Delivery day", minus1: "1 day before", minus2: "2 days before" })[r]).join(", ") : "None"}</span></div>
+      </div>
+      <div class="banner info"><span class="mi">info</span>Saved locally on this device — works offline.</div>
+      <div class="scroll-pad"></div>`;
+    body.scrollTop = 0;
+    return;
+  }
+
+  body.innerHTML = `
+    <div class="card" style="margin-top:10px"><h4 class="card-title">Platform</h4>
       <div class="plat-grid">${Object.entries(PLATFORMS).map(([k, p]) => `
         <button type="button" class="plat-opt ${dr.platform === k ? "is-on" : ""}" data-plat="${k}">
           <span class="plat-badge" style="background:${p.color}">${p.initial}</span>${p.label}
@@ -504,13 +544,14 @@ function renderWizard() {
       <div class="custom-plat" ${dr.platform === "OTHER" ? "" : "hidden"}>
         <p class="field-label">Store / platform name</p>
         <input class="field" id="wCustomPlat" placeholder="e.g. Carousell, Viber seller" value="${esc(dr.customPlatformName)}">
-      </div>`;
-  }
-  if (dr.step === 1) {
-    body.innerHTML = `
+      </div>
+      <p class="field-label">Title</p>
+      <input class="field" id="wTitle" placeholder="e.g. Soundcore R50i earbuds" value="${esc(dr.title)}">
       <p class="field-label">Seller name</p>
       <input class="field" id="wSeller" placeholder="e.g. AudioHub PH" value="${esc(dr.sellerName)}">
-      <p class="field-label">Items</p>
+    </div>
+
+    <div class="card"><h4 class="card-title">Items</h4>
       ${dr.items.map((it, i) => `
         <div class="wiz-item">
           <div class="wiz-item-head">
@@ -525,15 +566,17 @@ function renderWizard() {
           </div>
         </div>`).join("")}
       <button class="btn btn-outline" id="wAddItem" type="button" style="width:100%"><span class="mi">add</span>Add item</button>
+    </div>
+
+    <div class="card"><h4 class="card-title">Pricing</h4>
       <div class="field-row">
         <span><p class="field-label">Shipping ₱</p><input class="field" id="wShip" type="number" min="0" step="0.01" value="${dr.shippingMinor ? dr.shippingMinor / 100 : ""}" placeholder="0"></span>
         <span><p class="field-label">Discount ₱</p><input class="field" id="wDisc" type="number" min="0" step="0.01" value="${dr.discountMinor ? dr.discountMinor / 100 : ""}" placeholder="0"></span>
       </div>
-      <div class="kv-row total" style="margin-top:14px"><span class="k">Total</span><span class="v" id="wTotal">${peso(draftTotal(dr))}</span></div>`;
-  }
-  if (dr.step === 2) {
-    body.innerHTML = `
-      <p class="field-label">Payment method</p>
+      <div class="kv-row total"><span class="k">Total</span><span class="v" id="wTotal">${peso(draftTotal(dr))}</span></div>
+    </div>
+
+    <div class="card"><h4 class="card-title">Payment</h4>
       ${PAY_METHODS.map(m => `
         <label class="radio-card"><input type="radio" name="wPay" value="${m}" ${dr.paymentMethod === m ? "checked" : ""}>
         <span>${m}${m === "COD" ? "<small>Cash on delivery — prepare exact amount</small>" : ""}</span></label>`).join("")}
@@ -541,10 +584,12 @@ function renderWizard() {
       <div class="segmented" id="wPayStatus">
         ${PAY_STATUSES.map(s => `<button class="seg ${dr.paymentStatus === s ? "is-on" : ""}" data-ps="${s}" type="button">${s === "UNPAID" ? "Unpaid" : s === "PAID" ? "Paid" : "Partial"}</button>`).join("")}
       </div>
-      ${dr.isCod ? `<div class="banner warn" style="margin-top:14px"><span class="mi">payments</span>COD amount due on delivery: <strong>&nbsp;${peso(draftTotal(dr))}</strong></div>` : ""}`;
-  }
-  if (dr.step === 3) {
-    body.innerHTML = `
+      ${dr.isCod ? `<div class="banner warn" style="margin-top:14px"><span class="mi">payments</span>COD amount due on delivery: <strong>&nbsp;${peso(draftTotal(dr))}</strong></div>` : ""}
+    </div>
+
+    <div class="card"><h4 class="card-title">Delivery</h4>
+      <p class="field-label">Status</p>
+      <select class="field" id="wStatus">${Object.entries(STATUSES).filter(([k]) => k !== "DRAFT").map(([k, v]) => `<option value="${k}" ${dr.status === k ? "selected" : ""}>${v.label}</option>`).join("")}</select>
       <p class="field-label">Courier</p>
       <select class="field" id="wCourier"><option value="">Not set</option>${COURIERS.map(c => `<option ${dr.courier === c ? "selected" : ""}>${c}</option>`).join("")}</select>
       <p class="field-label">Tracking number</p>
@@ -555,84 +600,67 @@ function renderWizard() {
         <span><p class="field-label">ETA from</p><input class="field" id="wEtaA" type="date" value="${dr.etaStart}"></span>
         <span><p class="field-label">ETA to</p><input class="field" id="wEtaB" type="date" value="${dr.etaEnd}"></span>
       </div>
-      <p class="field-label">Notes — optional</p>
-      <input class="field" id="wNotes" placeholder="e.g. Rider calls first" value="${esc(dr.notes)}">
       <p class="field-label">Reminders</p>
       <div class="chip-row" style="padding-top:0" id="wRemindChips">
         ${[["dayof", "Delivery day"], ["minus1", "1 day before"], ["minus2", "2 days before"]].map(([k, l]) =>
           `<button class="chip ${dr.reminders?.includes(k) ? "is-on" : ""}" data-rem="${k}" type="button">${l}</button>`).join("")}
-      </div>`;
-  }
-  if (dr.step === 4) {
-    const p = dr.platform ? platOf({ platform: dr.platform }) : null;
-    body.innerHTML = `
-      <div class="card" style="margin-top:6px"><h4 class="card-title">Review order</h4>
-        <div class="kv-row"><span class="k">Platform</span><span class="v">${p ? esc(dr.customPlatformName || p.label) : "—"}</span></div>
-        <div class="kv-row"><span class="k">Seller</span><span class="v">${esc(dr.sellerName) || "—"}</span></div>
-        <hr class="hr">
-        ${dr.items.map(i => `<div class="item-row"><span><div class="item-name">${esc(i.name)}</div>${i.variant ? `<div class="item-var">${esc(i.variant)}</div>` : ""}</span><span class="item-price">${i.qty} × ${peso(i.priceMinor)}</span></div>`).join("")}
-        <hr class="hr">
-        <div class="kv-row"><span class="k">Shipping</span><span class="v">${peso(dr.shippingMinor)}</span></div>
-        <div class="kv-row"><span class="k">Discount</span><span class="v">−${peso(dr.discountMinor)}</span></div>
-        <div class="kv-row total"><span class="k">Total</span><span class="v">${peso(draftTotal(dr))}</span></div>
-        <hr class="hr">
-        <div class="kv-row"><span class="k">Payment</span><span class="v">${dr.paymentMethod} · ${dr.paymentStatus === "PAID" ? "Paid" : dr.paymentStatus === "PARTIAL" ? "Partial" : "Unpaid"}</span></div>
-        <div class="kv-row"><span class="k">Courier</span><span class="v">${esc(dr.courier) || "Not set"}</span></div>
-        <div class="kv-row"><span class="k">ETA</span><span class="v">${dr.etaStart ? `${fmtDate(dr.etaStart)} – ${fmtDate(dr.etaEnd)}` : "—"}</span></div>
       </div>
-      <div class="banner info"><span class="mi">info</span>Saved locally on this device — works offline.</div>`;
-  }
-  wireWizardInputs();
-  $("#wizardBody").scrollTop = 0;
+    </div>
+
+    <div class="card"><h4 class="card-title">Notes</h4>
+      <input class="field" id="wNotes" placeholder="e.g. Rider calls first" value="${esc(dr.notes)}">
+    </div>
+    <div class="scroll-pad"></div>`;
+  wireEditInputs();
 }
 
 function collectDraft() {
   const dr = draft, gv = id => document.getElementById(id);
-  if (dr.step === 0) dr.customPlatformName = gv("wCustomPlat")?.value.trim() || dr.customPlatformName;
-  if (dr.step === 1) {
-    dr.sellerName = gv("wSeller").value.trim();
-    dr.items.forEach((it, i) => {
-      it.name = document.querySelector(`[data-item="${i}"][data-k="name"]`).value.trim();
+  dr.customPlatformName = gv("wCustomPlat")?.value.trim() || dr.customPlatformName;
+  if (gv("wTitle")) dr.title = gv("wTitle").value.trim();
+  if (gv("wSeller")) dr.sellerName = gv("wSeller").value.trim();
+  dr.items.forEach((it, i) => {
+    const nm = document.querySelector(`[data-item="${i}"][data-k="name"]`);
+    if (nm) {
+      it.name = nm.value.trim();
       it.variant = document.querySelector(`[data-item="${i}"][data-k="variant"]`).value.trim();
       it.priceMinor = Math.round((parseFloat(document.querySelector(`[data-item="${i}"][data-k="price"]`).value) || 0) * 100);
-    });
-    dr.shippingMinor = Math.round((parseFloat(gv("wShip").value) || 0) * 100);
-    dr.discountMinor = Math.round((parseFloat(gv("wDisc").value) || 0) * 100);
-  }
-  if (dr.step === 2) {
-    dr.paymentMethod = document.querySelector('input[name="wPay"]:checked').value;
-    dr.isCod = dr.paymentMethod === "COD";
-  }
-  if (dr.step === 3) {
-    dr.courier = gv("wCourier").value; dr.tracking = gv("wTracking").value.trim();
-    dr.orderedAt = gv("wOrdered").value || d(0);
-    dr.etaStart = gv("wEtaA").value; dr.etaEnd = gv("wEtaB").value;
-    dr.notes = gv("wNotes").value.trim();
-  }
+    }
+  });
+  if (gv("wShip")) dr.shippingMinor = Math.round((parseFloat(gv("wShip").value) || 0) * 100);
+  if (gv("wDisc")) dr.discountMinor = Math.round((parseFloat(gv("wDisc").value) || 0) * 100);
+  const pay = document.querySelector('input[name="wPay"]:checked');
+  if (pay) { dr.paymentMethod = pay.value; dr.isCod = pay.value === "COD"; }
+  if (gv("wCourier")) dr.courier = gv("wCourier").value;
+  if (gv("wTracking")) dr.tracking = gv("wTracking").value.trim();
+  if (gv("wOrdered")) dr.orderedAt = gv("wOrdered").value || d(0);
+  if (gv("wEtaA")) { dr.etaStart = gv("wEtaA").value; dr.etaEnd = gv("wEtaB").value; }
+  if (gv("wNotes")) dr.notes = gv("wNotes").value.trim();
+  if (gv("wStatus")) dr.status = gv("wStatus").value;
 }
 
-function wireWizardInputs() {
+function wireEditInputs() {
   const dr = draft;
   document.querySelectorAll("[data-plat]").forEach(b => b.onclick = () => {
-    collectDraft(); dr.platform = b.dataset.plat; renderWizard();
+    collectDraft(); dr.platform = b.dataset.plat; renderEdit();
   });
   document.querySelectorAll("[data-qty]").forEach(b => b.onclick = () => {
     collectDraft();
     const it = dr.items[+b.dataset.qty];
     it.qty = Math.max(1, it.qty + (+b.dataset.d));
-    renderWizard();
+    renderEdit();
   });
   document.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
-    collectDraft(); dr.items.splice(+b.dataset.rm, 1); renderWizard();
+    collectDraft(); dr.items.splice(+b.dataset.rm, 1); renderEdit();
   });
   const add = $("#wAddItem");
-  if (add) add.onclick = () => { collectDraft(); dr.items.push({ name: "", variant: "", qty: 1, priceMinor: 0 }); renderWizard(); };
+  if (add) add.onclick = () => { collectDraft(); dr.items.push({ name: "", variant: "", qty: 1, priceMinor: 0 }); renderEdit(); };
   document.querySelectorAll("#wPayStatus .seg").forEach(b => b.onclick = () => {
     dr.paymentStatus = b.dataset.ps;
     document.querySelectorAll("#wPayStatus .seg").forEach(x => x.classList.toggle("is-on", x === b));
   });
   document.querySelectorAll('input[name="wPay"]').forEach(r => r.onchange = () => {
-    dr.paymentMethod = r.value; dr.isCod = r.value === "COD"; collectDraft(); renderWizard();
+    dr.paymentMethod = r.value; dr.isCod = r.value === "COD"; collectDraft(); renderEdit();
   });
   document.querySelectorAll("[data-rem]").forEach(b => b.onclick = () => {
     dr.reminders = dr.reminders || [];
@@ -641,46 +669,107 @@ function wireWizardInputs() {
       : [...dr.reminders, b.dataset.rem];
     b.classList.toggle("is-on");
   });
-  ["wSeller", "wShip", "wDisc"].forEach(id => {
+  ["wTitle", "wSeller", "wShip", "wDisc"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.oninput = () => { collectDraft(); const t = $("#wTotal"); if (t) t.textContent = peso(draftTotal(dr)); };
   });
 }
 
-function wizNext() {
+function editNext() {
   collectDraft();
   const dr = draft;
-  if (dr.step === 0 && !dr.platform) return toast("Pick a platform first");
-  if (dr.platform === "OTHER" && !dr.customPlatformName) return toast("Name the store or platform");
-  if (dr.step === 1) {
-    if (!dr.items[0].name) return toast("Name at least the first item");
+  if (editStep === "form") {
+    if (!dr.platform) return toast("Pick a platform first");
+    if (dr.platform === "OTHER" && !dr.customPlatformName) return toast("Name the store or platform");
+    if (!dr.items.some(i => i.name) && !dr.title) return toast("Name at least one item or a title");
     if (draftTotal(dr) <= 0) return toast("Add a price — total can't be zero");
+    editStep = "review"; renderEdit(); return;
   }
-  if (dr.step === 4) {
-    const o = {
-      id: `ord-${nextId++}`, platform: dr.platform, customPlatformName: dr.customPlatformName,
-      sellerName: dr.sellerName || platOf({ platform: dr.platform }).label,
-      isCod: dr.isCod, paymentMethod: dr.paymentMethod, paymentStatus: dr.paymentStatus,
-      status: "ORDERED", courier: dr.courier, tracking: dr.tracking,
-      orderedAt: dr.orderedAt, etaStart: dr.etaStart, etaEnd: dr.etaEnd, deliveredAt: null,
-      items: dr.items.filter(i => i.name), shippingMinor: dr.shippingMinor, discountMinor: dr.discountMinor,
-      notes: dr.notes, archived: false, createdAt: d(0),
-    };
-    orders.unshift(o);
-    draft = null;
-    state.detailId = o.id;
-    showScreen("detail");
-    return toast("Order saved");
-  }
-  dr.step++;
-  renderWizard();
+  const o = {
+    id: `ord-${nextId++}`, platform: dr.platform, customPlatformName: dr.customPlatformName,
+    title: dr.title || null,
+    sellerName: dr.sellerName || platOf({ platform: dr.platform }).label,
+    isCod: dr.isCod, paymentMethod: dr.paymentMethod, paymentStatus: dr.paymentStatus,
+    status: dr.status, courier: dr.courier, tracking: dr.tracking,
+    orderedAt: dr.orderedAt, etaStart: dr.etaStart, etaEnd: dr.etaEnd, deliveredAt: null,
+    items: dr.items.filter(i => i.name), shippingMinor: dr.shippingMinor, discountMinor: dr.discountMinor,
+    notes: dr.notes, reminders: dr.reminders, archived: false, createdAt: d(0),
+  };
+  orders.unshift(o);
+  draft = null;
+  state.detailId = o.id;
+  showScreen("detail");
+  toast("Order saved");
 }
 
-function wizBack() {
-  if (draft.step === 0) { draft = null; showScreen("home"); return; }
-  draft.step--;
-  renderWizard();
+function editBack() {
+  if (editStep === "review") { editStep = "form"; renderEdit(); return; }
+  draft = null; showScreen("home");
 }
+
+/* ---------- shipment timeline (mirrors ShipmentTimelineScreen) ---------- */
+function renderTimeline() {
+  const o = orders.find(x => x.id === state.detailId);
+  const body = $("#timelineBody");
+  if (!o) { body.innerHTML = `<div class="empty"><p>No parcel selected.</p></div>`; return; }
+  const st = STATUSES[o.status];
+  const step = st.step;
+  body.innerHTML = `
+    <div class="detail-hero" style="margin-top:10px">
+      <span class="plat-badge" style="background:${platOf(o).color}">${platOf(o).initial}</span>
+      <div>
+        <h3>${esc(itemsSummary(o))}</h3>
+        <div class="order-sub">${esc(o.sellerName)} · ${esc(o.customPlatformName || platOf(o).label)}</div>
+      </div>
+      <span class="order-side">${statusChip(o.status)}</span>
+    </div>
+    <div class="card"><h4 class="card-title">Shipment</h4>
+      <div class="kv-row"><span class="k">Courier</span><span class="v">${esc(o.courier || "Not set")}</span></div>
+      <div class="kv-row"><span class="k">Tracking</span><span class="v">${o.tracking ? `<span class="mono">${esc(o.tracking)}</span>` : "—"}</span></div>
+      <div class="kv-row"><span class="k">ETA</span><span class="v">${o.etaStart ? `${fmtDate(o.etaStart)} – ${fmtDate(o.etaEnd)}` : "—"}</span></div>
+      <div class="kv-row"><span class="k">Source</span><span class="v">Manual</span></div>
+    </div>
+    ${step >= 0 ? `
+      <div class="card"><h4 class="card-title">Tracking</h4>
+        <ul class="timeline">${TIMELINE_STEPS.map((label, i) => {
+          const cls = i < step ? "done" : i === step ? "now" : "";
+          const date = i === step ? `<div class="tl-date">${o.status === "DELIVERED" ? fmtDate(o.deliveredAt) : "Current status"}</div>` : "";
+          return `<li class="${cls}"><span class="tl-dot"><span class="mi">check</span></span><span><div class="tl-name">${label}</div>${date}</span></li>`;
+        }).join("")}</ul>
+      </div>` : `
+      <div class="banner warn" style="margin-top:10px"><span class="mi">info</span>
+        ${o.status === "RETURNED" ? "Returned — refund pending." : o.status === "CANCELLED" ? "Cancelled." : o.status === "REFUNDED" ? "Refunded." : "Draft."}
+      </div>`}
+    <div class="action-col">
+      ${!TERMINAL.includes(o.status) ? `<button class="btn btn-fill" type="button" onclick="markDelivered('${o.id}');renderTimeline()"><span class="mi">check_circle</span>Mark as delivered</button>` : ""}
+      <button class="btn btn-tonal" type="button" data-goto="detail"><span class="mi">arrow_back</span>Back to order</button>
+    </div>
+    <div class="scroll-pad"></div>`;
+}
+
+/* ---------- COD overview (mirrors CodOverviewScreen) ---------- */
+function renderCod() {
+  const due = orders.filter(isPendingCod);
+  const total = due.reduce((s, o) => s + orderTotal(o), 0);
+  const today = due.filter(o => (o.etaEnd || o.etaStart) === d(0));
+  const soon = due.filter(o => o.etaEnd && o.etaEnd > d(0) && o.etaEnd <= d(3));
+  $("#codBody").innerHTML = `
+    <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
+      <div class="stat-card"><div class="stat-num">${due.length}</div><div class="stat-label">Pending COD</div></div>
+      <div class="stat-card"><div class="stat-num">${today.length}</div><div class="stat-label">Due today</div></div>
+      <div class="stat-card"><div class="stat-num money">${peso(total)}</div><div class="stat-label">Total due</div></div>
+    </div>
+    <div class="banner warn" style="margin-top:12px"><span class="mi">payments</span>Prepare exact cash — dates are estimates, not confirmed arrivals.</div>
+    <div class="section-head" style="margin-top:14px"><h3>Due today</h3></div>
+    <div class="stack">${today.length ? today.map(orderCard).join("") : `<div class="empty"><span class="mi">event_available</span><p>Nothing due today.</p></div>`}</div>
+    <div class="section-head" style="margin-top:14px"><h3>Next 3 days</h3></div>
+    <div class="stack">${soon.length ? soon.map(orderCard).join("") : `<div class="empty"><span class="mi">event_available</span><p>Nothing due soon.</p></div>`}</div>
+    <div class="section-head" style="margin-top:14px"><h3>All pending COD</h3></div>
+    <div class="stack">${due.length ? due.map(orderCard).join("") : `<div class="empty"><span class="mi">done_all</span><p>All COD is settled.</p></div>`}</div>
+    <div class="scroll-pad"></div>`;
+}
+
+/* ---------- backup / export (Phase 8) ---------- */
 
 /* ---------- delivery calendar (Phase 2) ---------- */
 let calCursor = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}`; })();
@@ -1001,7 +1090,8 @@ document.addEventListener("click", e => {
   const go = e.target.closest("[data-goto]");
   if (go) { showScreen(go.dataset.goto); return; }
   if (e.target.closest("[data-back]")) {
-    if (state.screen === "add") { wizBack(); return; }
+    if (state.screen === "add") { editBack(); return; }
+    if (state.screen === "timeline") { showScreen("detail"); return; }
     showScreen(state.detailId && orders.some(o => o.id === state.detailId) && state.screen === "detail" ? "orders" : "home");
     return;
   }
@@ -1014,8 +1104,8 @@ document.addEventListener("click", e => {
 });
 
 $("#fabAdd").addEventListener("click", () => showScreen("add", { fresh: true }));
-$("#wizNext").addEventListener("click", wizNext);
-$("#wizBack").addEventListener("click", wizBack);
+$("#editNext").addEventListener("click", editNext);
+$("#editBack").addEventListener("click", editBack);
 $("#searchInput").addEventListener("input", e => { state.query = e.target.value; renderOrders(); });
 $("#sortSelect").addEventListener("change", e => { state.sort = e.target.value; renderOrders(); });
 $("#dlgCancel").addEventListener("click", () => { $("#dialogOverlay").hidden = true; pendingDelete = null; });

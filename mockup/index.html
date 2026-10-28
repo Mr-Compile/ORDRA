@@ -35,7 +35,9 @@
     <button type="button" class="rail-link is-active" data-goto="home">Home</button>
     <button type="button" class="rail-link" data-goto="orders">Orders</button>
     <button type="button" class="rail-link" data-goto="detail">Order details</button>
+    <button type="button" class="rail-link" data-goto="timeline">Tracking timeline</button>
     <button type="button" class="rail-link" data-goto="add">New order</button>
+    <button type="button" class="rail-link" data-goto="cod">COD overview</button>
     <button type="button" class="rail-link" data-goto="calendar">Delivery calendar</button>
     <button type="button" class="rail-link" data-goto="detections">Detected updates</button>
     <button type="button" class="rail-link" data-goto="import">Smart import</button>
@@ -119,20 +121,23 @@
         <div class="scroll" id="detailBody"></div>
       </section>
 
-      <!-- ============ ADD ORDER WIZARD ============ -->
+      <!-- ============ ADD/EDIT ORDER — FORM + REVIEW (mirrors AddEditOrderScreen) ============ -->
       <section class="screen" id="screen-add" data-screen="add">
-        <div class="wizard-top">
-          <div class="wizard-meta">
-            <span id="stepLabel">Step 1 of 5</span>
-            <span id="stepName">Platform</span>
-          </div>
-          <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="scroll" id="editBody"></div>
+        <div class="wizard-footer" id="editFooter">
+          <button class="btn btn-tonal" id="editBack" type="button">Cancel</button>
+          <button class="btn btn-fill" id="editNext" type="button">Review</button>
         </div>
-        <div class="scroll" id="wizardBody"></div>
-        <div class="wizard-footer">
-          <button class="btn btn-tonal" id="wizBack" type="button">Back</button>
-          <button class="btn btn-fill" id="wizNext" type="button">Continue</button>
-        </div>
+      </section>
+
+      <!-- ============ SHIPMENT TIMELINE (mirrors ShipmentTimelineScreen) ============ -->
+      <section class="screen" id="screen-timeline" data-screen="timeline">
+        <div class="scroll" id="timelineBody"></div>
+      </section>
+
+      <!-- ============ COD OVERVIEW (mirrors CodOverviewScreen) ============ -->
+      <section class="screen" id="screen-cod" data-screen="cod">
+        <div class="scroll" id="codBody"></div>
       </section>
 
       <!-- ============ DELIVERY CALENDAR ============ -->
