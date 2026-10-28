@@ -4,11 +4,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.ordra.feature.analytics.AnalyticsScreen
 import com.ordra.feature.calendar.DeliveryCalendarScreen
@@ -34,9 +41,32 @@ fun OrdraNavHost(navController: NavHostController) {
         }
     }
     val reducedMotion = rememberReducedMotion()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = {
+            if (currentRoute in TOP_LEVEL_ROUTES) {
+                OrdraBottomBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onAdd = { navController.navigate(OrdraRoutes.orderEditor()) },
+                )
+            }
+        },
+    ) { innerPadding ->
     NavHost(
         navController = navController,
         startDestination = OrdraRoutes.HOME,
+        modifier = Modifier.padding(innerPadding),
         enterTransition = {
             if (reducedMotion) {
                 fadeIn(microTween())
@@ -151,5 +181,6 @@ fun OrdraNavHost(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() },
             )
         }
+    }
     }
 }

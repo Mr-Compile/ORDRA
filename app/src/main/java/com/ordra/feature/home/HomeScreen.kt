@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -124,14 +123,6 @@ fun HomeScreen(
                 onOpenCalendar = onOpenCalendar,
                 onSmartImport = onSmartImport,
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onAddOrder) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(R.string.home_add_order),
-                )
-            }
         },
     ) { innerPadding ->
         Box(Modifier.fillMaxSize()) {
