@@ -120,4 +120,19 @@ class OrderFormTest {
         ).toOrder(null, Instant.ofEpochMilli(1))
         assertEquals("Mouse", order.title)
     }
+
+    @Test
+    fun `new order items bind to the generated order id`() {
+        val order = OrderFormState(
+            title = "x",
+            platform = Platform.SHOPEE,
+            total = "10",
+            items = listOf(
+                OrderItemForm(name = "a"),
+                OrderItemForm(name = "b", quantity = "2"),
+            ),
+        ).toOrder(existing = null, now = Instant.ofEpochMilli(1))
+        assertTrue(order.items.isNotEmpty())
+        order.items.forEach { assertEquals(order.id, it.orderId) }
+    }
 }

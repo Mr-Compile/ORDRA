@@ -27,7 +27,7 @@ interface OrderDao {
     suspend fun upsertOrderWithItems(order: OrderEntity, items: List<OrderItemEntity>) {
         upsertOrder(order)
         deleteItemsForOrder(order.id)
-        upsertItems(items)
+        upsertItems(items.map { it.copy(orderId = order.id) })
     }
 
     @Transaction

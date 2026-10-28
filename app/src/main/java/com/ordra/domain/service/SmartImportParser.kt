@@ -62,7 +62,23 @@ object SmartImportParser {
     private val PHONE_RE = Regex("(\\+?\\d{2,4}[\\s\\-()]*)?\\d[\\d\\s\\-]{7,}\\d")
     private val AMOUNT_ONLY_RE = Regex("^[₱PHP$\\-€£\\s\\d.,]+$")
     private val DOMAIN_RE = Regex("\\.(ph|com|net|shop|store|co)\\b", RegexOption.IGNORE_CASE)
-    private val QTY_MARKER_RE = Regex("\\bx\\s*(\\d{1,3})\\b", RegexOption.IGNORE_CASE)
+    private val QTY_MARKER_RE = Regex(
+        "(?:^|\\s)[x×✕]\\s*(\\d{1,3})\\b|\\bqty[:\\s]*(\\d{1,3})\\b",
+        RegexOption.IGNORE_CASE,
+    )
+    /** Address vocabulary — recipient/address lines never become a title. */
+    private val ADDRESS_RE = Regex(
+        "\\b(street|st\\.|avenue|ave\\.|road|rd\\.|blvd|boulevard|drive|dr\\.|lane|purok|" +
+            "barangay|brgy\\.?|poblacion|sitio|subdivision|subd\\.?|village|city|province|" +
+            "block|blk\\.?|lot|unit|bldg\\.?|building|floor|flr\\.?|phase|zone|zip|postal)\\b",
+        RegexOption.IGNORE_CASE,
+    )
+    private val POSTCODE_END_RE = Regex(",\\s*\\d{4,6}\\s*$")
+    /** Section headers — generic money labels must skip these occurrences. */
+    private val HEADER_WORD_RE = Regex(
+        "\\b(information|history|details|status|method|options|updates|summary)\\b",
+        RegexOption.IGNORE_CASE,
+    )
 
     /** Lines that are page chrome / sections / actions — never a product title. */
     private val TITLE_BLOCK = listOf(
@@ -113,15 +129,41 @@ object SmartImportParser {
 
         fun amountNear(vararg labels: String): Pair<Long?, String?> {
             for (label in labels) {
-                val idx = lower.indexOf(label)
-                if (idx < 0) continue
-                val window = text.substring(
-                    idx,
-                    (idx + label.length + 40).coerceAtMost(text.length),
+                val labelRe = Regex(
+                    "\\b" + Regex.escape(label) + "\\b",
+                    RegexOption.IGNORE_CASE,
                 )
-                val m = AMOUNT_RE.find(window) ?: continue
-                val minor = MoneyFormat.parseToMinor(m.value)
-                if (minor != null) return minor to m.value
+                for (lm in labelRe.findAll(lower)) {
+                    val lineEnd = lower.indexOf('\n', lm.range.first)
+                        .let { if (it < 0) lower.length else it }
+                    val restOfLine = lower.substring(lm.range.last + 1, lineEnd)
+                    // "Shipping Information" / "Total summary" are headers, not values.
+                    if (HEADER_WORD_RE.containsMatchIn(restOfLine)) continue
+                    val winStart = lm.range.first
+                    val window = text.substring(
+                        winStart,
+                        (lm.range.last + 60).coerceAtMost(text.length),
+                    )
+                    for (m in AMOUNT_RE.findAll(window)) {
+                        val marked = m.value.trimStart().let {
+                            it.startsWith("₱") || it.startsWith("PHP", ignoreCase = true) ||
+                                it.startsWith("$") || it.startsWith("P")
+                        }
+                        if (!marked) {
+                            // Reject digits embedded in tracking ids / model codes
+                            // ("PH2613…" -> 261, "ESP32" -> 32).
+                            val before = text.getOrNull(winStart + m.range.first - 1)
+                            val after = text.getOrNull(winStart + m.range.last + 1)
+                            if (before?.isLetterOrDigit() == true ||
+                                after?.isLetterOrDigit() == true
+                            ) {
+                                continue
+                            }
+                        }
+                        val minor = MoneyFormat.parseToMinor(m.value)
+                        if (minor != null) return minor to m.value
+                    }
+                }
             }
             return null to null
         }
@@ -236,6 +278,8 @@ object SmartImportParser {
             if (TRACKING_RE.find(l) != null) return false
             if (StatusNormalizer.normalize(l) != ShipmentStatus.UNKNOWN) return false
             if (QTY_MARKER_RE.containsMatchIn(l)) return false
+            if (ADDRESS_RE.containsMatchIn(l)) return false
+            if (POSTCODE_END_RE.containsMatchIn(l)) return false
             return true
         }
         var titleCandidate: String? = null
@@ -243,12 +287,28 @@ object SmartImportParser {
         var itemQty: Int? = null
         val qtyIdx = lines.indexOfFirst { QTY_MARKER_RE.containsMatchIn(it) }
         if (qtyIdx >= 0) {
-            itemQty = QTY_MARKER_RE.find(lines[qtyIdx])?.groupValues?.get(1)?.toIntOrNull()
+            itemQty = QTY_MARKER_RE.find(lines[qtyIdx])?.let { m ->
+                m.groupValues.drop(1).firstOrNull { it.isNotEmpty() }?.toIntOrNull()
+            }
             for (up in 1..3) {
                 val l = lines.getOrNull(qtyIdx - up) ?: break
                 if (isTitleCandidate(l)) {
                     titleCandidate = l; titleConf = 0.7f; break
                 }
+            }
+        }
+        if (titleCandidate == null) {
+            // Shopee lists the product right after the seller badge/store line.
+            val badgeIdx = lines.indexOfFirst { l ->
+                val ll = l.lowercase()
+                SELLER_BADGE.any { ll.contains(it) } || DOMAIN_RE.containsMatchIn(l)
+            }
+            if (badgeIdx >= 0) {
+                titleCandidate = (1..4)
+                    .asSequence()
+                    .mapNotNull { lines.getOrNull(badgeIdx + it) }
+                    .firstOrNull { isTitleCandidate(it) }
+                if (titleCandidate != null) titleConf = 0.6f
             }
         }
         if (titleCandidate == null) {

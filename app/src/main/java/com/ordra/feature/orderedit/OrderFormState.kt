@@ -112,6 +112,7 @@ data class OrderFormState(
     fun isValid(): Boolean = fieldErrors().isEmpty()
 
     fun toOrder(existing: Order?, now: Instant): Order {
+        val resolvedOrderId = orderId ?: existing?.id ?: UUID.randomUUID().toString()
         val domainItems = items
             .filterNot { it.isCompletelyEmpty }
             .map { item ->
@@ -119,7 +120,7 @@ data class OrderFormState(
                 val unit = MoneyFormat.parseToMinor(item.unitPrice)
                 OrderItem(
                     id = item.id,
-                    orderId = orderId ?: existing?.id ?: "",
+                    orderId = resolvedOrderId,
                     name = item.name.trim(),
                     variant = item.variant.ifBlank { null },
                     quantity = qty,
@@ -131,7 +132,7 @@ data class OrderFormState(
             domainItems.firstOrNull()?.name ?: "Untitled order"
         }
         return Order(
-            id = orderId ?: existing?.id ?: UUID.randomUUID().toString(),
+            id = resolvedOrderId,
             title = effectiveTitle,
             platform = platform ?: Platform.OTHER,
             customPlatformName = customPlatformName.ifBlank { null },

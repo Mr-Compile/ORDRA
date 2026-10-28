@@ -58,7 +58,7 @@ class SmartImportParserTest {
             Preferred
             ENGLAB.ph
             ENGLAB★ ESP32 WiFi IoT Development Board
-            ESP32 - 30P - TYPEC - CP2102 x1
+            ESP32 - 30P - TYPEC - CP2102 ×1
             ₱329
             Merchandise Subtotal
             ₱329
@@ -89,6 +89,48 @@ class SmartImportParserTest {
         assertTrue(r.draft.sellerName.value!!.contains("ENGLAB"))
         assertTrue(r.draft.itemNames.isNotEmpty())
         assertEquals(1, r.draft.itemQuantity.value)
+    }
+
+    @Test
+    fun `shopee layout tolerates address lines and qty glyphs`() {
+        // On-device OCR variant: recipient block before the product, ×1 glyph.
+        val text = """
+            Order Details
+            Shipping Information
+            SPX Express: PH2613786845088
+            Delivery Information
+            Michael Torillo (+63) 955 241 9031
+            Garzon Store, Balayon Street, Purok 13a, Poblacion, Tupi, South Cotabato, 9505
+            Preferred
+            ENGLAB.ph
+            ENGLAB★ ESP32 WiFi IoT Development Board
+            ESP32 - 30P - TYPEC - CP2102 ×1
+            ₱329
+            Order Total: ₱259
+        """.trimIndent()
+        val r = SmartImportParser.parse(text)
+        val title = r.draft.title.value!!
+        assertTrue(title.contains("ESP32"))
+        assertTrue(!title.contains("Poblacion"))
+        assertEquals(1, r.draft.itemQuantity.value)
+        assertEquals(25900L, r.draft.totalMinor.value)
+    }
+
+    @Test
+    fun `generic shipping label skips section headers and tracking fragments`() {
+        // "Shipping Information" is a header — the real fee sits on its own row.
+        val text = """
+            Shopee
+            Test Product Name Here
+            Shipping Information
+            SPX Express: PH2613786845088
+            Shipping Fee
+            ₱106
+            Order Total: ₱259
+        """.trimIndent()
+        val r = SmartImportParser.parse(text)
+        assertEquals(10600L, r.draft.shippingMinor.value)
+        assertEquals(25900L, r.draft.totalMinor.value)
     }
 
     @Test

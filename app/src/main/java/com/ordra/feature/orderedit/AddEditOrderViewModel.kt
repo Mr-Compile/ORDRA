@@ -204,6 +204,7 @@ class AddEditOrderViewModel @Inject constructor(
                     usedGroq = false,
                 )
             } else {
+                android.util.Log.d("SmartImport", "OCR text:\n$text")
                 SmartImportParser.parse(text)
             }
             _uiState.update { s ->
@@ -289,6 +290,7 @@ class AddEditOrderViewModel @Inject constructor(
                     _effects.send(AddEditEffect.Saved)
                 }
                 is AppResult.Failure -> {
+                    android.util.Log.e("AddEditOrder", "save failed: ${result.error}")
                     _uiState.update { it.copy(isSaving = false, saveError = true) }
                     _effects.send(AddEditEffect.ShowSaveError)
                 }
