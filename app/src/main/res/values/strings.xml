@@ -141,6 +141,14 @@
     <string name="home_section_recent">Recent orders</string>
     <string name="home_eta_range">%1$s – %2$s</string>
     <string name="home_eta_single">Est. %1$s</string>
+    <string name="featured_eta_range">ETA %1$s – %2$s</string>
+    <string name="featured_eta_single">ETA %1$s</string>
+    <string name="featured_delivered_on">Delivered %1$s</string>
+    <string name="featured_no_eta">No ETA yet</string>
+    <string name="featured_shipment_progress">Shipment progress</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_add_order">Add order</string>
 
     <!-- Order detail -->
     <string name="detail_section_items">Items</string>

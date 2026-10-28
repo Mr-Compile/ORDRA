@@ -8,6 +8,7 @@ import com.ordra.core.ui.ai.resolveCompanionBanner
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.PaymentStatus
+import com.ordra.domain.model.Shipment
 import com.ordra.core.ui.components.OrderSwipeAction
 import com.ordra.domain.repository.OrderRepository
 import com.ordra.domain.repository.ShipmentRepository
@@ -18,11 +19,16 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -45,9 +51,20 @@ data class HomeUiState(
     val archived: List<Order> = emptyList(),
     val showingArchived: Boolean = false,
     val banner: CompanionBannerData = CompanionBannerData(CompanionBannerKind.EMPTY),
+    val featured: Order? = null,
+    val featuredShipment: Shipment? = null,
     val loaded: Boolean = false,
 ) {
     val isEmpty: Boolean get() = upcoming.isEmpty() && recent.isEmpty()
+}
+
+/** Mirrors mockup/app.js featured-pick: soonest-ETA live order, else newest live order. */
+internal fun pickFeaturedOrder(active: List<Order>): Order? {
+    val live = active.filter { it.status !in TERMINAL_STATUSES }
+    return live
+        .filter { it.estimatedDeliveryStart != null || it.estimatedDeliveryEnd != null }
+        .minByOrNull { it.estimatedDeliveryStart ?: it.estimatedDeliveryEnd!! }
+        ?: live.maxByOrNull { it.createdAt }
 }
 
 @HiltViewModel
@@ -59,6 +76,15 @@ class HomeViewModel @Inject constructor(
 
     private val showingArchived = MutableStateFlow(false)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val featuredShipment: StateFlow<Shipment?> = orderRepository.observeActiveOrders()
+        .map(::pickFeaturedOrder)
+        .distinctUntilChanged()
+        .flatMapLatest { featured ->
+            if (featured == null) flowOf(null) else shipmentRepository.observePrimaryShipment(featured.id)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     val actionEvents: SharedFlow<OrderActionEvent> = orderActions.events
 
     val uiState: StateFlow<HomeUiState> = combine(
@@ -66,7 +92,8 @@ class HomeViewModel @Inject constructor(
         orderRepository.observeArchivedOrders(),
         shipmentRepository.observeAttentionShipmentCount(),
         showingArchived,
-    ) { active, archived, attentionShipments, showArchived ->
+        featuredShipment,
+    ) { active, archived, attentionShipments, showArchived, shipment ->
         val today = LocalDate.now()
         val soonWindowEnd = today.plusDays(3)
 
@@ -116,6 +143,8 @@ class HomeViewModel @Inject constructor(
             archived = archived,
             showingArchived = showArchived,
             banner = banner,
+            featured = pickFeaturedOrder(active),
+            featuredShipment = shipment,
             loaded = true,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())

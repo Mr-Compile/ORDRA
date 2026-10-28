@@ -1,5 +1,6 @@
 package com.ordra.feature.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -41,6 +47,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -56,6 +64,9 @@ import com.ordra.core.ui.components.DeliveredCelebrationOverlay
 import com.ordra.core.ui.components.OrderSwipeAction
 import com.ordra.core.ui.components.SkeletonList
 import com.ordra.core.ui.components.SwipeableOrderCard
+import com.ordra.core.ui.theme.OrdraAmber
+import com.ordra.core.ui.theme.OrdraIndigo
+import com.ordra.core.ui.theme.StatusShipped
 import com.ordra.domain.model.Order
 import com.ordra.feature.ordi.OrdiChatSheet
 import com.ordra.feature.orders.OrderActionEffects
@@ -279,6 +290,16 @@ private fun HomeContent(
             )
             Spacer(Modifier.height(8.dp))
         }
+        state.featured?.let { featured ->
+            item(key = "featured") {
+                FeaturedParcelCard(
+                    order = featured,
+                    shipment = state.featuredShipment,
+                    onClick = { onOpenOrder(featured.id) },
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+        }
         item {
             SummaryRow(state = state, onOpenCod = onOpenCod)
             Spacer(Modifier.height(8.dp))
@@ -330,17 +351,23 @@ private fun SummaryRow(state: HomeUiState, onOpenCod: () -> Unit) {
         SummaryCard(
             label = stringResource(R.string.home_metric_active),
             value = state.activeCount.toString(),
+            icon = Icons.Filled.Inventory2,
+            iconTint = OrdraIndigo,
             modifier = Modifier.weight(1f),
         )
         SummaryCard(
             label = stringResource(R.string.home_metric_arriving),
             value = state.arrivingSoonCount.toString(),
+            icon = Icons.Filled.LocalShipping,
+            iconTint = StatusShipped,
             modifier = Modifier.weight(1f),
         )
         SummaryCard(
             label = stringResource(R.string.home_metric_cod),
             value = MoneyFormat.formatMinor(state.codToPrepareMinor ?: 0L, state.codCurrency)
                 .ifBlank { "0" },
+            icon = Icons.Filled.Payments,
+            iconTint = OrdraAmber,
             modifier = Modifier.weight(1f),
             onClick = onOpenCod,
         )
@@ -351,6 +378,8 @@ private fun SummaryRow(state: HomeUiState, onOpenCod: () -> Unit) {
 private fun SummaryCard(
     label: String,
     value: String,
+    icon: ImageVector,
+    iconTint: Color,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
@@ -363,6 +392,20 @@ private fun SummaryCard(
         ),
     ) {
         Column(Modifier.padding(12.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(iconTint.copy(alpha = 0.14f), RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
             Text(
                 value,
                 style = MaterialTheme.typography.titleMedium,

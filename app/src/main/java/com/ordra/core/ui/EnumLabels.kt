@@ -1,6 +1,7 @@
 package com.ordra.core.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.ordra.R
 import com.ordra.domain.model.Courier
@@ -23,6 +24,18 @@ fun platformLabel(platform: Platform, customName: String? = null): String =
         Platform.OTHER -> customName?.takeIf { it.isNotBlank() }
             ?: stringResource(R.string.platform_other)
     }
+
+/** Brand tint per platform — mirrors the PLATFORMS palette in mockup/app.js. */
+fun platformColor(platform: Platform): Color = when (platform) {
+    Platform.SHOPEE -> Color(0xFFEE4D2D)
+    Platform.TIKTOK_SHOP -> Color(0xFF171821)
+    Platform.LAZADA -> Color(0xFF1A0DAB)
+    Platform.TEMU -> Color(0xFFFB7701)
+    Platform.AMAZON -> Color(0xFF232F3E)
+    Platform.FACEBOOK -> Color(0xFF1877F2)
+    Platform.INSTAGRAM -> Color(0xFFC13584)
+    Platform.OTHER -> Color(0xFF666979)
+}
 
 @Composable
 fun orderStatusLabel(status: OrderStatus): String = when (status) {
