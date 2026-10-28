@@ -1,6 +1,5 @@
 package com.ordra.core.ui.ai
 
-import android.provider.Settings
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -13,7 +12,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -26,13 +24,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ordra.R
+import com.ordra.core.ui.rememberReducedMotion
 import com.ordra.core.ui.theme.OrdraIndigo
 import com.ordra.core.ui.theme.OrdraMint
 import com.ordra.core.ui.theme.OrdraAmber
@@ -79,19 +77,6 @@ object CompanionTokens {
     const val BREATHE_MS = 2600
     const val DOT_PULSE_MS = 1500
     const val SWEEP_MS = 1800
-}
-
-/** True when the user disabled animations at system level — motion must degrade to static. */
-@Composable
-fun rememberReducedMotion(): Boolean {
-    val context = LocalContext.current
-    return remember {
-        Settings.Global.getFloat(
-            context.contentResolver,
-            Settings.Global.ANIMATOR_DURATION_SCALE,
-            1f,
-        ) <= 0f
-    }
 }
 
 /**
