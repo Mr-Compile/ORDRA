@@ -99,15 +99,21 @@ fun CodOverviewScreen(
 
                 if (uiState.dueToday.isNotEmpty()) {
                     item { SectionHeader(stringResource(R.string.cod_today)) }
-                    items(uiState.dueToday, key = { "t_${it.id}" }) { CodRow(it, onOpenOrder) }
+                    items(uiState.dueToday, key = { "t_${it.id}" }) {
+                        CodRow(it, onOpenOrder, Modifier.animateItem())
+                    }
                 }
                 if (uiState.nextThreeDays.isNotEmpty()) {
                     item { SectionHeader(stringResource(R.string.cod_next_3_days)) }
-                    items(uiState.nextThreeDays, key = { "n_${it.id}" }) { CodRow(it, onOpenOrder) }
+                    items(uiState.nextThreeDays, key = { "n_${it.id}" }) {
+                        CodRow(it, onOpenOrder, Modifier.animateItem())
+                    }
                 }
                 if (uiState.outstanding.isNotEmpty()) {
                     item { SectionHeader(stringResource(R.string.cod_all_pending)) }
-                    items(uiState.outstanding, key = { "a_${it.id}" }) { CodRow(it, onOpenOrder) }
+                    items(uiState.outstanding, key = { "a_${it.id}" }) {
+                        CodRow(it, onOpenOrder, Modifier.animateItem())
+                    }
                 }
             }
         }
@@ -124,6 +130,6 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
-private fun CodRow(order: Order, onOpenOrder: (String) -> Unit) {
-    OrderCard(order = order, onClick = { onOpenOrder(order.id) })
+private fun CodRow(order: Order, onOpenOrder: (String) -> Unit, modifier: Modifier = Modifier) {
+    OrderCard(order = order, onClick = { onOpenOrder(order.id) }, modifier = modifier)
 }

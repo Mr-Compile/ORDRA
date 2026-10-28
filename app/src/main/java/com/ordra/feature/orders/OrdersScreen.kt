@@ -181,7 +181,11 @@ fun OrdersScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(uiState.orders, key = { it.id }) { order ->
-                        OrderCard(order = order, onClick = { onOpenOrder(order.id) })
+                        OrderCard(
+                            order = order,
+                            onClick = { onOpenOrder(order.id) },
+                            modifier = Modifier.animateItem(),
+                        )
                     }
                 }
             }

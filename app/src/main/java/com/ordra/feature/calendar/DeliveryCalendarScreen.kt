@@ -165,7 +165,11 @@ fun DeliveryCalendarScreen(
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(dayOrders, key = { it.id }) { order ->
-                        OrderCard(order = order, onClick = { onOpenOrder(order.id) })
+                        OrderCard(
+                            order = order,
+                            onClick = { onOpenOrder(order.id) },
+                            modifier = Modifier.animateItem(),
+                        )
                     }
                 }
             }

@@ -84,7 +84,7 @@ fun ShipmentTimelineScreen(
             ) {
                 items(uiState.events, key = { it.id }) { event ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().animateItem(),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface,
                         ),

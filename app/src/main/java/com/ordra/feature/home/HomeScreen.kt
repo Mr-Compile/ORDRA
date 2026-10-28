@@ -204,7 +204,12 @@ private fun HomeContent(
                 )
             }
             items(state.upcoming, key = { "up_${it.id}" }) { order ->
-                OrderCard(order = order, onClick = { onOpenOrder(order.id) }, etaText = etaText(order))
+                OrderCard(
+                    order = order,
+                    onClick = { onOpenOrder(order.id) },
+                    etaText = etaText(order),
+                    modifier = Modifier.animateItem(),
+                )
             }
         }
         if (state.recent.isNotEmpty()) {
@@ -216,7 +221,12 @@ private fun HomeContent(
                 )
             }
             items(state.recent, key = { "re_${it.id}" }) { order ->
-                OrderCard(order = order, onClick = { onOpenOrder(order.id) }, etaText = etaText(order))
+                OrderCard(
+                    order = order,
+                    onClick = { onOpenOrder(order.id) },
+                    etaText = etaText(order),
+                    modifier = Modifier.animateItem(),
+                )
             }
         }
     }
@@ -292,7 +302,11 @@ private fun ArchivedContent(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(orders, key = { it.id }) { order ->
-            OrderCard(order = order, onClick = { onOpenOrder(order.id) })
+            OrderCard(
+                order = order,
+                onClick = { onOpenOrder(order.id) },
+                modifier = Modifier.animateItem(),
+            )
         }
     }
 }

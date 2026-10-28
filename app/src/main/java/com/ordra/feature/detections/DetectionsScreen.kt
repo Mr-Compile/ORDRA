@@ -121,6 +121,7 @@ fun DetectionsScreen(
             ) {
                 items(state.pending, key = { it.id }) { s ->
                     Card(
+                        modifier = Modifier.animateItem(),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface,
                         ),
