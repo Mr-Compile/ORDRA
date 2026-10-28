@@ -21,7 +21,7 @@ Per `docs/RULES.md` → **UI mockup consistency**: this mockup mirrors the live 
 | Order details | Hero (title, total, Update status + Mark delivered buttons), Shipment card (Update shipment status / Track externally / View timeline, source attribution), Items, Payment, Notes, post-purchase; ⋮ menu holds Archive/Delete; separate order-status vs shipment-status models |
 | Tracking timeline | Standalone shipment timeline screen (mirrors `ShipmentTimelineScreen`) |
 | COD overview | Pending COD totals, due today / next 3 days / all lists (mirrors `CodOverviewScreen`) |
-| New order | Form → Review flow (mirrors `AddEditOrderScreen`: Platform, Items, Pricing, Payment, Delivery + reminders, Notes sections → review → save) |
+| New order | Manual entry ↔ Import choice (mirrors progressive automation) → Form → Review (mirrors `AddEditOrderScreen`): required-field asterisks + summary, `OrderFormState.fieldErrors()` rendered inline — fields validate on blur and all errors show on Review/save attempt; editable Total with Suggested hint; custom platform/courier names; qty digits-filtered |
 | Delivery calendar | Month grid with parcel/COD dots, per-day list |
 | Detected updates | Suggestion review — apply / ignore / pick-parcel, confidence chips |
 | Smart import | Screenshot pick → extracted-field review with confidence → save |

@@ -457,6 +457,19 @@ button { font-family: inherit; cursor: pointer; }
 }
 .field:focus { border-color: var(--primary); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+textarea.field { resize: vertical; min-height: 44px; line-height: 1.45; }
+
+/* ---------- form validation (mirrors OutlinedTextField isError + supportingText) ---------- */
+.req { color: var(--danger); font-weight: 800; }
+.req-note { font-size: 12px; color: var(--text-2); margin: 10px 2px 0; }
+.field.is-error { border-color: var(--danger); }
+.plat-grid.is-error .plat-opt { border-color: var(--danger); }
+.field-error { font-size: 11.5px; font-weight: 600; color: var(--danger); margin: 4px 1px 0; }
+.field-hint { font-size: 11.5px; color: var(--text-2); margin: 4px 1px 0; }
+#entrySeg .seg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+#entrySeg .mi { font-size: 17px; }
+.fade-in { animation: fade-in .18s var(--ease); }
+@keyframes fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
 .radio-card {
   display: flex; align-items: center; gap: 12px;

@@ -50,7 +50,7 @@ const d = n => { const t = new Date(); t.setDate(t.getDate() + n); return t.toIS
 const peso = minor => "₱" + (minor / 100).toLocaleString("en-PH", { maximumFractionDigits: minor % 100 ? 2 : 0 });
 const fmtDate = iso => iso ? new Date(iso + "T00:00:00").toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const orderTotal = o => o.items.reduce((s, i) => s + i.qty * i.priceMinor, 0) + o.shippingMinor - o.discountMinor;
+const orderTotal = o => o.totalMinor ?? (o.items.reduce((s, i) => s + i.qty * i.priceMinor, 0) + o.shippingMinor - o.discountMinor);
 const itemsSummary = o => o.title || (o.items.length === 1 ? o.items[0].name : `${o.items[0].name} + ${o.items.length - 1} more`);
 
 /* ---------- sample data ---------- */
@@ -210,6 +210,7 @@ function renderAppbar() {
       break;
     case "orders":
       appbar.innerHTML = `${back}<span class="appbar-title">Orders</span>
+        <button class="icon-btn" type="button" aria-label="Import screenshot" data-goto="import"><span class="mi">photo_camera</span></button>
         <button class="icon-btn" type="button" aria-label="Sort" onclick="openSortMenu(this)"><span class="mi">sort</span></button>`;
       break;
     case "timeline":
@@ -689,81 +690,169 @@ function askDelete() {
 }
 
 /* ---------- add/edit order — FORM → REVIEW (mirrors AddEditOrderScreen) ---------- */
-let editStep = "form"; // "form" | "review" — mirrors EditorStep
+let editStep = "form";        // "form" | "review" — mirrors EditorStep
+let editMode = "manual";      // "manual" | "import" — entry choice on new orders
 let editOrderId = null;
+let editAttempted = false;    // mirrors attemptedSave: every error visible after Review
+let editTouched = new Set();  // field keys already left once — validated on blur
+
+/* money parsing mirrors MoneyFormat.parseToMinor — null when invalid */
+const parseMoney = s => {
+  const cleaned = String(s ?? "").trim().replace(/,/g, "").replace(/[^\d.\-]/g, "");
+  if (!cleaned || cleaned === "-") return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? Math.round(n * 100) : null;
+};
+/* minor units -> editable string, mirrors BigDecimal.stripTrailingZeros().toPlainString() */
+const minorStr = m => m == null ? "" : (m % 100 ? (m / 100).toFixed(2) : String(m / 100));
+
+/* mirrors OrderItemForm.isCompletelyEmpty */
+const itemEmpty = it => !it.name.trim() && !it.variant.trim() && !it.price.trim() && it.qty === "1";
+/* mirrors OrderFormState.itemsSubtotalMinor / suggestedTotalMinor */
+const itemsSubtotal = dr => dr.items.reduce((s, it) => {
+  const u = parseMoney(it.price), q = parseInt(it.qty, 10);
+  return s + (u > 0 && q > 0 ? u * q : 0);
+}, 0);
+const suggestedTotal = dr => itemsSubtotal(dr) + (parseMoney(dr.shipping) || 0) - (parseMoney(dr.discount) || 0);
+const draftTotal = dr => parseMoney(dr.total) ?? suggestedTotal(dr);
+
+/* mirrors OrderFormState.fieldErrors() — same keys and messages */
+function fieldErrors(dr) {
+  const e = {};
+  if (!dr.title.trim() && !dr.items.some(i => i.name.trim())) e.title = "Add an order name or at least one item";
+  if (!dr.platform) e.platform = "Platform is required";
+  if (dr.platform === "OTHER" && !dr.customPlatformName.trim()) e.customPlatformName = "Name the platform or store";
+  if (parseMoney(dr.total) == null) e.total = "Valid total is required";
+  dr.items.forEach((it, i) => {
+    if (itemEmpty(it)) return;
+    if (!it.name.trim()) e[`item_name_${i}`] = "Item name is required";
+    const q = parseInt(it.qty, 10);
+    if (!Number.isInteger(q) || q < 1) e[`item_qty_${i}`] = "Quantity must be at least 1";
+  });
+  if (dr.etaStart && dr.etaEnd && dr.etaEnd < dr.etaStart) e.etaEnd = "End date can't be before start";
+  if (dr.shipping.trim() && parseMoney(dr.shipping) == null) e.shipping = "Invalid amount";
+  if (dr.discount.trim() && parseMoney(dr.discount) == null) e.discount = "Invalid amount";
+  if (dr.courier === "Other" && !dr.customCourierName.trim()) e.customCourierName = "Name the courier";
+  return e;
+}
+/* paints current errors without re-rendering — keeps focus while typing */
+function updateErrorUI() {
+  if (!draft) return;
+  const errs = fieldErrors(draft);
+  document.querySelectorAll("#editBody [data-fk]").forEach(el => {
+    const k = el.dataset.fk, msg = (editAttempted || editTouched.has(k)) ? errs[k] : null;
+    el.classList.toggle("is-error", !!msg);
+    el.setAttribute("aria-invalid", msg ? "true" : "false");
+    const slot = document.querySelector(`#editBody [data-err="${k}"]`);
+    if (slot) { slot.textContent = msg || ""; slot.hidden = !msg; }
+  });
+  const th = document.querySelector('[data-hint="total"]');
+  if (th) {
+    const s = suggestedTotal(draft);
+    th.hidden = !(draft.total.trim() === "" && s !== 0);
+    th.textContent = `Suggested: ${peso(s)}`;
+  }
+}
+function touchField(key) { editTouched.add(key); updateErrorUI(); }
 
 function startWizard() { startEdit(null); }
 function startEdit(orderId) {
   editOrderId = orderId || null;
   const o = orderId ? orders.find(x => x.id === orderId) : null;
-  editStep = "form";
+  editStep = "form"; editMode = "manual";
+  editAttempted = false; editTouched = new Set();
+  importStep = 0; importDraft = null;
   draft = o ? {
     platform: o.platform, customPlatformName: o.customPlatformName || "", title: o.title || "",
-    sellerName: o.sellerName, items: o.items.map(i => ({ ...i })),
-    shippingMinor: o.shippingMinor, discountMinor: o.discountMinor,
+    sellerName: o.sellerName,
+    items: o.items.map(i => ({ name: i.name, variant: i.variant || "", qty: String(i.qty), price: minorStr(i.priceMinor) })),
+    shipping: minorStr(o.shippingMinor), discount: minorStr(o.discountMinor),
+    total: minorStr(o.totalMinor ?? orderTotal(o)),
     paymentMethod: o.paymentMethod, paymentStatus: o.paymentStatus, isCod: o.isCod,
-    courier: o.courier, tracking: o.tracking, orderedAt: o.orderedAt,
+    courier: COURIERS.includes(o.courier) ? o.courier : (o.courier ? "Other" : ""),
+    customCourierName: o.courier && !COURIERS.includes(o.courier) ? o.courier : "",
+    tracking: o.tracking, orderedAt: o.orderedAt,
     etaStart: o.etaStart, etaEnd: o.etaEnd, notes: o.notes,
     reminders: o.reminders || ["dayof"], status: o.status,
   } : {
     platform: null, customPlatformName: "", title: "", sellerName: "",
-    items: [{ name: "", variant: "", qty: 1, priceMinor: 0 }],
-    shippingMinor: 0, discountMinor: 0,
+    items: [{ name: "", variant: "", qty: "1", price: "" }],
+    shipping: "", discount: "", total: "",
     paymentMethod: "COD", paymentStatus: "UNPAID", isCod: true,
-    courier: "", tracking: "", orderedAt: d(0), etaStart: "", etaEnd: "", notes: "",
+    courier: "", customCourierName: "", tracking: "", orderedAt: d(0),
+    etaStart: "", etaEnd: "", notes: "",
     reminders: ["dayof"], status: "ORDERED",
   };
   showScreen("add"); renderEdit();
 }
 
-const draftTotal = dr => dr.items.reduce((s, i) => s + i.qty * i.priceMinor, 0) + dr.shippingMinor - dr.discountMinor;
+const entrySeg = () => editOrderId ? "" : `
+  <div class="segmented" id="entrySeg" style="margin-top:8px">
+    <button class="seg ${editMode === "manual" ? "is-on" : ""}" data-em="manual" type="button">
+      <span class="mi">edit_note</span>Manual entry</button>
+    <button class="seg ${editMode === "import" ? "is-on" : ""}" data-em="import" type="button">
+      <span class="mi">document_scanner</span>Import</button>
+  </div>`;
 
 function renderEdit() {
   const dr = draft;
   $("#editBack").textContent = editStep === "form" ? "Cancel" : "Back to edit";
   $("#editNext").innerHTML = editStep === "form" ? "Review" : `<span class="mi">check</span>Save order`;
+  $("#editFooter").hidden = editMode === "import";
   const body = $("#editBody");
+
+  if (editMode === "import") { renderEditImport(body); return; }
 
   if (editStep === "review") {
     const p = dr.platform ? platOf({ platform: dr.platform }) : null;
-    body.innerHTML = `
+    const ship = parseMoney(dr.shipping), disc = parseMoney(dr.discount);
+    body.innerHTML = `<div class="fade-in">
       <div class="card" style="margin-top:10px"><h4 class="card-title">Review order</h4>
         <div class="kv-row"><span class="k">Platform</span><span class="v">${p ? esc(dr.customPlatformName || p.label) : "—"}</span></div>
-        <div class="kv-row"><span class="k">Title</span><span class="v">${esc(dr.title) || "—"}</span></div>
-        <div class="kv-row"><span class="k">Seller</span><span class="v">${esc(dr.sellerName) || "—"}</span></div>
+        <div class="kv-row"><span class="k">Order name</span><span class="v">${esc(dr.title) || "—"}</span></div>
+        ${dr.sellerName ? `<div class="kv-row"><span class="k">Seller / store</span><span class="v">${esc(dr.sellerName)}</span></div>` : ""}
+        ${dr.items.filter(i => !itemEmpty(i)).length ? `<hr class="hr">
+        ${dr.items.filter(i => !itemEmpty(i)).map(i => `<div class="item-row"><span><div class="item-name">${esc(i.name)}</div>${i.variant ? `<div class="item-var">${esc(i.variant)}</div>` : ""}</span><span class="item-price">${parseInt(i.qty, 10) || 1} × ${peso(parseMoney(i.price) || 0)}</span></div>`).join("")}` : ""}
         <hr class="hr">
-        ${dr.items.filter(i => i.name).map(i => `<div class="item-row"><span><div class="item-name">${esc(i.name)}</div>${i.variant ? `<div class="item-var">${esc(i.variant)}</div>` : ""}</span><span class="item-price">${i.qty} × ${peso(i.priceMinor)}</span></div>`).join("")}
-        <hr class="hr">
-        <div class="kv-row"><span class="k">Shipping</span><span class="v">${peso(dr.shippingMinor)}</span></div>
-        <div class="kv-row"><span class="k">Discount</span><span class="v">−${peso(dr.discountMinor)}</span></div>
-        <div class="kv-row total"><span class="k">Total</span><span class="v">${peso(draftTotal(dr))}</span></div>
+        ${ship != null ? `<div class="kv-row"><span class="k">Shipping</span><span class="v">${peso(ship)}</span></div>` : ""}
+        ${disc != null ? `<div class="kv-row"><span class="k">Discount</span><span class="v">−${peso(disc)}</span></div>` : ""}
+        <div class="kv-row total"><span class="k">Total</span><span class="v">${peso(parseMoney(dr.total))}</span></div>
         <hr class="hr">
         <div class="kv-row"><span class="k">Payment</span><span class="v">${dr.paymentMethod} · ${dr.paymentStatus === "PAID" ? "Paid" : dr.paymentStatus === "PARTIAL" ? "Partial" : "Unpaid"}</span></div>
         <div class="kv-row"><span class="k">Status</span><span class="v">${STATUSES[dr.status].label}</span></div>
-        <div class="kv-row"><span class="k">Courier</span><span class="v">${esc(dr.courier) || "Not set"}</span></div>
+        ${dr.courier ? `<div class="kv-row"><span class="k">Courier</span><span class="v">${esc(dr.courier === "Other" ? dr.customCourierName : dr.courier)}</span></div>` : ""}
+        ${dr.tracking ? `<div class="kv-row"><span class="k">Tracking</span><span class="v">${esc(dr.tracking)}</span></div>` : ""}
         <div class="kv-row"><span class="k">ETA</span><span class="v">${dr.etaStart ? `${fmtDate(dr.etaStart)} – ${fmtDate(dr.etaEnd)}` : "—"}</span></div>
-        <div class="kv-row"><span class="k">Reminders</span><span class="v">${dr.reminders.length ? dr.reminders.map(r => ({ dayof: "Delivery day", minus1: "1 day before", minus2: "2 days before" })[r]).join(", ") : "None"}</span></div>
+        <div class="kv-row"><span class="k">Reminders</span><span class="v">${dr.reminders.length ? dr.reminders.map(r => ({ dayof: "On delivery day", minus1: "1 day before", minus2: "2 days before" })[r]).join(", ") : "None"}</span></div>
       </div>
       <div class="banner info"><span class="mi">info</span>Saved locally on this device — works offline.</div>
-      <div class="scroll-pad"></div>`;
+      <div class="scroll-pad"></div></div>`;
     body.scrollTop = 0;
     return;
   }
 
-  body.innerHTML = `
+  /* manual form — mirrors OrderFormContent: required summary + per-field supportingText errors */
+  body.innerHTML = `<div class="fade-in">
+    ${entrySeg()}
+    <p class="req-note">Required: a name, platform, and total.</p>
+
     <div class="card" style="margin-top:10px"><h4 class="card-title">Platform</h4>
-      <div class="plat-grid">${Object.entries(PLATFORMS).map(([k, p]) => `
+      <p class="field-label">Order name <span class="req">*</span></p>
+      <input class="field" id="wTitle" data-fk="title" placeholder="e.g. Soundcore R50i earbuds" value="${esc(dr.title)}">
+      <p class="field-error" data-err="title" hidden></p>
+      <p class="field-label">Platform <span class="req">*</span></p>
+      <div class="plat-grid" data-fk="platform">${Object.entries(PLATFORMS).map(([k, p]) => `
         <button type="button" class="plat-opt ${dr.platform === k ? "is-on" : ""}" data-plat="${k}">
           <span class="plat-badge" style="background:${p.color}">${p.initial}</span>${p.label}
         </button>`).join("")}
       </div>
+      <p class="field-error" data-err="platform" hidden></p>
       <div class="custom-plat" ${dr.platform === "OTHER" ? "" : "hidden"}>
-        <p class="field-label">Store / platform name</p>
-        <input class="field" id="wCustomPlat" placeholder="e.g. Carousell, Viber seller" value="${esc(dr.customPlatformName)}">
+        <p class="field-label">Platform or store name <span class="req">*</span></p>
+        <input class="field" id="wCustomPlat" data-fk="customPlatformName" placeholder="e.g. Carousell, Viber seller" value="${esc(dr.customPlatformName)}">
+        <p class="field-error" data-err="customPlatformName" hidden></p>
       </div>
-      <p class="field-label">Title</p>
-      <input class="field" id="wTitle" placeholder="e.g. Soundcore R50i earbuds" value="${esc(dr.title)}">
-      <p class="field-label">Seller name</p>
+      <p class="field-label">Seller / store</p>
       <input class="field" id="wSeller" placeholder="e.g. AudioHub PH" value="${esc(dr.sellerName)}">
     </div>
 
@@ -774,22 +863,35 @@ function renderEdit() {
             <strong style="font-size:12.5px;color:var(--text-2)">Item ${i + 1}</strong>
             ${dr.items.length > 1 ? `<button class="remove-item" data-rm="${i}" type="button" aria-label="Remove item"><span class="mi">close</span></button>` : ""}
           </div>
-          <input class="field" data-item="${i}" data-k="name" placeholder="Item name" value="${esc(it.name)}" style="margin-top:6px">
-          <input class="field" data-item="${i}" data-k="variant" placeholder="Variant (size, color) — optional" value="${esc(it.variant)}" style="margin-top:8px">
-          <div class="field-row" style="margin-top:8px">
-            <input class="field" data-item="${i}" data-k="price" type="number" min="0" step="0.01" placeholder="Unit price ₱" value="${it.priceMinor ? it.priceMinor / 100 : ""}">
-            <span class="qty-step"><button type="button" data-qty="${i}" data-d="-1" aria-label="Decrease quantity">−</button><strong>${it.qty}</strong><button type="button" data-qty="${i}" data-d="1" aria-label="Increase quantity">+</button></span>
+          <p class="field-label" style="margin-top:8px">Item name <span class="req">*</span></p>
+          <input class="field" data-item="${i}" data-k="name" data-fk="item_name_${i}" placeholder="Item name" value="${esc(it.name)}">
+          <p class="field-error" data-err="item_name_${i}" hidden></p>
+          <div class="field-row3" style="margin-top:8px">
+            <input class="field" data-item="${i}" data-k="variant" placeholder="Variant" value="${esc(it.variant)}">
+            <span><input class="field" data-item="${i}" data-k="qty" data-fk="item_qty_${i}" inputmode="numeric" placeholder="Qty" value="${esc(it.qty)}">
+            <p class="field-error" data-err="item_qty_${i}" hidden></p></span>
+            <input class="field" data-item="${i}" data-k="price" inputmode="decimal" placeholder="Unit price" value="${esc(it.price)}">
           </div>
         </div>`).join("")}
       <button class="btn btn-outline" id="wAddItem" type="button" style="width:100%"><span class="mi">add</span>Add item</button>
     </div>
 
     <div class="card"><h4 class="card-title">Pricing</h4>
-      <div class="field-row">
-        <span><p class="field-label">Shipping ₱</p><input class="field" id="wShip" type="number" min="0" step="0.01" value="${dr.shippingMinor ? dr.shippingMinor / 100 : ""}" placeholder="0"></span>
-        <span><p class="field-label">Discount ₱</p><input class="field" id="wDisc" type="number" min="0" step="0.01" value="${dr.discountMinor ? dr.discountMinor / 100 : ""}" placeholder="0"></span>
+      <div class="kv-row" id="wSubtotalRow" ${itemsSubtotal(dr) > 0 ? "" : "hidden"}>
+        <span class="k">Items subtotal</span><span class="v" id="wSubtotal">${peso(itemsSubtotal(dr))}</span>
       </div>
-      <div class="kv-row total"><span class="k">Total</span><span class="v" id="wTotal">${peso(draftTotal(dr))}</span></div>
+      <div class="field-row">
+        <span><p class="field-label">Shipping</p>
+          <input class="field" id="wShip" data-fk="shipping" inputmode="decimal" placeholder="0.00" value="${esc(dr.shipping)}">
+          <p class="field-error" data-err="shipping" hidden></p></span>
+        <span><p class="field-label">Discount</p>
+          <input class="field" id="wDisc" data-fk="discount" inputmode="decimal" placeholder="0.00" value="${esc(dr.discount)}">
+          <p class="field-error" data-err="discount" hidden></p></span>
+      </div>
+      <p class="field-label">Total <span class="req">*</span></p>
+      <input class="field" id="wTotal" data-fk="total" inputmode="decimal" placeholder="0.00" value="${esc(dr.total)}">
+      <p class="field-hint" data-hint="total" hidden></p>
+      <p class="field-error" data-err="total" hidden></p>
     </div>
 
     <div class="card"><h4 class="card-title">Payment</h4>
@@ -800,77 +902,168 @@ function renderEdit() {
       <div class="segmented" id="wPayStatus">
         ${PAY_STATUSES.map(s => `<button class="seg ${dr.paymentStatus === s ? "is-on" : ""}" data-ps="${s}" type="button">${s === "UNPAID" ? "Unpaid" : s === "PAID" ? "Paid" : "Partial"}</button>`).join("")}
       </div>
-      ${dr.isCod ? `<div class="banner warn" style="margin-top:14px"><span class="mi">payments</span>COD amount due on delivery: <strong>&nbsp;${peso(draftTotal(dr))}</strong></div>` : ""}
+      <div class="banner warn" id="wCodBanner" style="margin-top:14px" ${dr.isCod && parseMoney(dr.total) != null ? "" : "hidden"}><span class="mi">payments</span>COD amount to prepare:<strong id="wCodAmt">&nbsp;${peso(parseMoney(dr.total) ?? 0)}</strong></div>
     </div>
 
     <div class="card"><h4 class="card-title">Delivery</h4>
-      <p class="field-label">Status</p>
+      <p class="field-label">Order status</p>
       <select class="field" id="wStatus">${Object.entries(STATUSES).filter(([k]) => k !== "DRAFT").map(([k, v]) => `<option value="${k}" ${dr.status === k ? "selected" : ""}>${v.label}</option>`).join("")}</select>
       <p class="field-label">Courier</p>
       <select class="field" id="wCourier"><option value="">Not set</option>${COURIERS.map(c => `<option ${dr.courier === c ? "selected" : ""}>${c}</option>`).join("")}</select>
+      <div class="custom-plat" ${dr.courier === "Other" ? "" : "hidden"}>
+        <p class="field-label">Courier name <span class="req">*</span></p>
+        <input class="field" id="wCustomCourier" data-fk="customCourierName" placeholder="e.g. Lalamove, UPS" value="${esc(dr.customCourierName)}">
+        <p class="field-error" data-err="customCourierName" hidden></p>
+      </div>
       <p class="field-label">Tracking number</p>
       <input class="field" id="wTracking" placeholder="e.g. JT824011592PH" value="${esc(dr.tracking)}">
       <p class="field-label">Order date</p>
       <input class="field" id="wOrdered" type="date" value="${dr.orderedAt}">
       <div class="field-row">
-        <span><p class="field-label">ETA from</p><input class="field" id="wEtaA" type="date" value="${dr.etaStart}"></span>
-        <span><p class="field-label">ETA to</p><input class="field" id="wEtaB" type="date" value="${dr.etaEnd}"></span>
+        <span><p class="field-label">Earliest delivery</p><input class="field" id="wEtaA" type="date" value="${dr.etaStart}"></span>
+        <span><p class="field-label">Latest delivery</p>
+          <input class="field" id="wEtaB" data-fk="etaEnd" type="date" value="${dr.etaEnd}">
+          <p class="field-error" data-err="etaEnd" hidden></p></span>
       </div>
       <p class="field-label">Reminders</p>
       <div class="chip-row" style="padding-top:0" id="wRemindChips">
-        ${[["dayof", "Delivery day"], ["minus1", "1 day before"], ["minus2", "2 days before"]].map(([k, l]) =>
+        ${[["dayof", "On delivery day"], ["minus1", "1 day before"], ["minus2", "2 days before"]].map(([k, l]) =>
           `<button class="chip ${dr.reminders?.includes(k) ? "is-on" : ""}" data-rem="${k}" type="button">${l}</button>`).join("")}
       </div>
     </div>
 
     <div class="card"><h4 class="card-title">Notes</h4>
-      <input class="field" id="wNotes" placeholder="e.g. Rider calls first" value="${esc(dr.notes)}">
+      <textarea class="field" id="wNotes" rows="3" placeholder="e.g. Rider calls first">${esc(dr.notes)}</textarea>
     </div>
-    <div class="scroll-pad"></div>`;
+    <div class="scroll-pad"></div></div>`;
   wireEditInputs();
+  updateErrorUI();
+}
+
+/* smart-import step inside the editor — extracted data flows into the same draft + validation */
+function renderEditImport(body) {
+  if (importStep === 0) {
+    body.innerHTML = `<div class="fade-in">
+      ${entrySeg()}
+      <div class="banner info" style="margin-top:10px"><span class="mi">photo_scan</span>
+        Import a marketplace screenshot — on-device OCR extracts the details for your review. Nothing saves until you confirm.
+      </div>
+      <label class="import-photo" style="margin-top:14px">
+        <input type="file" accept="image/*" id="wImportFile">
+        <span class="mi">add_photo_alternate</span>
+        <strong>Pick a screenshot</strong><br><small>Shopee, TikTok Shop, Lazada or any order page</small>
+      </label>
+      <button class="btn btn-tonal" type="button" style="width:100%;margin-top:12px" id="wImportSample">
+        <span class="mi">auto_awesome</span>Try with sample screenshot data
+      </button>
+      <div class="scroll-pad"></div></div>`;
+    $("#wImportFile").onchange = simulateImport;
+    $("#wImportSample").onclick = simulateImport;
+    wireEntrySeg();
+    return;
+  }
+  const f = importDraft;
+  body.innerHTML = `<div class="fade-in">
+    ${entrySeg()}
+    <div class="banner warn" style="margin-top:10px"><span class="mi">fact_check</span>
+      Review before saving — every extracted field is a suggestion you can correct.
+    </div>
+    <div class="card" style="margin-top:12px"><h4 class="card-title">Extracted fields</h4>
+      <div class="conf-row">${Object.entries(f.conf).map(([k, v]) => `<span class="conf-chip conf-${v}">${k} · ${v}</span>`).join("")}</div>
+      <p class="field-label">Product name</p><input class="field" id="iName" value="${esc(f.name)}">
+      <div class="field-row">
+        <span><p class="field-label">Seller</p><input class="field" id="iSeller" value="${esc(f.seller)}"></span>
+        <span><p class="field-label">Total ₱</p><input class="field" id="iTotal" type="number" step="0.01" value="${(f.totalMinor / 100).toFixed(2)}"></span>
+      </div>
+      <div class="field-row">
+        <span><p class="field-label">Platform</p>
+          <select class="field" id="iPlat">${Object.keys(PLATFORMS).map(k => `<option value="${k}" ${f.platform === k ? "selected" : ""}>${PLATFORMS[k].label}</option>`).join("")}</select></span>
+        <span><p class="field-label">Courier</p>
+          <select class="field" id="iCourier">${["", ...COURIERS].map(c => `<option ${f.courier === c ? "selected" : ""}>${c || "Not set"}</option>`).join("")}</select></span>
+      </div>
+      <p class="field-label">Tracking</p><input class="field" id="iTracking" value="${esc(f.tracking)}">
+    </div>
+    <div class="action-col">
+      <button class="btn btn-fill" type="button" id="wImportUse"><span class="mi">check</span>Review order</button>
+      <button class="btn btn-text" type="button" id="wImportDiscard">Discard</button>
+    </div>
+    <div class="scroll-pad"></div></div>`;
+  $("#wImportDiscard").onclick = () => { importStep = 0; importDraft = null; renderEdit(); };
+  $("#wImportUse").onclick = importToDraft;
+  wireEntrySeg();
+}
+
+/* extracted fields -> manual draft -> same OrderDraft validation as manual entry */
+function importToDraft() {
+  const gv = id => document.getElementById(id);
+  const name = gv("iName").value.trim(), courier = gv("iCourier").value;
+  const total = parseMoney(gv("iTotal").value);
+  draft.title = name;
+  draft.sellerName = gv("iSeller").value.trim();
+  draft.platform = gv("iPlat").value || null;
+  draft.total = total != null ? (total / 100).toFixed(2) : "";
+  draft.items = [{ name, variant: "", qty: "1", price: total != null ? (total / 100).toFixed(2) : "" }];
+  draft.courier = courier === "Not set" ? "" : (COURIERS.includes(courier) ? courier : "Other");
+  draft.customCourierName = COURIERS.includes(courier) || courier === "Not set" ? "" : courier;
+  draft.tracking = gv("iTracking").value.trim();
+  importStep = 0; importDraft = null;
+  editMode = "manual"; editStep = "form";
+  goReview();
 }
 
 function collectDraft() {
   const dr = draft, gv = id => document.getElementById(id);
-  dr.customPlatformName = gv("wCustomPlat")?.value.trim() || dr.customPlatformName;
-  if (gv("wTitle")) dr.title = gv("wTitle").value.trim();
-  if (gv("wSeller")) dr.sellerName = gv("wSeller").value.trim();
+  if (gv("wCustomPlat")) dr.customPlatformName = gv("wCustomPlat").value;
+  if (gv("wTitle")) dr.title = gv("wTitle").value;
+  if (gv("wSeller")) dr.sellerName = gv("wSeller").value;
   dr.items.forEach((it, i) => {
-    const nm = document.querySelector(`[data-item="${i}"][data-k="name"]`);
-    if (nm) {
-      it.name = nm.value.trim();
-      it.variant = document.querySelector(`[data-item="${i}"][data-k="variant"]`).value.trim();
-      it.priceMinor = Math.round((parseFloat(document.querySelector(`[data-item="${i}"][data-k="price"]`).value) || 0) * 100);
+    const q = k => document.querySelector(`[data-item="${i}"][data-k="${k}"]`);
+    if (q("name")) {
+      it.name = q("name").value;
+      it.variant = q("variant").value;
+      it.qty = q("qty").value;
+      it.price = q("price").value;
     }
   });
-  if (gv("wShip")) dr.shippingMinor = Math.round((parseFloat(gv("wShip").value) || 0) * 100);
-  if (gv("wDisc")) dr.discountMinor = Math.round((parseFloat(gv("wDisc").value) || 0) * 100);
+  if (gv("wShip")) dr.shipping = gv("wShip").value;
+  if (gv("wDisc")) dr.discount = gv("wDisc").value;
+  if (gv("wTotal")) dr.total = gv("wTotal").value;
   const pay = document.querySelector('input[name="wPay"]:checked');
   if (pay) { dr.paymentMethod = pay.value; dr.isCod = pay.value === "COD"; }
   if (gv("wCourier")) dr.courier = gv("wCourier").value;
-  if (gv("wTracking")) dr.tracking = gv("wTracking").value.trim();
+  if (gv("wCustomCourier")) dr.customCourierName = gv("wCustomCourier").value;
+  if (gv("wTracking")) dr.tracking = gv("wTracking").value;
   if (gv("wOrdered")) dr.orderedAt = gv("wOrdered").value || d(0);
   if (gv("wEtaA")) { dr.etaStart = gv("wEtaA").value; dr.etaEnd = gv("wEtaB").value; }
-  if (gv("wNotes")) dr.notes = gv("wNotes").value.trim();
+  if (gv("wNotes")) dr.notes = gv("wNotes").value;
   if (gv("wStatus")) dr.status = gv("wStatus").value;
 }
 
-function wireEditInputs() {
-  const dr = draft;
-  document.querySelectorAll("[data-plat]").forEach(b => b.onclick = () => {
-    collectDraft(); dr.platform = b.dataset.plat; renderEdit();
-  });
-  document.querySelectorAll("[data-qty]").forEach(b => b.onclick = () => {
+function wireEntrySeg() {
+  document.querySelectorAll("#entrySeg .seg").forEach(b => b.onclick = () => {
+    if (editMode === b.dataset.em) return;
     collectDraft();
-    const it = dr.items[+b.dataset.qty];
-    it.qty = Math.max(1, it.qty + (+b.dataset.d));
+    editMode = b.dataset.em;
     renderEdit();
   });
-  document.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
-    collectDraft(); dr.items.splice(+b.dataset.rm, 1); renderEdit();
+}
+
+function wireEditInputs() {
+  const dr = draft, body = $("#editBody");
+  wireEntrySeg();
+  body.querySelectorAll("[data-plat]").forEach(b => b.onclick = () => {
+    collectDraft(); dr.platform = b.dataset.plat; renderEdit();
+  });
+  body.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
+    collectDraft(); dr.items.splice(+b.dataset.rm, 1);
+    editTouched = new Set([...editTouched].filter(k => !k.startsWith("item_")));
+    renderEdit();
   });
   const add = $("#wAddItem");
-  if (add) add.onclick = () => { collectDraft(); dr.items.push({ name: "", variant: "", qty: 1, priceMinor: 0 }); renderEdit(); };
+  if (add) add.onclick = () => {
+    collectDraft(); dr.items.push({ name: "", variant: "", qty: "1", price: "" });
+    renderEdit();
+  };
   document.querySelectorAll("#wPayStatus .seg").forEach(b => b.onclick = () => {
     dr.paymentStatus = b.dataset.ps;
     document.querySelectorAll("#wPayStatus .seg").forEach(x => x.classList.toggle("is-on", x === b));
@@ -885,35 +1078,69 @@ function wireEditInputs() {
       : [...dr.reminders, b.dataset.rem];
     b.classList.toggle("is-on");
   });
-  ["wTitle", "wSeller", "wShip", "wDisc"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.oninput = () => { collectDraft(); const t = $("#wTotal"); if (t) t.textContent = peso(draftTotal(dr)); };
+  const courierSel = $("#wCourier");
+  if (courierSel) courierSel.onchange = () => { collectDraft(); dr.courier = courierSel.value; renderEdit(); };
+  const etaA = $("#wEtaA");
+  if (etaA) etaA.addEventListener("change", () => { collectDraft(); updateErrorUI(); });
+  /* validate on leaving a field: blur (focusout) for text, change for selects/dates */
+  body.querySelectorAll("[data-fk]").forEach(el => {
+    el.addEventListener("focusout", () => touchField(el.dataset.fk));
+    el.addEventListener("change", () => touchField(el.dataset.fk));
   });
+  /* re-validate visible errors while typing + live totals */
+  body.querySelectorAll("input.field, textarea.field").forEach(el => el.addEventListener("input", () => {
+    if (el.dataset.k === "qty") el.value = el.value.replace(/\D/g, "");
+    collectDraft(); updateErrorUI();
+    const sub = itemsSubtotal(dr), row = $("#wSubtotalRow");
+    if (row) { row.hidden = sub <= 0; $("#wSubtotal").textContent = peso(sub); }
+    const cod = $("#wCodBanner");
+    if (cod) {
+      const tm = parseMoney(dr.total);
+      cod.hidden = !(dr.isCod && tm != null);
+      $("#wCodAmt").textContent = " " + peso(tm ?? 0);
+    }
+  }));
+}
+
+/* mirrors goToReview: attemptedSave=true -> valid? REVIEW : stay on form with all errors */
+function goReview() {
+  collectDraft();
+  editAttempted = true;
+  if (Object.keys(fieldErrors(draft)).length === 0) {
+    editStep = "review"; renderEdit(); return;
+  }
+  renderEdit();
+  document.querySelector("#editBody .is-error")?.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 function editNext() {
+  if (editMode === "import") return;
+  if (editStep === "form") { goReview(); return; }
   collectDraft();
+  editAttempted = true;
+  if (Object.keys(fieldErrors(draft)).length) { editStep = "form"; renderEdit(); return; }
   const dr = draft;
-  if (editStep === "form") {
-    if (!dr.platform) return toast("Pick a platform first");
-    if (dr.platform === "OTHER" && !dr.customPlatformName) return toast("Name the store or platform");
-    if (!dr.items.some(i => i.name) && !dr.title) return toast("Name at least one item or a title");
-    if (draftTotal(dr) <= 0) return toast("Add a price — total can't be zero");
-    editStep = "review"; renderEdit(); return;
-  }
   const existing = editOrderId ? orders.find(x => x.id === editOrderId) : null;
   const o = existing || {
     id: `ord-${nextId++}`, shipStatus: null, deliveredAt: null, archived: false, createdAt: d(0),
   };
+  const ship = parseMoney(dr.shipping), disc = parseMoney(dr.discount);
   Object.assign(o, {
-    platform: dr.platform, customPlatformName: dr.customPlatformName,
-    title: dr.title || null,
-    sellerName: dr.sellerName || platOf({ platform: dr.platform }).label,
+    platform: dr.platform, customPlatformName: dr.customPlatformName.trim(),
+    title: dr.title.trim() || null,
+    sellerName: dr.sellerName.trim() || platOf({ platform: dr.platform }).label,
     isCod: dr.isCod, paymentMethod: dr.paymentMethod, paymentStatus: dr.paymentStatus,
-    status: dr.status, courier: dr.courier, tracking: dr.tracking,
+    status: dr.status,
+    courier: dr.courier === "Other" ? dr.customCourierName.trim() : dr.courier,
+    tracking: dr.tracking.trim(),
     orderedAt: dr.orderedAt, etaStart: dr.etaStart, etaEnd: dr.etaEnd,
-    items: dr.items.filter(i => i.name), shippingMinor: dr.shippingMinor, discountMinor: dr.discountMinor,
-    notes: dr.notes, reminders: dr.reminders,
+    items: dr.items.filter(i => !itemEmpty(i)).map(i => ({
+      name: i.name.trim(), variant: i.variant.trim(),
+      qty: Math.max(1, parseInt(i.qty, 10) || 1),
+      priceMinor: parseMoney(i.price) ?? 0,
+    })),
+    shippingMinor: ship ?? 0, discountMinor: disc ?? 0, totalMinor: parseMoney(dr.total),
+    notes: dr.notes.trim(), reminders: dr.reminders,
   });
   if (dr.courier || dr.tracking) o.shipStatus = o.shipStatus || "PREPARING"; else o.shipStatus = null;
   if (!existing) orders.unshift(o);
@@ -924,6 +1151,7 @@ function editNext() {
 }
 
 function editBack() {
+  if (editMode === "import") { editMode = "manual"; renderEdit(); return; }
   if (editStep === "review") { editStep = "form"; renderEdit(); return; }
   draft = null;
   showScreen(editOrderId ? "detail" : "home");
@@ -1155,7 +1383,7 @@ function simulateImport() {
   };
   importStep = 1;
   toast("OCR extracted 5 fields");
-  renderImport();
+  if (state.screen === "add") renderEdit(); else renderImport();
 }
 
 function saveImport() {
