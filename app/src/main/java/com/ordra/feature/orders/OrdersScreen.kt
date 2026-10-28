@@ -31,6 +31,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -49,7 +51,7 @@ import com.ordra.R
 import com.ordra.core.ui.ai.CompanionAvatar
 import com.ordra.core.ui.ai.CompanionState
 import com.ordra.core.ui.ai.CompanionVariant
-import com.ordra.core.ui.components.OrderCard
+import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.core.ui.orderStatusLabel
 import com.ordra.core.ui.platformLabel
 import com.ordra.domain.model.OrderQuery
@@ -67,8 +69,16 @@ fun OrdersScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var filtersOpen by remember { mutableStateOf(false) }
     var sortMenuOpen by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    OrderActionEffects(
+        events = viewModel.actionEvents,
+        snackbarHostState = snackbarHostState,
+        onUndo = viewModel::undoOrderAction,
+    )
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.orders_title)) },
@@ -181,9 +191,10 @@ fun OrdersScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(uiState.orders, key = { it.id }) { order ->
-                        OrderCard(
+                        SwipeableOrderCard(
                             order = order,
                             onClick = { onOpenOrder(order.id) },
+                            onAction = { viewModel.performOrderAction(order, it) },
                             modifier = Modifier.animateItem(),
                         )
                     }

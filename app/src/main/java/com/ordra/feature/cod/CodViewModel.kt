@@ -2,16 +2,21 @@ package com.ordra.feature.cod
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ordra.core.ui.components.OrderSwipeAction
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderQuery
 import com.ordra.domain.repository.OrderRepository
+import com.ordra.feature.orders.OrderActionDelegate
+import com.ordra.feature.orders.OrderActionEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class CodUiState(
     val dueToday: List<Order> = emptyList(),
@@ -25,7 +30,10 @@ data class CodUiState(
 @HiltViewModel
 class CodViewModel @Inject constructor(
     orderRepository: OrderRepository,
+    private val orderActions: OrderActionDelegate,
 ) : ViewModel() {
+
+    val actionEvents: SharedFlow<OrderActionEvent> = orderActions.events
 
     val uiState: StateFlow<CodUiState> =
         orderRepository.observeOrders(OrderQuery(codOnly = true))
@@ -50,4 +58,12 @@ class CodViewModel @Inject constructor(
                 )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CodUiState())
+
+    fun performOrderAction(order: Order, action: OrderSwipeAction) {
+        viewModelScope.launch { orderActions.perform(order, action) }
+    }
+
+    fun undoOrderAction() {
+        viewModelScope.launch { orderActions.undoLast() }
+    }
 }

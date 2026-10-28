@@ -17,10 +17,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,8 +32,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
 import com.ordra.core.common.MoneyFormat
-import com.ordra.core.ui.components.OrderCard
+import com.ordra.core.ui.components.OrderSwipeAction
+import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.domain.model.Order
+import com.ordra.feature.orders.OrderActionEffects
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,8 +45,16 @@ fun CodOverviewScreen(
     viewModel: CodViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    OrderActionEffects(
+        events = viewModel.actionEvents,
+        snackbarHostState = snackbarHostState,
+        onUndo = viewModel::undoOrderAction,
+    )
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.cod_title)) },
@@ -100,19 +113,19 @@ fun CodOverviewScreen(
                 if (uiState.dueToday.isNotEmpty()) {
                     item { SectionHeader(stringResource(R.string.cod_today)) }
                     items(uiState.dueToday, key = { "t_${it.id}" }) {
-                        CodRow(it, onOpenOrder, Modifier.animateItem())
+                        CodRow(it, onOpenOrder, viewModel::performOrderAction, Modifier.animateItem())
                     }
                 }
                 if (uiState.nextThreeDays.isNotEmpty()) {
                     item { SectionHeader(stringResource(R.string.cod_next_3_days)) }
                     items(uiState.nextThreeDays, key = { "n_${it.id}" }) {
-                        CodRow(it, onOpenOrder, Modifier.animateItem())
+                        CodRow(it, onOpenOrder, viewModel::performOrderAction, Modifier.animateItem())
                     }
                 }
                 if (uiState.outstanding.isNotEmpty()) {
                     item { SectionHeader(stringResource(R.string.cod_all_pending)) }
                     items(uiState.outstanding, key = { "a_${it.id}" }) {
-                        CodRow(it, onOpenOrder, Modifier.animateItem())
+                        CodRow(it, onOpenOrder, viewModel::performOrderAction, Modifier.animateItem())
                     }
                 }
             }
@@ -130,6 +143,16 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
-private fun CodRow(order: Order, onOpenOrder: (String) -> Unit, modifier: Modifier = Modifier) {
-    OrderCard(order = order, onClick = { onOpenOrder(order.id) }, modifier = modifier)
+private fun CodRow(
+    order: Order,
+    onOpenOrder: (String) -> Unit,
+    onOrderAction: (Order, OrderSwipeAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SwipeableOrderCard(
+        order = order,
+        onClick = { onOpenOrder(order.id) },
+        onAction = { onOrderAction(order, it) },
+        modifier = modifier,
+    )
 }

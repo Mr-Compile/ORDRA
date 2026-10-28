@@ -6,18 +6,21 @@ import com.ordra.domain.model.Category
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderQuery
 import com.ordra.domain.model.OrderSort
+import com.ordra.core.ui.components.OrderSwipeAction
 import com.ordra.domain.repository.CategoryRepository
 import com.ordra.domain.repository.OrderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class OrdersUiState(
     val orders: List<Order> = emptyList(),
@@ -33,10 +36,13 @@ data class OrdersUiState(
 class OrdersViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
     categoryRepository: CategoryRepository,
+    private val orderActions: OrderActionDelegate,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow(OrderQuery())
     val query: StateFlow<OrderQuery> = _query.asStateFlow()
+
+    val actionEvents: SharedFlow<OrderActionEvent> = orderActions.events
 
     private val ordersFlow = _query.flatMapLatest { orderRepository.observeOrders(it) }
     private val categoriesFlow = categoryRepository.observeCategories()
@@ -55,5 +61,13 @@ class OrdersViewModel @Inject constructor(
 
     fun resetQuery() {
         _query.value = OrderQuery()
+    }
+
+    fun performOrderAction(order: Order, action: OrderSwipeAction) {
+        viewModelScope.launch { orderActions.perform(order, action) }
+    }
+
+    fun undoOrderAction() {
+        viewModelScope.launch { orderActions.undoLast() }
     }
 }

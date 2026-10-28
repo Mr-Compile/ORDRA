@@ -8,18 +8,23 @@ import com.ordra.core.ui.ai.resolveCompanionBanner
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.PaymentStatus
+import com.ordra.core.ui.components.OrderSwipeAction
 import com.ordra.domain.repository.OrderRepository
 import com.ordra.domain.repository.ShipmentRepository
+import com.ordra.feature.orders.OrderActionDelegate
+import com.ordra.feature.orders.OrderActionEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 private val TERMINAL_STATUSES = setOf(
     OrderStatus.DELIVERED,
@@ -49,9 +54,12 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     orderRepository: OrderRepository,
     shipmentRepository: ShipmentRepository,
+    private val orderActions: OrderActionDelegate,
 ) : ViewModel() {
 
     private val showingArchived = MutableStateFlow(false)
+
+    val actionEvents: SharedFlow<OrderActionEvent> = orderActions.events
 
     val uiState: StateFlow<HomeUiState> = combine(
         orderRepository.observeActiveOrders(),
@@ -114,5 +122,13 @@ class HomeViewModel @Inject constructor(
 
     fun toggleArchived() {
         showingArchived.value = !showingArchived.value
+    }
+
+    fun performOrderAction(order: Order, action: OrderSwipeAction) {
+        viewModelScope.launch { orderActions.perform(order, action) }
+    }
+
+    fun undoOrderAction() {
+        viewModelScope.launch { orderActions.undoLast() }
     }
 }

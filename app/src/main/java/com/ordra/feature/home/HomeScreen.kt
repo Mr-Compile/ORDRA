@@ -26,12 +26,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,9 +52,11 @@ import com.ordra.core.ui.ai.CompanionAvatar
 import com.ordra.core.ui.ai.CompanionState
 import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.ai.OrdraAiBanner
-import com.ordra.core.ui.components.OrderCard
+import com.ordra.core.ui.components.OrderSwipeAction
+import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.domain.model.Order
 import com.ordra.feature.ordi.OrdiChatSheet
+import com.ordra.feature.orders.OrderActionEffects
 import java.time.format.DateTimeFormatter
 
 private val ETA_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d")
@@ -82,8 +87,16 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var chatOpen by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    OrderActionEffects(
+        events = viewModel.actionEvents,
+        snackbarHostState = snackbarHostState,
+        onUndo = viewModel::undoOrderAction,
+    )
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             HomeTopBar(
                 showingArchived = uiState.showingArchived,
@@ -108,6 +121,9 @@ fun HomeScreen(
                 ArchivedContent(
                     orders = uiState.archived,
                     onOpenOrder = onOpenOrder,
+                    onOrderAction = { order, action ->
+                        viewModel.performOrderAction(order, action)
+                    },
                     modifier = Modifier.padding(innerPadding),
                 )
             } else if (uiState.isEmpty && uiState.loaded) {
@@ -119,6 +135,9 @@ fun HomeScreen(
                     onOpenOrders = onOpenOrders,
                     onOpenCod = onOpenCod,
                     onAddOrder = onAddOrder,
+                    onOrderAction = { order, action ->
+                        viewModel.performOrderAction(order, action)
+                    },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -220,6 +239,7 @@ private fun HomeContent(
     onOpenOrders: () -> Unit,
     onOpenCod: () -> Unit,
     onAddOrder: () -> Unit,
+    onOrderAction: (Order, OrderSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -248,9 +268,10 @@ private fun HomeContent(
                 )
             }
             items(state.upcoming, key = { "up_${it.id}" }) { order ->
-                OrderCard(
+                SwipeableOrderCard(
                     order = order,
                     onClick = { onOpenOrder(order.id) },
+                    onAction = { onOrderAction(order, it) },
                     etaText = etaText(order),
                     modifier = Modifier.animateItem(),
                 )
@@ -265,9 +286,10 @@ private fun HomeContent(
                 )
             }
             items(state.recent, key = { "re_${it.id}" }) { order ->
-                OrderCard(
+                SwipeableOrderCard(
                     order = order,
                     onClick = { onOpenOrder(order.id) },
+                    onAction = { onOrderAction(order, it) },
                     etaText = etaText(order),
                     modifier = Modifier.animateItem(),
                 )
@@ -334,6 +356,7 @@ private fun SummaryCard(
 private fun ArchivedContent(
     orders: List<Order>,
     onOpenOrder: (String) -> Unit,
+    onOrderAction: (Order, OrderSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (orders.isEmpty()) {
@@ -346,9 +369,10 @@ private fun ArchivedContent(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(orders, key = { it.id }) { order ->
-            OrderCard(
+            SwipeableOrderCard(
                 order = order,
                 onClick = { onOpenOrder(order.id) },
+                onAction = { onOrderAction(order, it) },
                 modifier = Modifier.animateItem(),
             )
         }
