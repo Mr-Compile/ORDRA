@@ -43,13 +43,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (intent?.action != Intent.ACTION_SEND) return
+        if (intent?.action != Intent.ACTION_SEND &&
+            intent?.action != Intent.ACTION_SEND_MULTIPLE
+        ) return
         when {
             intent.type?.startsWith("image/") == true -> {
                 @Suppress("DEPRECATION")
-                val uri = intent.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)
-                if (uri != null) {
-                    AppIntake.pendingImageUri.value = uri.toString()
+                val uris = if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
+                    intent.getParcelableArrayListExtra<android.net.Uri>(Intent.EXTRA_STREAM)
+                        ?.map { it.toString() }
+                } else {
+                    intent.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)
+                        ?.let { listOf(it.toString()) }
+                }
+                if (!uris.isNullOrEmpty()) {
+                    AppIntake.pendingImageUris.value = uris
                     AppIntake.pendingRoute.tryEmit(OrdraRoutes.SMART_IMPORT)
                 }
             }

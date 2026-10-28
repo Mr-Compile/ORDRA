@@ -35,7 +35,7 @@ enum class ImportStep { PICK, PROCESSING, REVIEW }
 
 data class SmartImportUiState(
     val step: ImportStep = ImportStep.PICK,
-    val imageUri: String? = null,
+    val imageUris: List<String> = emptyList(),
     val result: SmartImportResult? = null,
     val ocrFailed: Boolean = false,
     val form: OrderFormState = OrderFormState(),
@@ -80,10 +80,14 @@ class SmartImportViewModel @Inject constructor(
         }
     }
 
-    fun onImagePicked(uri: String) {
-        _uiState.update { it.copy(step = ImportStep.PROCESSING, imageUri = uri) }
+    /** Accepts one or more screenshots; OCR text is combined and parsed once. */
+    fun onImagesPicked(uris: List<String>) {
+        if (uris.isEmpty()) return
+        _uiState.update { it.copy(step = ImportStep.PROCESSING, imageUris = uris) }
         viewModelScope.launch {
-            val text = ocrEngine.recognize(uri)
+            val text = uris.mapNotNull { ocrEngine.recognize(it) }
+                .joinToString("\n\n")
+                .takeIf { it.isNotBlank() }
             val result = if (text == null) {
                 SmartImportResult(
                     detectedPlatform = null,
