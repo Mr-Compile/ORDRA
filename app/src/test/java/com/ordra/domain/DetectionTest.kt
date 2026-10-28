@@ -5,6 +5,7 @@ import com.ordra.domain.model.DetectionConfidence
 import com.ordra.domain.model.NotificationSignals
 import com.ordra.domain.model.Platform
 import com.ordra.domain.model.ShipmentStatus
+import com.ordra.domain.model.UserSettings
 import com.ordra.domain.service.NotificationParser
 import com.ordra.domain.service.ShipmentMatcher
 import com.ordra.domain.service.StatusProgression
@@ -15,6 +16,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DetectionTest {
+
+    @Test
+    fun `auto-apply high-confidence updates defaults to enabled`() {
+        assertTrue(UserSettings().autoApplyHighConfidence)
+    }
 
     @Test
     fun `irrelevant notification is rejected`() {

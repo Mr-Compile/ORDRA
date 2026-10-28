@@ -1,5 +1,6 @@
 package com.ordra.domain.repository
 
+import com.ordra.domain.model.DetectionConfidence
 import com.ordra.domain.model.Shipment
 import com.ordra.domain.model.ShipmentStatus
 import com.ordra.domain.model.TrackingEvent
@@ -16,6 +17,7 @@ interface ShipmentRepository {
         shipmentId: String,
         status: ShipmentStatus,
         source: TrackingStatusSource = TrackingStatusSource.MANUAL,
+        confidence: DetectionConfidence = DetectionConfidence.HIGH,
         title: String? = null,
     )
 }

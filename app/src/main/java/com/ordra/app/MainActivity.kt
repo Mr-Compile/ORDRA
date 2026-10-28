@@ -15,6 +15,7 @@ import com.ordra.domain.service.NotificationParser
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -59,7 +60,8 @@ class MainActivity : ComponentActivity() {
                         signals = NotificationParser.parse(text),
                         source = TrackingStatusSource.SHARED_CONTENT,
                         summary = text,
-                        autoApplyHigh = false,
+                        autoApplyHigh = settingsRepository.settings.first()
+                            .autoApplyHighConfidence,
                     )
                     AppIntake.pendingRoute.tryEmit(OrdraRoutes.DETECTIONS)
                 }

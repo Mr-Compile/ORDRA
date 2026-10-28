@@ -21,9 +21,13 @@ interface DetectionDao {
     @Query("UPDATE detection_suggestions SET state = :state, appliedAt = :appliedAt WHERE id = :id")
     suspend fun updateState(id: String, state: String, appliedAt: Long?)
 
-    /** Dedupe: an identical pending suggestion (same key + status + source) is dropped. */
+    /**
+     * Dedupe: an identical recent suggestion (same key + status + source) is
+     * dropped regardless of state, so reposted notifications stay idempotent
+     * even after a detection was applied or dismissed.
+     */
     @Query(
-        "SELECT COUNT(*) FROM detection_suggestions WHERE state = 'PENDING' " +
+        "SELECT COUNT(*) FROM detection_suggestions WHERE detectedAt >= :since " +
             "AND status = :status AND source = :source " +
             "AND (trackingNumber = :tracking OR orderId = :orderId OR summary = :summary)",
     )
@@ -33,5 +37,6 @@ interface DetectionDao {
         status: String,
         source: String,
         summary: String?,
+        since: Long,
     ): Int
 }

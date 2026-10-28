@@ -41,6 +41,7 @@ class ShipmentRepositoryImpl @Inject constructor(
         shipmentId: String,
         status: ShipmentStatus,
         source: TrackingStatusSource,
+        confidence: DetectionConfidence,
         title: String?,
     ) {
         val now = Instant.now().toEpochMilli()
@@ -48,7 +49,7 @@ class ShipmentRepositoryImpl @Inject constructor(
             shipmentId = shipmentId,
             status = status.name,
             source = source.name,
-            confidence = DetectionConfidence.HIGH.name,
+            confidence = confidence.name,
             at = now,
             detectedAt = if (source == TrackingStatusSource.MANUAL) null else now,
         )
@@ -60,6 +61,7 @@ class ShipmentRepositoryImpl @Inject constructor(
                     status = status,
                     title = title,
                     source = source,
+                    confidence = confidence,
                     at = now,
                 ),
             )
@@ -73,6 +75,7 @@ private object TrackingEventEntityBuilder {
         status: ShipmentStatus,
         title: String?,
         source: TrackingStatusSource,
+        confidence: DetectionConfidence,
         at: Long,
     ) = TrackingEvent(
         id = UUID.randomUUID().toString(),
@@ -83,6 +86,6 @@ private object TrackingEventEntityBuilder {
         occurredAt = Instant.ofEpochMilli(at),
         detectedAt = Instant.ofEpochMilli(at),
         source = source,
-        confidence = DetectionConfidence.HIGH,
+        confidence = confidence,
     ).let(ShipmentMapper::toEntity)
 }

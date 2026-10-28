@@ -3,6 +3,8 @@ package com.ordra.domain.model
 enum class TrackingStatusSource {
     MANUAL,
     MARKETPLACE_NOTIFICATION,
+    COURIER_APP_NOTIFICATION,
+    MESSAGE_NOTIFICATION,
     SCREENSHOT_OCR,
     SMART_IMPORT,
     SHARED_CONTENT,

@@ -2,6 +2,8 @@ package com.ordra.core.notifications
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import com.ordra.domain.model.DetectionConfidence
+import com.ordra.domain.model.SuggestionState
 import com.ordra.domain.model.TrackingStatusSource
 import com.ordra.domain.repository.DetectionRepository
 import com.ordra.domain.repository.SettingsRepository
@@ -39,6 +41,32 @@ class OrdraNotificationListenerService : NotificationListenerService() {
         "com.facebook.orca", "com.facebook.mlite", "com.whatsapp",
         "org.telegram.messenger", "com.viber.voip",
     )
+    private val sourceAppLabels = mapOf(
+        "com.shopee.ph" to "Shopee", "com.lazada.android" to "Lazada",
+        "com.zhiliaoapp.musically" to "TikTok Shop",
+        "com.ss.android.ugc.trill" to "TikTok Shop",
+        "ph.com.spx.express" to "SPX Express", "com.jtexpress.ph" to "J&T Express",
+        "com.ninjavan" to "Ninja Van", "com.flashexpress" to "Flash Express",
+        "ph.com.lbc" to "LBC", "com.jrs.express" to "JRS Express",
+        "com.facebook.orca" to "Messenger", "com.facebook.mlite" to "Messenger Lite",
+        "com.whatsapp" to "WhatsApp", "org.telegram.messenger" to "Telegram",
+        "com.viber.voip" to "Viber",
+    )
+
+    private fun detectedFrom(source: TrackingStatusSource, pkg: String): String {
+        val app = sourceAppLabels[pkg]
+        return when (source) {
+            TrackingStatusSource.MARKETPLACE_NOTIFICATION,
+            TrackingStatusSource.COURIER_APP_NOTIFICATION,
+            ->
+                if (app != null) "Detected from $app notification"
+                else "Detected from courier notification"
+            TrackingStatusSource.MESSAGE_NOTIFICATION ->
+                if (app != null) "Detected from $app message"
+                else "Detected from delivery message"
+            else -> "Detected update"
+        }
+    }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val pkg = sbn.packageName
@@ -54,9 +82,9 @@ class OrdraNotificationListenerService : NotificationListenerService() {
                 pkg in marketplacePkgs && s.detectionMarketplace ->
                     TrackingStatusSource.MARKETPLACE_NOTIFICATION
                 pkg in courierPkgs && s.detectionCourier ->
-                    TrackingStatusSource.MARKETPLACE_NOTIFICATION
+                    TrackingStatusSource.COURIER_APP_NOTIFICATION
                 pkg in messagingPkgs && s.detectionRider ->
-                    TrackingStatusSource.MARKETPLACE_NOTIFICATION
+                    TrackingStatusSource.MESSAGE_NOTIFICATION
                 else -> return@launch
             }
             val signals = NotificationParser.parse(combined)
@@ -66,14 +94,28 @@ class OrdraNotificationListenerService : NotificationListenerService() {
                 notificationPackage = pkg,
                 summary = combined,
                 autoApplyHigh = s.autoApplyHighConfidence,
-            )
-            if (suggestion != null) {
-                notifier.post(
+            ) ?: return@launch
+
+            val statusLabel = suggestion.status.name.lowercase()
+                .replace('_', ' ').replaceFirstChar { it.uppercase() }
+            when {
+                // Auto-applied high-confidence match -> status-change notice.
+                suggestion.appliedAt != null -> notifier.post(
                     notificationId = suggestion.id.hashCode(),
                     channel = NotificationChannels.PARCEL_STATUS,
-                    title = "Possible parcel update",
-                    body = "Tap Ordra to review: ${suggestion.status.name.lowercase().replace('_', ' ')}",
+                    title = "Parcel update",
+                    body = "$statusLabel · ${detectedFrom(source, pkg)}",
                 )
+                // Still pending and worth a review -> ask. LOW-confidence and
+                // consumed/regressed detections stay silent per contract.
+                suggestion.state == SuggestionState.PENDING &&
+                    suggestion.confidence != DetectionConfidence.LOW ->
+                    notifier.post(
+                        notificationId = suggestion.id.hashCode(),
+                        channel = NotificationChannels.PARCEL_STATUS,
+                        title = "Possible parcel update",
+                        body = "Tap Ordra to review: $statusLabel",
+                    )
             }
         }
     }

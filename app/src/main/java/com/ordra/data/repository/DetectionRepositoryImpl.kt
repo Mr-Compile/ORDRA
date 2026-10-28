@@ -111,6 +111,7 @@ class DetectionRepositoryImpl @Inject constructor(
             status = status.name,
             source = source.name,
             summary = summary?.take(120),
+            since = Instant.now().minus(DEDUPE_WINDOW).toEpochMilli(),
         )
         if (dupes > 0) return null
 
@@ -135,6 +136,7 @@ class DetectionRepositoryImpl @Inject constructor(
             !outcome.needsParcelPick
         ) {
             apply(suggestion)
+            return detectionDao.get(suggestion.id)?.let(::toDomain)
         }
         return suggestion
     }
@@ -151,27 +153,36 @@ class DetectionRepositoryImpl @Inject constructor(
         detectionDao.updateState(suggestionId, SuggestionState.DISMISSED.name, null)
     }
 
-    private suspend fun apply(suggestion: DetectionSuggestion) {
+    /** Returns true when the shipment status was actually written. */
+    private suspend fun apply(suggestion: DetectionSuggestion): Boolean {
         val shipmentId = suggestion.shipmentId
             ?: suggestion.orderId?.let { shipmentDao.getPrimaryShipment(it)?.id }
-            ?: return
+        if (shipmentId == null) {
+            // Parcel gone before apply — discard the detection, no orphan event.
+            detectionDao.updateState(suggestion.id, SuggestionState.DISMISSED.name, null)
+            return false
+        }
         val current = shipmentDao.getShipment(shipmentId)?.let(ShipmentMapper::toDomain)
         val from = current?.shipmentStatus ?: ShipmentStatus.UNKNOWN
         if (!StatusProgression.canTransition(from, suggestion.status)) {
-            // Regression: mark confirmed but do not move the parcel backward.
-            detectionDao.updateState(
-                suggestion.id, SuggestionState.CONFIRMED.name,
-                Instant.now().toEpochMilli(),
-            )
-            return
+            // Regression: consume the suggestion but do not move the parcel backward.
+            detectionDao.updateState(suggestion.id, SuggestionState.CONFIRMED.name, null)
+            return false
         }
         shipmentRepository.updateShipmentStatus(
             shipmentId, suggestion.status, suggestion.source,
+            confidence = suggestion.confidence,
             title = suggestion.summary,
         )
         detectionDao.updateState(
             suggestion.id, SuggestionState.CONFIRMED.name,
             Instant.now().toEpochMilli(),
         )
+        return true
+    }
+
+    private companion object {
+        /** Same detected transition reposted within this window is a duplicate. */
+        val DEDUPE_WINDOW: java.time.Duration = java.time.Duration.ofHours(24)
     }
 }

@@ -178,7 +178,8 @@ Conceptual confidence bands (internal numeric score decided in implementation):
 
 - **HIGH** — e.g. tracking number + courier + COD + delivery phrase all agree on
   one shipment. Safe for automatic update *only when the user enabled automatic
-  high-confidence updates*; otherwise show confirmation.
+  high-confidence updates*; otherwise show confirmation. v1 ships this preference
+  enabled by default (owner opt-in); the Settings toggle can disable it.
 - **MEDIUM** — e.g. marketplace + COD + delivery phrase that plausibly identifies
   one active shipment. Always requires explicit Confirm/Ignore review.
 - **LOW** — e.g. COD match alone. Never modifies the shipment; suggestion only.
