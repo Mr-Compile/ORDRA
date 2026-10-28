@@ -1,10 +1,18 @@
 # ORDRA Navigation UX
 
-Primary bottom destinations: **Home, Orders, Calendar, Insights** with a visually emphasized
-central **Add/Scan** action. The center slot is an action, not a persistent destination with
+Primary bottom destinations: **Home, Orders, Analytics, Settings** with a visually emphasized
+central **Add** action. Implemented as `OrdraBottomBar` (M3 `NavigationBar` + center FAB) in
+`app/navigation/`, shown only on the four top-level routes; pushed screens hide the bar.
+Top-level taps navigate with `saveState`/`restoreState` + `launchSingleTop`.
+The center slot is an action, not a persistent destination with
 its own back stack; a floating/elevated bar with restrained `GlassSurface` treatment is the
 approved treatment. Every destination supports active/inactive states, an optional
 notification indicator, accessibility labels, and both themes.
+
+Implementation note (2026-11): destination set follows the approved HTML mockup navbar
+(home/orders/add/analytics/settings). Calendar remains reachable from the Home top bar and
+COD/detections/import via their existing entries; earlier text named Calendar+Insights as
+committed destinations — the mockup set now wins as shipped.
 
 Spec-vs-canonical decision (2026-10-27): the design direction suggested
 Home/Orders/Track-Add/Activity/Profile. Ordra keeps Calendar and Insights as committed
