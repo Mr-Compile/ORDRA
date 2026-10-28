@@ -105,6 +105,7 @@ import com.ordra.domain.model.PaymentMethod
 import com.ordra.domain.model.PaymentStatus
 import com.ordra.domain.model.Platform
 import com.ordra.domain.model.ReminderType
+import com.ordra.domain.model.SmartImportResult
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -187,9 +188,8 @@ fun AddEditOrderScreen(
                 onCreateCategory = viewModel::createCategory,
                 onEntryMode = viewModel::setEntryMode,
                 onImportImages = viewModel::onImportImages,
-                onImportFormChange = viewModel::updateImportForm,
-                onApplyImport = viewModel::applyImport,
-                onDiscardImport = viewModel::discardImport,
+                onFieldTouched = viewModel::markFieldTouched,
+                onDismissImportNotice = viewModel::dismissImportNotice,
                 modifier = Modifier.padding(padding),
             )
         } else {
@@ -346,15 +346,28 @@ private fun OrderFormContent(
     onCreateCategory: (String) -> Unit,
     onEntryMode: (EntryMode) -> Unit,
     onImportImages: (List<String>) -> Unit,
-    onImportFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
-    onApplyImport: () -> Unit,
-    onDiscardImport: () -> Unit,
+    onFieldTouched: (String) -> Unit,
+    onDismissImportNotice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val form = state.form
     val errors = state.fieldErrors
     val importMode = state.entryMode == EntryMode.IMPORT && !form.isEdit
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    LaunchedEffect(state.attemptedSave) {
+        if (!state.attemptedSave || errors.isEmpty()) return@LaunchedEffect
+        val shift = if (form.isEdit) -1 else 0
+        val target = when {
+            errors.keys.any { it == "title" || it == "platform" || it == "customPlatformName" } ->
+                2 + shift
+            errors.keys.any { it.startsWith("item_") } -> 3 + shift
+            errors.keys.any { it == "shipping" || it == "discount" || it == "total" } -> 4 + shift
+            else -> 6 + shift
+        }.coerceAtLeast(0)
+        listState.animateScrollToItem(target)
+    }
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -366,23 +379,25 @@ private fun OrderFormContent(
         }
         if (importMode) {
             item {
-                EditorImportPane(
-                    state = state,
-                    onPick = onImportImages,
-                    onFormChange = onImportFormChange,
-                    onApply = onApplyImport,
-                    onDiscard = onDiscardImport,
-                )
+                EditorImportPane(state = state, onPick = onImportImages)
             }
             return@LazyColumn
         }
 
         item {
-            Text(
-                stringResource(R.string.editor_required_summary),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    stringResource(R.string.editor_required_summary),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (state.importNotice && state.importResult != null) {
+                    ImportNoticeCard(
+                        result = state.importResult,
+                        onDismiss = onDismissImportNotice,
+                    )
+                }
+            }
         }
 
         item {
@@ -394,11 +409,15 @@ private fun OrderFormContent(
                     required = true,
                     placeholder = stringResource(R.string.editor_ph_order_title),
                     error = errors["title"],
+                    onBlur = { onFieldTouched("title") },
                 )
                 PlatformGrid(
                     selected = form.platform,
                     error = errors["platform"],
-                    onSelect = { p -> onFormChange { it.copy(platform = p) } },
+                    onSelect = { p ->
+                        onFieldTouched("platform")
+                        onFormChange { it.copy(platform = p) }
+                    },
                 )
                 if (form.platform == Platform.OTHER) {
                     OrdraField(
@@ -408,6 +427,7 @@ private fun OrderFormContent(
                         required = true,
                         placeholder = stringResource(R.string.editor_ph_custom_platform),
                         error = errors["customPlatformName"],
+                        onBlur = { onFieldTouched("customPlatformName") },
                     )
                 }
                 OrdraField(
@@ -426,6 +446,7 @@ private fun OrderFormContent(
                         index = index,
                         item = item,
                         errors = errors,
+                        onFieldTouched = onFieldTouched,
                         onChange = { updated ->
                             onFormChange { f ->
                                 f.copy(items = f.items.toMutableList().apply { set(index, updated) })
@@ -477,6 +498,7 @@ private fun OrderFormContent(
                         placeholder = "0.00",
                         error = errors["shipping"],
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        onBlur = { onFieldTouched("shipping") },
                         modifier = Modifier.weight(1f),
                     )
                     OrdraField(
@@ -486,6 +508,7 @@ private fun OrderFormContent(
                         placeholder = "0.00",
                         error = errors["discount"],
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        onBlur = { onFieldTouched("discount") },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -496,6 +519,7 @@ private fun OrderFormContent(
                     required = true,
                     placeholder = "0.00",
                     error = errors["total"],
+                    onBlur = { onFieldTouched("total") },
                     supporting = if (form.total.isBlank() && form.suggestedTotalMinor != 0L) {
                         stringResource(
                             R.string.editor_total_hint,
@@ -566,6 +590,7 @@ private fun OrderFormContent(
                         value = form.customCourierName,
                         onValueChange = { v -> onFormChange { it.copy(customCourierName = v) } },
                         error = errors["customCourierName"],
+                        onBlur = { onFieldTouched("customCourierName") },
                     )
                 }
                 OrdraField(
@@ -589,7 +614,10 @@ private fun OrderFormContent(
                     OrdraDateField(
                         label = stringResource(R.string.editor_eta_end),
                         value = form.etaEnd,
-                        onChange = { d -> onFormChange { it.copy(etaEnd = d) } },
+                        onChange = { d ->
+                            onFieldTouched("etaEnd")
+                            onFormChange { it.copy(etaEnd = d) }
+                        },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -811,6 +839,7 @@ private fun ItemCard(
     index: Int,
     item: OrderItemForm,
     errors: Map<String, String>,
+    onFieldTouched: (String) -> Unit,
     onChange: (OrderItemForm) -> Unit,
     onRemove: (() -> Unit)?,
 ) {
@@ -845,6 +874,7 @@ private fun ItemCard(
                 required = true,
                 placeholder = stringResource(R.string.editor_item_name),
                 error = errors["item_name_$index"],
+                onBlur = { onFieldTouched("item_name_$index") },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OrdraField(
@@ -860,6 +890,7 @@ private fun ItemCard(
                     onValueChange = { onChange(item.copy(quantity = it.filter { c -> c.isDigit() })) },
                     placeholder = stringResource(R.string.editor_item_qty),
                     error = errors["item_qty_$index"],
+                    onBlur = { onFieldTouched("item_qty_$index") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                 )
@@ -965,7 +996,10 @@ private fun OrderReviewContent(
                         form.customPlatformName.ifBlank { null },
                     ),
                 )
-                ReviewRow(stringResource(R.string.editor_order_title), form.title.ifBlank { "—" })
+                val displayTitle = form.title.ifBlank {
+                    form.items.firstOrNull { it.name.isNotBlank() }?.name ?: "—"
+                }
+                ReviewRow(stringResource(R.string.editor_order_title), displayTitle)
                 ReviewRow(
                     stringResource(R.string.editor_seller),
                     form.sellerName.ifBlank { "—" },
@@ -1084,14 +1118,12 @@ private fun EntrySegment(mode: EntryMode, onSelect: (EntryMode) -> Unit) {
     )
 }
 
-/** Embedded import pane — pick → OCR → extracted fields → merge into the draft. */
+/** Embedded import pane — pick → OCR → extracted values merge into the SAME
+ *  manual draft (fill-blanks), then the manual form shows for review. */
 @Composable
 private fun EditorImportPane(
     state: AddEditUiState,
     onPick: (List<String>) -> Unit,
-    onFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
-    onApply: () -> Unit,
-    onDiscard: () -> Unit,
 ) {
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
@@ -1099,98 +1131,83 @@ private fun EditorImportPane(
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OrdraBanner(
-            kind = if (state.importForm == null) OrdraBannerKind.INFO else OrdraBannerKind.WARN,
-            icon = if (state.importForm == null) Icons.Filled.DocumentScanner else Icons.AutoMirrored.Filled.FactCheck,
-            text = stringResource(
-                if (state.importForm == null) R.string.editor_import_banner
-                else R.string.editor_import_review_banner,
-            ),
+            kind = OrdraBannerKind.INFO,
+            icon = Icons.Filled.DocumentScanner,
+            text = stringResource(R.string.editor_import_banner),
         )
-        when {
-            state.importBusy -> {
+        if (state.importBusy) {
+            Column(
+                Modifier.fillMaxWidth().padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    stringResource(R.string.editor_import_processing),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else {
+            Surface(
+                onClick = {
+                    launcher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                    )
+                },
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 Column(
-                    Modifier.fillMaxWidth().padding(24.dp),
+                    Modifier.fillMaxWidth().padding(vertical = 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                    Spacer(Modifier.height(10.dp))
+                    Icon(
+                        Icons.Filled.AddPhotoAlternate,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(34.dp),
+                    )
+                    Spacer(Modifier.height(8.dp))
                     Text(
-                        stringResource(R.string.editor_import_processing),
+                        stringResource(R.string.editor_import_pick),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Text(
+                        stringResource(R.string.editor_import_pick_sub),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            state.importForm != null -> {
-                ExtractedFieldsCard(
-                    state = state,
-                    onFormChange = onFormChange,
+            if (state.importOcrFailed) {
+                Text(
+                    stringResource(R.string.editor_import_ocr_failed),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
                 )
-                Button(onClick = onApply, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.editor_review))
-                }
-                TextButton(onClick = onDiscard, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.editor_discard_confirm))
-                }
-            }
-            else -> {
-                Surface(
-                    onClick = {
-                        launcher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                        )
-                    },
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(
-                        Modifier.fillMaxWidth().padding(vertical = 28.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Icon(
-                            Icons.Filled.AddPhotoAlternate,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(34.dp),
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            stringResource(R.string.editor_import_pick),
-                            style = MaterialTheme.typography.titleSmall,
-                        )
-                        Text(
-                            stringResource(R.string.editor_import_pick_sub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                if (state.importOcrFailed) {
-                    Text(
-                        stringResource(R.string.editor_import_ocr_failed),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
             }
         }
     }
 }
 
-/** "Extracted fields" card — per-field confidence chips + editable inputs. */
+/** Post-import notice on the manual form — "review before saving" banner,
+ *  per-field confidence chips, dismissible. Same fields, just prefilled. */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-private fun ExtractedFieldsCard(
-    state: AddEditUiState,
-    onFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
+private fun ImportNoticeCard(
+    result: SmartImportResult,
+    onDismiss: () -> Unit,
 ) {
-    val draft = state.importResult?.draft ?: return
-    val form = state.importForm ?: return
+    val draft = result.draft
     FormSection(title = stringResource(R.string.editor_extracted_title)) {
+        OrdraBanner(
+            kind = OrdraBannerKind.WARN,
+            icon = Icons.AutoMirrored.Filled.FactCheck,
+            text = stringResource(R.string.editor_import_review_banner),
+        )
         androidx.compose.foundation.layout.FlowRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -1201,49 +1218,11 @@ private fun ExtractedFieldsCard(
             ConfChip(stringResource(R.string.editor_courier), draft.courier.confidence)
             ConfChip(stringResource(R.string.editor_tracking), draft.trackingNumber.confidence)
         }
-        OrdraField(
-            label = stringResource(R.string.editor_field_product),
-            value = form.title,
-            onValueChange = { v -> onFormChange { it.copy(title = v) } },
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OrdraField(
-                label = stringResource(R.string.editor_seller),
-                value = form.sellerName,
-                onValueChange = { v -> onFormChange { it.copy(sellerName = v) } },
-                modifier = Modifier.weight(1f),
-            )
-            OrdraField(
-                label = stringResource(R.string.editor_field_total_php),
-                value = form.total,
-                onValueChange = { v -> onFormChange { it.copy(total = v) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1f),
-            )
+        Box(Modifier.fillMaxWidth()) {
+            TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.CenterEnd)) {
+                Text(stringResource(R.string.editor_dismiss))
+            }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OrdraSelect(
-                label = stringResource(R.string.editor_platform),
-                options = Platform.entries,
-                selected = form.platform,
-                optionLabel = { platformLabel(it) },
-                onSelect = { p -> onFormChange { it.copy(platform = p) } },
-                modifier = Modifier.weight(1f),
-            )
-            OrdraSelect(
-                label = stringResource(R.string.editor_courier),
-                options = Courier.entries,
-                selected = form.courier.takeIf { it != Courier.UNKNOWN },
-                optionLabel = { courierLabel(it, null) },
-                onSelect = { c -> onFormChange { it.copy(courier = c) } },
-                modifier = Modifier.weight(1f),
-            )
-        }
-        OrdraField(
-            label = stringResource(R.string.editor_tracking),
-            value = form.trackingNumber,
-            onValueChange = { v -> onFormChange { it.copy(trackingNumber = v) } },
-        )
     }
 }
 

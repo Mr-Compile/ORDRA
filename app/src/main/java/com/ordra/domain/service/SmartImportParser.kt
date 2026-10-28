@@ -50,6 +50,7 @@ object SmartImportParser {
         DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH),
         DateTimeFormatter.ofPattern("MMM d yyyy", Locale.ENGLISH),
         DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+        DateTimeFormatter.ofPattern("dd-MM-yyyy"),
         DateTimeFormatter.ofPattern("yyyy-MM-dd"),
         DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH),
     )
@@ -57,12 +58,53 @@ object SmartImportParser {
         "\\b(\\d{1,2}[/\\-]\\d{1,2}[/\\-]\\d{4}|\\d{4}-\\d{2}-\\d{2}|" +
             "\\d{1,2}\\s+[A-Za-z]+\\s+\\d{4}|[A-Za-z]+\\s+\\d{1,2},?\\s+\\d{4})\\b",
     )
+    private val TIME_RE = Regex("\\d{1,2}:\\d{2}")
+    private val PHONE_RE = Regex("(\\+?\\d{2,4}[\\s\\-()]*)?\\d[\\d\\s\\-]{7,}\\d")
+    private val AMOUNT_ONLY_RE = Regex("^[₱PHP$\\-€£\\s\\d.,]+$")
+    private val DOMAIN_RE = Regex("\\.(ph|com|net|shop|store|co)\\b", RegexOption.IGNORE_CASE)
+    private val QTY_MARKER_RE = Regex("\\bx\\s*(\\d{1,3})\\b", RegexOption.IGNORE_CASE)
+
+    /** Lines that are page chrome / sections / actions — never a product title. */
+    private val TITLE_BLOCK = listOf(
+        "order details", "order id", "order #", "shipping information", "delivery information",
+        "estimated delivery", "guaranteed", "support center", "request for refund",
+        "request refund", "track order", "buy again", "view more", "view all",
+        "rate product", "receipt", "invoice", "cash on delivery", "total", "subtotal",
+        "fee", "sold by", "payment", "quantity",
+    )
+    private val SELLER_BADGE = listOf(
+        "preferred", "mall", "star seller", "official store", "official", "flagship",
+    )
+    private val SOLD_BY_RE = Regex("sold\\s+by[:\\s]+(.+)", RegexOption.IGNORE_CASE)
+
+    /** Discount keywords — amounts on these lines count toward the discount total,
+     *  but promo/earning lines ("Get a ₱40 voucher if…") are excluded. */
+    private val DISCOUNT_RE = Regex("discount|voucher|promo|rebate|coins?\\s+(?:used|redeemed)")
+    private val DISCOUNT_EARN_RE = Regex("get a|earn|win\\b|collect|if no|cashback offer|free voucher")
+
+    private val ETA_LABEL_RE = Regex(
+        "estimated\\s+delivery(?:\\s+date)?|est\\.?\\s+delivery|delivery\\s+date|" +
+            "arrival\\s+date|expected\\s+delivery|deliver\\s+(?:by|within)",
+        RegexOption.IGNORE_CASE,
+    )
+    private val MONTHS = mapOf(
+        "jan" to 1, "feb" to 2, "mar" to 3, "apr" to 4, "may" to 5, "jun" to 6,
+        "jul" to 7, "aug" to 8, "sep" to 9, "oct" to 10, "nov" to 11, "dec" to 12,
+    )
+
+    /** "29 Oct - 1 Nov" | "29 Oct – 31" | "Oct 29 - Nov 1, 2026" | "Oct 29 - 31" */
+    private val ETA_RANGE_RE = Regex(
+        "(\\d{1,2})\\s*([A-Za-z]{3,9})\\.?\\s*[-–—]\\s*(\\d{1,2})(?:\\s*([A-Za-z]{3,9})\\.?)?(?:,?\\s*(\\d{4}))?|" +
+            "([A-Za-z]{3,9})\\.?\\s*(\\d{1,2})\\s*[-–—]\\s*(?:([A-Za-z]{3,9})\\.?\\s*)?(\\d{1,2})(?:,?\\s*(\\d{4}))?",
+        RegexOption.IGNORE_CASE,
+    )
 
     fun parse(rawText: String): SmartImportResult {
         val text = rawText.trim()
         val lower = text.lowercase()
         val warnings = mutableListOf<String>()
         if (text.isEmpty()) warnings += "no_text"
+        val lines = text.lineSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList()
 
         val platform = PLATFORM_HINTS
             .firstOrNull { (_, keys) -> keys.any { lower.contains(it) } }?.first
@@ -89,7 +131,31 @@ object SmartImportParser {
         val (shipping, shipEvidence) = amountNear(
             "shipping fee", "shipping", "delivery fee",
         )
-        val (discount, discEvidence) = amountNear("discount", "voucher", "promo")
+        val (merchSubtotal, merchEvidence) = amountNear(
+            "merchandise subtotal", "items subtotal", "item subtotal",
+        )
+
+        /* Discount = SUM of amounts on discount/voucher/promo lines — but promo
+         * teasers ("Get a ₱40 voucher if no delivery…") never count. */
+        var discountSum = 0L
+        var discEvidence: String? = null
+        DISCOUNT_RE.findAll(lower).forEach { m ->
+            val lineStart = lower.lastIndexOf('\n', m.range.first).let { if (it < 0) 0 else it + 1 }
+            val lineEnd = lower.indexOf('\n', m.range.first).let { if (it < 0) lower.length else it }
+            val line = lower.substring(lineStart, lineEnd)
+            if (!DISCOUNT_EARN_RE.containsMatchIn(line)) {
+                val window = text.substring(
+                    m.range.first,
+                    (m.range.first + 40).coerceAtMost(text.length),
+                )
+                val amt = AMOUNT_RE.find(window)?.let { MoneyFormat.parseToMinor(it.value) }
+                if (amt != null) {
+                    discountSum += amt
+                    if (discEvidence == null) discEvidence = line.trim()
+                }
+            }
+        }
+        val discount = discountSum.takeIf { it > 0 }
 
         val tracking = TRACKING_RE.find(text)?.value
         val status = StatusNormalizer.normalize(text)
@@ -104,28 +170,126 @@ object SmartImportParser {
         val future = dates.filter { !it.isBefore(today) }
         val past = dates.filter { it.isBefore(today) }
 
-        // Title: first meaningful line that isn't an order-id line
-        val titleCandidate = text.lineSequence()
-            .map { it.trim() }
-            .filter { it.length in 4..80 }
-            .filterNot {
-                val l = it.lowercase()
-                (l.contains("order") && l.contains("#")) ||
-                    l.contains("track") || l.contains("shopee") ||
-                    l.contains("lazada") || l.contains("tiktok")
+        /* ETA label + date range ("Estimated delivery date: 29 Oct - 1 Nov").
+         * Year comes from an explicit suffix, else the newest year in the text,
+         * else rollover from today. */
+        val textYear = dates.map { it.year }.maxOrNull() ?: today.year
+        var etaStart: LocalDate? = null
+        var etaEnd: LocalDate? = null
+        var etaEvidence: String? = null
+        var etaFromLabel = false
+        ETA_LABEL_RE.find(text)?.let { label ->
+            val window = text.substring(
+                label.range.last,
+                (label.range.last + 60).coerceAtMost(text.length),
+            )
+            ETA_RANGE_RE.find(window)?.let { m ->
+                val g = m.groups
+                fun monthOf(s: String?): Int? =
+                    s?.lowercase()?.take(3)?.let { MONTHS[it] }
+                val d1: Int; val m1: Int?; val d2: Int; val m2: Int?; val yr: Int?
+                if (g[1] != null) {
+                    // "29 Oct - 1 Nov[, 2026]" or "29 Oct - 31"
+                    d1 = g[1]!!.value.toInt(); m1 = monthOf(g[2]?.value)
+                    d2 = g[3]!!.value.toInt(); m2 = monthOf(g[4]?.value) ?: m1
+                    yr = g[5]?.value?.toInt()
+                } else {
+                    // "Oct 29 - Nov 1[, 2026]" or "Oct 29 - 31"
+                    m1 = monthOf(g[6]?.value); d1 = g[7]!!.value.toInt()
+                    m2 = monthOf(g[8]?.value) ?: m1
+                    d2 = g[9]!!.value.toInt(); yr = g[10]?.value?.toInt()
+                }
+                if (m1 != null && m2 != null) {
+                    var year = yr ?: textYear
+                    if (yr == null && m1 < today.monthValue && textYear <= today.year) year += 1
+                    val s = runCatching { LocalDate.of(year, m1, d1) }.getOrNull()
+                    val e = runCatching {
+                        val ey = if (m2 < m1) year + 1 else year
+                        LocalDate.of(ey, m2, d2)
+                    }.getOrNull()
+                    if (s != null && e != null && !e.isBefore(s)) {
+                        etaStart = s; etaEnd = e
+                        etaEvidence = m.value.trim(); etaFromLabel = true
+                    }
+                }
             }
-            .firstOrNull()
+        }
+        if (etaStart == null) {
+            etaStart = future.minOrNull()
+            etaEnd = future.maxOrNull().takeIf { future.size > 1 }
+            etaEvidence = etaStart?.toString()
+        }
+
+        /* Item name via qty marker ("… x1") — walk up ≤3 lines for a title
+         * candidate; fallback = first candidate line overall. */
+        fun isTitleCandidate(l: String): Boolean {
+            val ll = l.lowercase()
+            if (l.length !in 4..80 || !l.any { it.isLetter() }) return false
+            if (TITLE_BLOCK.any { ll.contains(it) }) return false
+            if (COURIER_HINTS.any { (_, k) -> k.any { ll.contains(it) } }) return false
+            if (PLATFORM_HINTS.any { (_, k) -> k.any { ll.contains(it) } }) return false
+            if (SELLER_BADGE.any { ll.contains(it) }) return false
+            if (DOMAIN_RE.containsMatchIn(l)) return false
+            if (PHONE_RE.containsMatchIn(l)) return false
+            if (TIME_RE.containsMatchIn(l)) return false
+            if (AMOUNT_ONLY_RE.matches(l)) return false
+            if (TRACKING_RE.find(l) != null) return false
+            if (StatusNormalizer.normalize(l) != ShipmentStatus.UNKNOWN) return false
+            if (QTY_MARKER_RE.containsMatchIn(l)) return false
+            return true
+        }
+        var titleCandidate: String? = null
+        var titleConf = 0f
+        var itemQty: Int? = null
+        val qtyIdx = lines.indexOfFirst { QTY_MARKER_RE.containsMatchIn(it) }
+        if (qtyIdx >= 0) {
+            itemQty = QTY_MARKER_RE.find(lines[qtyIdx])?.groupValues?.get(1)?.toIntOrNull()
+            for (up in 1..3) {
+                val l = lines.getOrNull(qtyIdx - up) ?: break
+                if (isTitleCandidate(l)) {
+                    titleCandidate = l; titleConf = 0.7f; break
+                }
+            }
+        }
+        if (titleCandidate == null) {
+            titleCandidate = lines.firstOrNull { isTitleCandidate(it) }
+            titleConf = if (titleCandidate != null) 0.45f else 0f
+        }
+
+        /* Seller: "Sold by X" else badge line (Preferred/Mall/…) → remainder or next line. */
+        fun sellerGuess(): Pair<String?, String?> {
+            SOLD_BY_RE.find(text)?.let {
+                return it.groupValues[1].trim().trimEnd('>', ' ') to it.value
+            }
+            lines.forEachIndexed { i, l ->
+                val ll = l.lowercase()
+                val badge = SELLER_BADGE.firstOrNull { ll.contains(it) } ?: return@forEachIndexed
+                val rest = l.substring(ll.indexOf(badge) + badge.length).trim(' ', '>', ':', '-')
+                if (rest.length >= 3 && !rest.any { it.isDigit() }) {
+                    return rest to l
+                }
+                val next = lines.getOrNull(i + 1)?.trim(' ', '>') ?: return@forEachIndexed
+                if (next.length in 3..60) return next to l
+            }
+            return null to null
+        }
+        val (seller, sellerEvidence) = sellerGuess()
 
         val draft = OrderDraft(
             title = ExtractionField(
                 titleCandidate,
-                if (titleCandidate != null) 0.5f else 0f,
+                titleConf,
                 ExtractionSource.OCR, titleCandidate,
             ),
             platform = ExtractionField(
                 platform,
                 if (platform != null) 0.8f else 0f,
                 ExtractionSource.LOCAL_PARSER, platform?.name,
+            ),
+            sellerName = ExtractionField(
+                seller,
+                if (seller != null) 0.6f else 0f,
+                ExtractionSource.OCR, sellerEvidence,
             ),
             totalMinor = ExtractionField(
                 total,
@@ -141,6 +305,16 @@ object SmartImportParser {
                 discount,
                 if (discount != null) 0.7f else 0f,
                 ExtractionSource.OCR, discEvidence,
+            ),
+            merchandiseSubtotalMinor = ExtractionField(
+                merchSubtotal,
+                if (merchSubtotal != null) 0.7f else 0f,
+                ExtractionSource.OCR, merchEvidence,
+            ),
+            itemQuantity = ExtractionField(
+                itemQty,
+                if (itemQty != null) 0.7f else 0f,
+                ExtractionSource.OCR, itemQty?.toString(),
             ),
             paymentMethod = ExtractionField(
                 if (isCod) PaymentMethod.COD else null,
@@ -168,16 +342,18 @@ object SmartImportParser {
                 ExtractionSource.OCR, past.maxOrNull()?.toString(),
             ),
             etaStart = ExtractionField(
-                future.minOrNull(),
-                if (future.isNotEmpty()) 0.6f else 0f,
-                ExtractionSource.OCR, future.minOrNull()?.toString(),
+                etaStart,
+                if (etaFromLabel) 0.7f else if (etaStart != null) 0.6f else 0f,
+                ExtractionSource.OCR, etaEvidence,
             ),
             etaEnd = ExtractionField(
-                future.maxOrNull(),
-                if (future.size > 1) 0.6f else 0f,
-                ExtractionSource.OCR, future.maxOrNull()?.toString(),
+                etaEnd,
+                if (etaStart != null && etaEnd != null) 0.6f else 0f,
+                ExtractionSource.OCR, etaEnd?.toString(),
             ),
-            itemNames = emptyList(),
+            itemNames = titleCandidate?.let {
+                listOf(ExtractionField(it, titleConf, ExtractionSource.OCR, it))
+            } ?: emptyList(),
             rawOcrText = text.take(2000),
             warnings = warnings,
         )

@@ -42,6 +42,56 @@ class SmartImportParserTest {
     }
 
     @Test
+    fun `shopee order details page extracts accurately`() {
+        // Transcribed from a real Shopee "Order Details" screenshot (ENGLAB ESP32).
+        val text = """
+            Order Details
+            Estimated delivery date: 29 Oct - 1 Nov
+            Guaranteed On-Time Delivery: Get a ₱40 voucher if no delivery was attempted by 03-11-2026. View More
+            Shipping Information
+            SPX Express: PH2613786845088
+            Parcel has departed from sorting facility
+            27-10-2026 07:42
+            Delivery Information
+            Michael Torillo (+63) 955 241 9031
+            Garzon Store, Balayon Street, Purok 13a, Poblacion, Tupi, Mindanao, South Cotabato, 9505
+            Preferred
+            ENGLAB.ph
+            ENGLAB★ ESP32 WiFi IoT Development Board
+            ESP32 - 30P - TYPEC - CP2102 x1
+            ₱329
+            Merchandise Subtotal
+            ₱329
+            Shipping Fee
+            ₱106
+            Shipping Discount Subtotal
+            -₱106
+            Shopee Voucher Applied
+            -₱70
+            Order Total: ₱259
+            Support Center
+            Request for Refund
+            Request Refund
+            Track Order
+        """.trimIndent()
+        val r = SmartImportParser.parse(text)
+        assertEquals(Platform.SHOPEE, r.detectedPlatform)
+        assertEquals(Courier.SPX_EXPRESS, r.draft.courier.value)
+        assertEquals("PH2613786845088", r.draft.trackingNumber.value)
+        assertEquals(25900L, r.draft.totalMinor.value)
+        assertEquals(10600L, r.draft.shippingMinor.value)
+        assertEquals(17600L, r.draft.discountMinor.value)
+        assertEquals(32900L, r.draft.merchandiseSubtotalMinor.value)
+        assertEquals(ShipmentStatus.IN_TRANSIT, r.draft.shipmentStatus.value)
+        assertEquals(java.time.LocalDate.of(2026, 10, 29), r.draft.etaStart.value)
+        assertEquals(java.time.LocalDate.of(2026, 11, 1), r.draft.etaEnd.value)
+        assertTrue(r.draft.title.value!!.contains("ESP32"))
+        assertTrue(r.draft.sellerName.value!!.contains("ENGLAB"))
+        assertTrue(r.draft.itemNames.isNotEmpty())
+        assertEquals(1, r.draft.itemQuantity.value)
+    }
+
+    @Test
     fun `empty text warns and yields empty draft`() {
         val r = SmartImportParser.parse("")
         assertTrue("no_text" in r.warnings)

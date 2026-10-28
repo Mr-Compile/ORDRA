@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -68,7 +69,9 @@ fun OrdraField(
     singleLine: Boolean = true,
     minLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    onBlur: (() -> Unit)? = null,
 ) {
+    var hadFocus by remember { mutableStateOf(false) }
     Column(modifier) {
         FieldLabel(label, required)
         Spacer(Modifier.height(6.dp))
@@ -93,7 +96,12 @@ fun OrdraField(
                         inner()
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { state ->
+                        if (hadFocus && !state.isFocused) onBlur?.invoke()
+                        hadFocus = state.isFocused
+                    },
             )
         }
         FieldFootnote(error, supporting)

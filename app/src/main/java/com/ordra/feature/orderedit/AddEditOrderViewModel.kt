@@ -66,11 +66,15 @@ data class AddEditUiState(
     val importBusy: Boolean = false,
     val importOcrFailed: Boolean = false,
     val importResult: SmartImportResult? = null,
-    val importForm: OrderFormState? = null,
+    val importNotice: Boolean = false,
     val importedShipmentStatus: ShipmentStatus? = null,
+    val touchedFields: Set<String> = emptySet(),
 ) {
+    /** Errors surface per-field once that field loses focus (blur), or all at
+     *  once once a save/review was attempted — mirrors the mockup's
+     *  focusout→touchField + attemptedSave semantics. */
     val fieldErrors: Map<String, String> get() =
-        if (attemptedSave) form.fieldErrors() else emptyMap()
+        form.fieldErrors().filterKeys { attemptedSave || it in touchedFields }
 }
 
 @HiltViewModel
@@ -180,8 +184,10 @@ class AddEditOrderViewModel @Inject constructor(
         _uiState.update { it.copy(entryMode = mode) }
     }
 
-    /** Embedded import mode: OCR + parse the picked screenshots, then review the
-     *  extracted fields — mirrors the mockup editor's Import tab. */
+    /** Embedded import mode: OCR + parse the picked screenshots, then merge the
+     *  extracted fields into the SAME manual draft (fill-blanks — user-entered
+     *  values always win) and land back on the manual form with the imported
+     *  fields flagged for review. */
     fun onImportImages(uris: List<String>) {
         if (uris.isEmpty()) return
         _uiState.update { it.copy(importBusy = true, importOcrFailed = false) }
@@ -200,80 +206,53 @@ class AddEditOrderViewModel @Inject constructor(
             } else {
                 SmartImportParser.parse(text)
             }
-            _uiState.update {
-                it.copy(
-                    importBusy = false,
-                    importOcrFailed = text == null,
-                    importResult = result,
-                    importForm = if (text != null) orderFormStateFrom(result) else null,
-                )
+            _uiState.update { s ->
+                if (text == null) {
+                    s.copy(importBusy = false, importOcrFailed = true)
+                } else {
+                    s.copy(
+                        importBusy = false,
+                        importResult = result,
+                        importNotice = true,
+                        entryMode = EntryMode.MANUAL,
+                        importedShipmentStatus = result.draft.shipmentStatus.value
+                            ?.takeIf { it != ShipmentStatus.UNKNOWN },
+                        form = s.form.mergedWithImport(orderFormStateFrom(result)),
+                    )
+                }
             }
         }
     }
 
-    fun updateImportForm(transform: (OrderFormState) -> OrderFormState) {
-        _uiState.update { s ->
-            s.copy(importForm = s.importForm?.let(transform))
+    fun dismissImportNotice() {
+        _uiState.update { it.copy(importNotice = false) }
+    }
+
+    fun markFieldTouched(key: String) {
+        _uiState.update {
+            if (key in it.touchedFields) it else it.copy(touchedFields = it.touchedFields + key)
         }
     }
 
-    fun discardImport() {
-        _uiState.update {
-            it.copy(
-                importResult = null,
-                importForm = null,
-                importOcrFailed = false,
-                importedShipmentStatus = null,
-            )
-        }
-    }
-
-    /** Extracted fields merge into the manual draft, then straight to review —
-     *  mirrors mockup importToDraft() + goReview(). */
-    fun applyImport() {
-        val extracted = _uiState.value.importForm ?: return
-        updateForm { f ->
-            f.copy(
-                title = extracted.title.ifBlank { f.title },
-                platform = extracted.platform ?: f.platform,
-                customPlatformName = extracted.customPlatformName.ifBlank { f.customPlatformName },
-                sellerName = extracted.sellerName.ifBlank { f.sellerName },
-                total = extracted.total.ifBlank { f.total },
-                shipping = extracted.shipping.ifBlank { f.shipping },
-                discount = extracted.discount.ifBlank { f.discount },
-                paymentMethod = if (extracted.paymentMethod != PaymentMethod.UNKNOWN) {
-                    extracted.paymentMethod
-                } else f.paymentMethod,
-                courier = if (extracted.courier != com.ordra.domain.model.Courier.UNKNOWN) {
-                    extracted.courier
-                } else f.courier,
-                customCourierName = extracted.customCourierName.ifBlank { f.customCourierName },
-                trackingNumber = extracted.trackingNumber.ifBlank { f.trackingNumber },
-                orderedDate = extracted.orderedDate ?: f.orderedDate,
-                etaStart = extracted.etaStart ?: f.etaStart,
-                etaEnd = extracted.etaEnd ?: f.etaEnd,
-                items = if (extracted.title.isNotBlank() && f.items.all { it.isCompletelyEmpty }) {
-                    listOf(
-                        OrderItemForm(
-                            name = extracted.title,
-                            quantity = "1",
-                            unitPrice = extracted.total,
-                        ),
-                    )
-                } else f.items,
-            )
-        }
-        _uiState.update {
-            it.copy(
-                entryMode = EntryMode.MANUAL,
-                importResult = null,
-                importForm = null,
-                importedShipmentStatus = it.importResult?.draft?.shipmentStatus?.value
-                    ?.takeIf { s -> s != ShipmentStatus.UNKNOWN },
-            )
-        }
-        goToReview()
-    }
+    /** Import merge policy: extracted values only fill fields the user hasn't
+     *  already set — typed values always win (TRACKING_CONTRACT review rule). */
+    private fun OrderFormState.mergedWithImport(e: OrderFormState): OrderFormState = copy(
+        title = title.ifBlank { e.title },
+        platform = platform ?: e.platform,
+        customPlatformName = customPlatformName.ifBlank { e.customPlatformName },
+        sellerName = sellerName.ifBlank { e.sellerName },
+        items = if (items.all { it.isCompletelyEmpty }) e.items else items,
+        total = total.ifBlank { e.total },
+        shipping = shipping.ifBlank { e.shipping },
+        discount = discount.ifBlank { e.discount },
+        paymentMethod = if (paymentMethod == PaymentMethod.UNKNOWN) e.paymentMethod else paymentMethod,
+        courier = if (courier == com.ordra.domain.model.Courier.UNKNOWN) e.courier else courier,
+        customCourierName = customCourierName.ifBlank { e.customCourierName },
+        trackingNumber = trackingNumber.ifBlank { e.trackingNumber },
+        orderedDate = orderedDate ?: e.orderedDate,
+        etaStart = etaStart ?: e.etaStart,
+        etaEnd = etaEnd ?: e.etaEnd,
+    )
 
     fun save() {
         val state = _uiState.value

@@ -9,11 +9,22 @@ import com.ordra.feature.orderedit.OrderFormState
 internal fun orderFormStateFrom(result: SmartImportResult): OrderFormState {
     val d = result.draft
     fun money(v: Long?) = v?.let { MoneyFormat.formatMinor(it, "PHP") }.orEmpty()
+    val itemName = d.itemNames.firstOrNull()?.value ?: d.title.value
+    val items = itemName?.let {
+        listOf(
+            com.ordra.feature.orderedit.OrderItemForm(
+                name = it,
+                quantity = (d.itemQuantity.value ?: 1).toString(),
+                unitPrice = money(d.merchandiseSubtotalMinor.value ?: d.totalMinor.value),
+            ),
+        )
+    }
     return OrderFormState(
         title = d.title.value.orEmpty(),
         platform = d.platform.value,
         customPlatformName = d.customPlatformName.value.orEmpty(),
         sellerName = d.sellerName.value.orEmpty(),
+        items = items ?: listOf(com.ordra.feature.orderedit.OrderItemForm()),
         total = money(d.totalMinor.value),
         shipping = money(d.shippingMinor.value),
         discount = money(d.discountMinor.value),

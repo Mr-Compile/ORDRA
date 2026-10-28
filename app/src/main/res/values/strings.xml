@@ -120,7 +120,8 @@
     <string name="editor_import_pick">Pick a screenshot</string>
     <string name="editor_import_pick_sub">Shopee, TikTok Shop, Lazada or any order page</string>
     <string name="editor_import_review_banner">Review before saving — every extracted field is a suggestion you can correct.</string>
-    <string name="editor_extracted_title">Extracted fields</string>
+    <string name="editor_extracted_title">Imported from screenshot</string>
+    <string name="editor_dismiss">Dismiss</string>
     <string name="editor_import_processing">Reading screenshots…</string>
     <string name="editor_import_ocr_failed">Couldn\'t read text from that image. Try a clearer screenshot or enter the details manually.</string>
     <string name="editor_field_product">Product name</string>

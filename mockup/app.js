@@ -162,6 +162,7 @@ const state = {
   theme: "light",
 };
 let draft = null;
+let importNotice = false; /* show "imported — review" chips on the manual form */
 let sessionCats = []; /* categories created this session — mirrors the Room categories table */
 const allCats = () => [...new Set([...orders.flatMap(o => o.categories || []), ...sessionCats])];
 
@@ -786,7 +787,7 @@ function startEdit(orderId) {
   const o = orderId ? orders.find(x => x.id === orderId) : null;
   editStep = "form"; editMode = "manual";
   editAttempted = false; editTouched = new Set();
-  importStep = 0; importDraft = null;
+  importStep = 0; importDraft = null; importNotice = false;
   draft = o ? {
     platform: o.platform, customPlatformName: o.customPlatformName || "", title: o.title || "",
     sellerName: o.sellerName,
@@ -836,7 +837,7 @@ function renderEdit() {
     body.innerHTML = `<div class="fade-in">
       <div class="card" style="margin-top:10px"><h4 class="card-title">Review order</h4>
         <div class="kv-row"><span class="k">Platform</span><span class="v">${p ? esc(dr.customPlatformName || p.label) : "—"}</span></div>
-        <div class="kv-row"><span class="k">Order name</span><span class="v">${esc(dr.title) || "—"}</span></div>
+        <div class="kv-row"><span class="k">Order name</span><span class="v">${esc(dr.title || dr.items.find(i => !itemEmpty(i))?.name || "") || "—"}</span></div>
         ${dr.sellerName ? `<div class="kv-row"><span class="k">Seller / store</span><span class="v">${esc(dr.sellerName)}</span></div>` : ""}
         ${dr.items.filter(i => !itemEmpty(i)).length ? `<hr class="hr">
         ${dr.items.filter(i => !itemEmpty(i)).map(i => `<div class="item-row"><span><div class="item-name">${esc(i.name)}</div>${i.variant ? `<div class="item-var">${esc(i.variant)}</div>` : ""}</span><span class="item-price">${parseInt(i.qty, 10) || 1} × ${peso(parseMoney(i.price) || 0)}</span></div>`).join("")}` : ""}
@@ -862,6 +863,13 @@ function renderEdit() {
   body.innerHTML = `<div class="fade-in">
     ${entrySeg()}
     <p class="req-note">Required: a name, platform, and total.</p>
+    ${importNotice && importDraft ? `<div class="card" style="margin-top:10px"><h4 class="card-title">Imported from screenshot</h4>
+      <div class="banner warn" style="margin:0 0 8px"><span class="mi">fact_check</span>
+        Review before saving — every extracted field is a suggestion you can correct.
+      </div>
+      <div class="conf-row">${Object.entries(importDraft.conf).map(([k, v]) => `<span class="conf-chip conf-${v}">${k} · ${v}</span>`).join("")}</div>
+      <button class="btn btn-text" id="wImportDismiss" type="button" style="margin-top:8px">Dismiss</button>
+    </div>` : ""}
 
     <div class="card" style="margin-top:10px"><h4 class="card-title">Platform</h4>
       <p class="field-label">Order name <span class="req">*</span></p>
@@ -989,75 +997,52 @@ function renderEdit() {
   updateErrorUI();
 }
 
-/* smart-import step inside the editor — extracted data flows into the same draft + validation */
+/* smart-import pane inside the editor — pick → OCR → values merge into the
+   SAME manual draft (fill-blanks); the manual form then shows for review */
 function renderEditImport(body) {
-  if (importStep === 0) {
-    body.innerHTML = `<div class="fade-in">
-      ${entrySeg()}
-      <div class="banner info" style="margin-top:10px"><span class="mi">photo_scan</span>
-        Import a marketplace screenshot — on-device OCR extracts the details for your review. Nothing saves until you confirm.
-      </div>
-      <label class="import-photo" style="margin-top:14px">
-        <input type="file" accept="image/*" id="wImportFile">
-        <span class="mi">add_photo_alternate</span>
-        <strong>Pick a screenshot</strong><br><small>Shopee, TikTok Shop, Lazada or any order page</small>
-      </label>
-      <button class="btn btn-tonal" type="button" style="width:100%;margin-top:12px" id="wImportSample">
-        <span class="mi">auto_awesome</span>Try with sample screenshot data
-      </button>
-      <div class="scroll-pad"></div></div>`;
-    $("#wImportFile").onchange = simulateImport;
-    $("#wImportSample").onclick = simulateImport;
-    wireEntrySeg();
-    return;
-  }
-  const f = importDraft;
   body.innerHTML = `<div class="fade-in">
     ${entrySeg()}
-    <div class="banner warn" style="margin-top:10px"><span class="mi">fact_check</span>
-      Review before saving — every extracted field is a suggestion you can correct.
+    <div class="banner info" style="margin-top:10px"><span class="mi">photo_scan</span>
+      Import a marketplace screenshot — on-device OCR extracts the details for your review. Nothing saves until you confirm.
     </div>
-    <div class="card" style="margin-top:12px"><h4 class="card-title">Extracted fields</h4>
-      <div class="conf-row">${Object.entries(f.conf).map(([k, v]) => `<span class="conf-chip conf-${v}">${k} · ${v}</span>`).join("")}</div>
-      <p class="field-label">Product name</p><input class="field" id="iName" value="${esc(f.name)}">
-      <div class="field-row">
-        <span><p class="field-label">Seller</p><input class="field" id="iSeller" value="${esc(f.seller)}"></span>
-        <span><p class="field-label">Total ₱</p><input class="field" id="iTotal" type="number" step="0.01" value="${(f.totalMinor / 100).toFixed(2)}"></span>
-      </div>
-      <div class="field-row">
-        <span><p class="field-label">Platform</p>
-          <select class="field" id="iPlat">${Object.keys(PLATFORMS).map(k => `<option value="${k}" ${f.platform === k ? "selected" : ""}>${PLATFORMS[k].label}</option>`).join("")}</select></span>
-        <span><p class="field-label">Courier</p>
-          <select class="field" id="iCourier">${["", ...COURIERS].map(c => `<option ${f.courier === c ? "selected" : ""}>${c || "Not set"}</option>`).join("")}</select></span>
-      </div>
-      <p class="field-label">Tracking</p><input class="field" id="iTracking" value="${esc(f.tracking)}">
-    </div>
-    <div class="action-col">
-      <button class="btn btn-fill" type="button" id="wImportUse"><span class="mi">check</span>Review order</button>
-      <button class="btn btn-text" type="button" id="wImportDiscard">Discard</button>
-    </div>
+    <label class="import-photo" style="margin-top:14px">
+      <input type="file" accept="image/*" id="wImportFile">
+      <span class="mi">add_photo_alternate</span>
+      <strong>Pick a screenshot</strong><br><small>Shopee, TikTok Shop, Lazada or any order page</small>
+    </label>
+    <button class="btn btn-tonal" type="button" style="width:100%;margin-top:12px" id="wImportSample">
+      <span class="mi">auto_awesome</span>Try with sample screenshot data
+    </button>
     <div class="scroll-pad"></div></div>`;
-  $("#wImportDiscard").onclick = () => { importStep = 0; importDraft = null; renderEdit(); };
-  $("#wImportUse").onclick = importToDraft;
+  $("#wImportFile").onchange = simulateImport;
+  $("#wImportSample").onclick = simulateImport;
   wireEntrySeg();
 }
 
-/* extracted fields -> manual draft -> same OrderDraft validation as manual entry */
+/* extracted values -> SAME manual draft (fill-blanks) -> manual form shows
+   the imported-notice chips; user reviews identical fields before saving */
 function importToDraft() {
-  const gv = id => document.getElementById(id);
-  const name = gv("iName").value.trim(), courier = gv("iCourier").value;
-  const total = parseMoney(gv("iTotal").value);
-  draft.title = name;
-  draft.sellerName = gv("iSeller").value.trim();
-  draft.platform = gv("iPlat").value || null;
-  draft.total = total != null ? (total / 100).toFixed(2) : "";
-  draft.items = [{ name, variant: "", qty: "1", price: total != null ? (total / 100).toFixed(2) : "" }];
-  draft.courier = courier === "Not set" ? "" : (COURIERS.includes(courier) ? courier : "Other");
-  draft.customCourierName = COURIERS.includes(courier) || courier === "Not set" ? "" : courier;
-  draft.tracking = gv("iTracking").value.trim();
-  importStep = 0; importDraft = null;
-  editMode = "manual"; editStep = "form";
-  goReview();
+  const f = importDraft, blank = v => !v || !String(v).trim();
+  if (!blank(f.name)) {
+    if (blank(draft.title)) draft.title = f.name;
+    if (draft.items.every(itemEmpty)) {
+      draft.items = [{ name: f.name, variant: "", qty: "1",
+        price: f.totalMinor != null ? (f.totalMinor / 100).toFixed(2) : "" }];
+    }
+  }
+  if (blank(draft.sellerName) && f.seller) draft.sellerName = f.seller;
+  if (!draft.platform && f.platform) draft.platform = f.platform;
+  if (blank(draft.total) && f.totalMinor != null) {
+    draft.total = (f.totalMinor / 100).toFixed(2);
+  }
+  if (!draft.courier && f.courier) {
+    draft.courier = COURIERS.includes(f.courier) ? f.courier : "Other";
+    draft.customCourierName = COURIERS.includes(f.courier) ? "" : f.courier;
+  }
+  if (blank(draft.tracking) && f.tracking) draft.tracking = f.tracking;
+  importStep = 0;
+  editMode = "manual"; editStep = "form"; importNotice = true;
+  renderEdit();
 }
 
 function collectDraft() {
@@ -1134,6 +1119,8 @@ function wireEditInputs() {
       : [...dr.categories, c];
     b.classList.toggle("is-on");
   });
+  const dismiss = $("#wImportDismiss");
+  if (dismiss) dismiss.onclick = () => { importNotice = false; importDraft = null; renderEdit(); };
   const addCat = $("#wAddCat");
   if (addCat) addCat.onclick = () => {
     collectDraft();
@@ -1455,9 +1442,11 @@ function simulateImport() {
     platform: "SHOPEE", courier: "J&T Express", tracking: "JT824011593PH",
     conf: { product: "high", seller: "high", amount: "medium", platform: "high", tracking: "low" },
   };
-  importStep = 1;
   toast("OCR extracted 5 fields");
-  if (state.screen === "add") renderEdit(); else renderImport();
+  /* add-screen import merges into the SAME manual draft; standalone import
+     keeps its own review card */
+  if (state.screen === "add") { importToDraft(); return; }
+  importStep = 1; renderImport();
 }
 
 function saveImport() {

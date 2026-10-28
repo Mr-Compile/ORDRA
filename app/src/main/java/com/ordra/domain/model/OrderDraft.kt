@@ -20,6 +20,8 @@ data class OrderDraft(
     val totalMinor: ExtractionField<Long> = ExtractionField(),
     val shippingMinor: ExtractionField<Long> = ExtractionField(),
     val discountMinor: ExtractionField<Long> = ExtractionField(),
+    val merchandiseSubtotalMinor: ExtractionField<Long> = ExtractionField(),
+    val itemQuantity: ExtractionField<Int> = ExtractionField(),
     val paymentMethod: ExtractionField<PaymentMethod> = ExtractionField(),
     val courier: ExtractionField<Courier> = ExtractionField(),
     val customCourierName: ExtractionField<String> = ExtractionField(),
