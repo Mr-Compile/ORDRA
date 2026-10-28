@@ -54,6 +54,7 @@ import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.core.ui.orderStatusLabel
 import com.ordra.core.ui.platformLabel
+import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderQuery
 import com.ordra.domain.model.OrderSort
 import com.ordra.domain.model.OrderStatus
@@ -70,6 +71,7 @@ fun OrdersScreen(
     var filtersOpen by remember { mutableStateOf(false) }
     var sortMenuOpen by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var actionOrder by remember { mutableStateOf<Order?>(null) }
 
     OrderActionEffects(
         events = viewModel.actionEvents,
@@ -195,12 +197,22 @@ fun OrdersScreen(
                             order = order,
                             onClick = { onOpenOrder(order.id) },
                             onAction = { viewModel.performOrderAction(order, it) },
+                            onLongClick = { actionOrder = order },
                             modifier = Modifier.animateItem(),
                         )
                     }
                 }
             }
         }
+    }
+
+    actionOrder?.let { order ->
+        OrderActionsSheet(
+            order = order,
+            onDismiss = { actionOrder = null },
+            onOpen = { onOpenOrder(order.id) },
+            onAction = { viewModel.performOrderAction(order, it) },
+        )
     }
 
     if (filtersOpen) {

@@ -49,6 +49,7 @@ fun SwipeableOrderCard(
     onAction: (OrderSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
     etaText: String? = null,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val startAction =
         resolveSwipeAction(order.isArchived, order.status, OrderSwipeDirection.StartToEnd)
@@ -86,7 +87,12 @@ fun SwipeableOrderCard(
             }
         },
     ) {
-        OrderCard(order = order, onClick = onClick, etaText = etaText)
+        OrderCard(
+            order = order,
+            onClick = onClick,
+            etaText = etaText,
+            onLongClick = onLongClick,
+        )
     }
 }
 

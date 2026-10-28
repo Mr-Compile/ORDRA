@@ -57,6 +57,7 @@ import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.domain.model.Order
 import com.ordra.feature.ordi.OrdiChatSheet
 import com.ordra.feature.orders.OrderActionEffects
+import com.ordra.feature.orders.OrderActionsSheet
 import java.time.format.DateTimeFormatter
 
 private val ETA_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d")
@@ -88,6 +89,7 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var chatOpen by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var actionOrder by remember { mutableStateOf<Order?>(null) }
 
     OrderActionEffects(
         events = viewModel.actionEvents,
@@ -124,6 +126,7 @@ fun HomeScreen(
                     onOrderAction = { order, action ->
                         viewModel.performOrderAction(order, action)
                     },
+                    onOrderLongPress = { actionOrder = it },
                     modifier = Modifier.padding(innerPadding),
                 )
             } else if (uiState.isEmpty && uiState.loaded) {
@@ -138,6 +141,7 @@ fun HomeScreen(
                     onOrderAction = { order, action ->
                         viewModel.performOrderAction(order, action)
                     },
+                    onOrderLongPress = { actionOrder = it },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -149,6 +153,14 @@ fun HomeScreen(
                     .padding(start = 20.dp, bottom = 8.dp),
             )
         }
+    }
+    actionOrder?.let { order ->
+        OrderActionsSheet(
+            order = order,
+            onDismiss = { actionOrder = null },
+            onOpen = { onOpenOrder(order.id) },
+            onAction = { viewModel.performOrderAction(order, it) },
+        )
     }
     if (chatOpen) {
         OrdiChatSheet(onDismiss = { chatOpen = false })
@@ -240,6 +252,7 @@ private fun HomeContent(
     onOpenCod: () -> Unit,
     onAddOrder: () -> Unit,
     onOrderAction: (Order, OrderSwipeAction) -> Unit,
+    onOrderLongPress: (Order) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -273,6 +286,7 @@ private fun HomeContent(
                     onClick = { onOpenOrder(order.id) },
                     onAction = { onOrderAction(order, it) },
                     etaText = etaText(order),
+                    onLongClick = { onOrderLongPress(order) },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -291,6 +305,7 @@ private fun HomeContent(
                     onClick = { onOpenOrder(order.id) },
                     onAction = { onOrderAction(order, it) },
                     etaText = etaText(order),
+                    onLongClick = { onOrderLongPress(order) },
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -357,6 +372,7 @@ private fun ArchivedContent(
     orders: List<Order>,
     onOpenOrder: (String) -> Unit,
     onOrderAction: (Order, OrderSwipeAction) -> Unit,
+    onOrderLongPress: (Order) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (orders.isEmpty()) {
@@ -373,6 +389,7 @@ private fun ArchivedContent(
                 order = order,
                 onClick = { onOpenOrder(order.id) },
                 onAction = { onOrderAction(order, it) },
+                onLongClick = { onOrderLongPress(order) },
                 modifier = Modifier.animateItem(),
             )
         }

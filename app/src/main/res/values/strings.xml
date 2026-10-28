@@ -23,6 +23,7 @@
     <string name="swipe_order_delivered">Marked as delivered</string>
     <string name="swipe_action_failed">Couldn\'t update that order. Try again.</string>
     <string name="action_undo">Undo</string>
+    <string name="action_open">Open order</string>
 
     <!-- Platforms -->
     <string name="platform_shopee">Shopee</string>
