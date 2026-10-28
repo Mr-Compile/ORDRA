@@ -1398,9 +1398,9 @@ function renderImport() {
         Import a marketplace screenshot — on-device OCR extracts the details for your review. Nothing saves until you confirm.
       </div>
       <label class="import-photo" style="margin-top:14px">
-        <input type="file" accept="image/*" id="importFile">
+        <input type="file" accept="image/*" id="importFile" multiple>
         <span class="mi">add_photo_alternate</span>
-        <strong>Pick a screenshot</strong><br><small>Shopee, TikTok Shop, Lazada or any order page</small>
+        <strong>Pick screenshots</strong><br><small>Shopee, TikTok Shop, Lazada — select up to 5 order pages</small>
       </label>
       <button class="btn btn-tonal" type="button" style="width:100%;margin-top:12px" onclick="simulateImport()">
         <span class="mi">auto_awesome</span>Try with sample screenshot data

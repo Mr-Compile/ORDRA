@@ -117,8 +117,8 @@
     <string name="editor_entry_manual">Manual entry</string>
     <string name="editor_entry_import">Import</string>
     <string name="editor_import_banner">Import a marketplace screenshot — on-device OCR extracts the details for your review. Nothing saves until you confirm.</string>
-    <string name="editor_import_pick">Pick a screenshot</string>
-    <string name="editor_import_pick_sub">Shopee, TikTok Shop, Lazada or any order page</string>
+    <string name="editor_import_pick">Pick screenshots</string>
+    <string name="editor_import_pick_sub">Shopee, TikTok Shop, Lazada — select up to 5 order pages</string>
     <string name="editor_import_review_banner">Review before saving — every extracted field is a suggestion you can correct.</string>
     <string name="editor_extracted_title">Imported from screenshot</string>
     <string name="editor_dismiss">Dismiss</string>

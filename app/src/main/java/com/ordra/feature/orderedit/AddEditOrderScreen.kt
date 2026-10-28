@@ -1126,8 +1126,8 @@ private fun EditorImportPane(
     onPick: (List<String>) -> Unit,
 ) {
     val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> if (uri != null) onPick(listOf(uri.toString())) }
+        ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5),
+    ) { uris -> if (uris.isNotEmpty()) onPick(uris.map { it.toString() }) }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OrdraBanner(
