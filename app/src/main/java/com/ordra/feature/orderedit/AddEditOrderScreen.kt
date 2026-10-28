@@ -5,6 +5,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,6 +75,7 @@ import com.ordra.core.ui.paymentMethodLabel
 import com.ordra.core.ui.paymentStatusLabel
 import com.ordra.core.ui.platformLabel
 import com.ordra.core.ui.courierLabel
+import com.ordra.core.ui.theme.standardTween
 import com.ordra.domain.model.Courier
 import com.ordra.domain.model.OrderStatus
 import com.ordra.domain.model.PaymentMethod
@@ -137,7 +142,12 @@ fun AddEditOrderScreen(
             )
         },
     ) { padding ->
-        if (uiState.step == EditorStep.FORM) {
+        AnimatedContent(
+            targetState = uiState.step,
+            transitionSpec = { fadeIn(standardTween()) togetherWith fadeOut(standardTween()) },
+            label = "editor_step",
+        ) { step ->
+        if (step == EditorStep.FORM) {
             OrderFormContent(
                 state = uiState,
                 onFormChange = viewModel::updateForm,
@@ -149,6 +159,7 @@ fun AddEditOrderScreen(
                 form = uiState.form,
                 modifier = Modifier.padding(padding),
             )
+        }
         }
     }
 

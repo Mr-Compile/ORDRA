@@ -1,5 +1,9 @@
 package com.ordra.app.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -18,6 +22,9 @@ import com.ordra.feature.settings.AboutScreen
 import com.ordra.feature.settings.SettingsScreen
 import com.ordra.feature.smartimport.SmartImportScreen
 import com.ordra.feature.timeline.ShipmentTimelineScreen
+import com.ordra.core.ui.rememberReducedMotion
+import com.ordra.core.ui.theme.microTween
+import com.ordra.core.ui.theme.standardTween
 
 @Composable
 fun OrdraNavHost(navController: NavHostController) {
@@ -26,9 +33,38 @@ fun OrdraNavHost(navController: NavHostController) {
             navController.navigate(route)
         }
     }
+    val reducedMotion = rememberReducedMotion()
     NavHost(
         navController = navController,
         startDestination = OrdraRoutes.HOME,
+        enterTransition = {
+            if (reducedMotion) {
+                fadeIn(microTween())
+            } else {
+                slideInHorizontally(standardTween()) { it / 4 } + fadeIn(standardTween())
+            }
+        },
+        exitTransition = {
+            if (reducedMotion) {
+                fadeOut(microTween())
+            } else {
+                slideOutHorizontally(standardTween()) { -it / 4 } + fadeOut(standardTween())
+            }
+        },
+        popEnterTransition = {
+            if (reducedMotion) {
+                fadeIn(microTween())
+            } else {
+                slideInHorizontally(standardTween()) { -it / 4 } + fadeIn(standardTween())
+            }
+        },
+        popExitTransition = {
+            if (reducedMotion) {
+                fadeOut(microTween())
+            } else {
+                slideOutHorizontally(standardTween()) { it / 4 } + fadeOut(standardTween())
+            }
+        },
     ) {
         composable(OrdraRoutes.HOME) {
             HomeScreen(

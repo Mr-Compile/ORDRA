@@ -3,6 +3,10 @@ package com.ordra.feature.smartimport
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -48,10 +52,13 @@ import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.courierLabel
 import com.ordra.core.ui.paymentMethodLabel
 import com.ordra.core.ui.platformLabel
+import com.ordra.core.ui.theme.standardTween
 import com.ordra.domain.model.Courier
 import com.ordra.domain.model.PaymentMethod
 import com.ordra.domain.model.Platform
 import com.ordra.feature.orderedit.OrderFormState
+
+private const val MAX_IMPORT_IMAGES = 5
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,17 +69,19 @@ fun SmartImportScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val picker = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> uri?.let { viewModel.onImagePicked(it.toString()) } }
+        ActivityResultContracts.PickMultipleVisualMedia(MAX_IMPORT_IMAGES),
+    ) { uris ->
+        if (uris.isNotEmpty()) viewModel.onImagesPicked(uris.map { it.toString() })
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { if (it is SmartImportEffect.Saved) onSaved() }
     }
     LaunchedEffect(Unit) {
-        com.ordra.app.AppIntake.pendingImageUri.collect { uri ->
-            if (uri != null) {
-                com.ordra.app.AppIntake.pendingImageUri.value = null
-                viewModel.onImagePicked(uri)
+        com.ordra.app.AppIntake.pendingImageUris.collect { uris ->
+            if (uris != null) {
+                com.ordra.app.AppIntake.pendingImageUris.value = null
+                viewModel.onImagesPicked(uris)
             }
         }
     }
@@ -89,7 +98,12 @@ fun SmartImportScreen(
             )
         },
     ) { padding ->
-        when (state.step) {
+        AnimatedContent(
+            targetState = state.step,
+            transitionSpec = { fadeIn(standardTween()) togetherWith fadeOut(standardTween()) },
+            label = "import_step",
+        ) { step ->
+        when (step) {
             ImportStep.PICK -> Column(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -143,6 +157,7 @@ fun SmartImportScreen(
                 onSave = viewModel::confirm,
                 modifier = Modifier.padding(padding),
             )
+        }
         }
     }
 }
