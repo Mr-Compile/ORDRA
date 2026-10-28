@@ -9,10 +9,14 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,35 +25,45 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.automirrored.filled.FactCheck
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -62,19 +76,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
 import com.ordra.core.common.MoneyFormat
+import com.ordra.core.ui.components.OrdraBanner
+import com.ordra.core.ui.components.OrdraBannerKind
+import com.ordra.core.ui.components.OrdraField
+import com.ordra.core.ui.components.OrdraSegmented
+import com.ordra.core.ui.components.OrdraSelect
+import com.ordra.core.ui.courierLabel
 import com.ordra.core.ui.orderStatusLabel
 import com.ordra.core.ui.paymentMethodLabel
 import com.ordra.core.ui.paymentStatusLabel
+import com.ordra.core.ui.platformColor
 import com.ordra.core.ui.platformLabel
-import com.ordra.core.ui.courierLabel
 import com.ordra.core.ui.theme.standardTween
 import com.ordra.domain.model.Courier
 import com.ordra.domain.model.OrderStatus
@@ -119,11 +142,16 @@ fun AddEditOrderScreen(
             EditorTopBar(
                 isEdit = uiState.form.isEdit,
                 isArchived = uiState.isArchived,
-                step = uiState.step,
                 onBack = {
-                    if (uiState.step == EditorStep.REVIEW) viewModel.backToForm()
-                    else if (uiState.form.isDirty) showDiscardDialog = true
-                    else onNavigateBack()
+                    if (uiState.entryMode == EntryMode.IMPORT) {
+                        viewModel.setEntryMode(EntryMode.MANUAL)
+                    } else if (uiState.step == EditorStep.REVIEW) {
+                        viewModel.backToForm()
+                    } else if (uiState.form.isDirty) {
+                        showDiscardDialog = true
+                    } else {
+                        onNavigateBack()
+                    }
                 },
                 onArchive = viewModel::archive,
                 onRestore = viewModel::restore,
@@ -131,15 +159,20 @@ fun AddEditOrderScreen(
             )
         },
         bottomBar = {
-            EditorBottomBar(
-                step = uiState.step,
-                isSaving = uiState.isSaving,
-                onPrimary = {
-                    if (uiState.step == EditorStep.FORM) viewModel.goToReview()
-                    else viewModel.save()
-                },
-                onSecondary = viewModel::backToForm,
-            )
+            if (uiState.entryMode == EntryMode.MANUAL) {
+                EditorBottomBar(
+                    step = uiState.step,
+                    isSaving = uiState.isSaving,
+                    onPrimary = {
+                        if (uiState.step == EditorStep.FORM) viewModel.goToReview()
+                        else viewModel.save()
+                    },
+                    onSecondary = viewModel::backToForm,
+                    onCancel = {
+                        if (uiState.form.isDirty) showDiscardDialog = true else onNavigateBack()
+                    },
+                )
+            }
         },
     ) { padding ->
         AnimatedContent(
@@ -152,11 +185,17 @@ fun AddEditOrderScreen(
                 state = uiState,
                 onFormChange = viewModel::updateForm,
                 onCreateCategory = viewModel::createCategory,
+                onEntryMode = viewModel::setEntryMode,
+                onImportImages = viewModel::onImportImages,
+                onImportFormChange = viewModel::updateImportForm,
+                onApplyImport = viewModel::applyImport,
+                onDiscardImport = viewModel::discardImport,
                 modifier = Modifier.padding(padding),
             )
         } else {
             OrderReviewContent(
                 form = uiState.form,
+                availableCategories = uiState.availableCategories,
                 modifier = Modifier.padding(padding),
             )
         }
@@ -211,7 +250,6 @@ fun AddEditOrderScreen(
 private fun EditorTopBar(
     isEdit: Boolean,
     isArchived: Boolean,
-    step: EditorStep,
     onBack: () -> Unit,
     onArchive: () -> Unit,
     onRestore: () -> Unit,
@@ -220,10 +258,7 @@ private fun EditorTopBar(
     var menuOpen by remember { mutableStateOf(false) }
     TopAppBar(
         title = {
-            Text(
-                if (step == EditorStep.REVIEW) stringResource(R.string.editor_review_title)
-                else stringResource(if (isEdit) R.string.editor_title_edit else R.string.editor_title_add),
-            )
+            Text(stringResource(if (isEdit) R.string.editor_title_edit else R.string.editor_title_add))
         },
         navigationIcon = {
             IconButton(onClick = onBack) {
@@ -234,7 +269,7 @@ private fun EditorTopBar(
             }
         },
         actions = {
-            if (isEdit && step == EditorStep.FORM) {
+            if (isEdit) {
                 IconButton(onClick = { menuOpen = true }) {
                     Icon(Icons.Default.MoreVert, contentDescription = null)
                 }
@@ -276,6 +311,7 @@ private fun EditorBottomBar(
     isSaving: Boolean,
     onPrimary: () -> Unit,
     onSecondary: () -> Unit,
+    onCancel: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -288,10 +324,15 @@ private fun EditorBottomBar(
                 Text(stringResource(R.string.editor_back_to_edit))
             }
             Button(onClick = onPrimary, enabled = !isSaving, modifier = Modifier.weight(1f)) {
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.editor_save))
             }
         } else {
-            Button(onClick = onPrimary, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.action_cancel))
+            }
+            Button(onClick = onPrimary, modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.editor_review))
             }
         }
@@ -303,15 +344,39 @@ private fun OrderFormContent(
     state: AddEditUiState,
     onFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
     onCreateCategory: (String) -> Unit,
+    onEntryMode: (EntryMode) -> Unit,
+    onImportImages: (List<String>) -> Unit,
+    onImportFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
+    onApplyImport: () -> Unit,
+    onDiscardImport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val form = state.form
     val errors = state.fieldErrors
+    val importMode = state.entryMode == EntryMode.IMPORT && !form.isEdit
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        if (!form.isEdit) {
+            item {
+                EntrySegment(mode = state.entryMode, onSelect = onEntryMode)
+            }
+        }
+        if (importMode) {
+            item {
+                EditorImportPane(
+                    state = state,
+                    onPick = onImportImages,
+                    onFormChange = onImportFormChange,
+                    onApply = onApplyImport,
+                    onDiscard = onDiscardImport,
+                )
+            }
+            return@LazyColumn
+        }
+
         item {
             Text(
                 stringResource(R.string.editor_required_summary),
@@ -322,40 +387,34 @@ private fun OrderFormContent(
 
         item {
             FormSection(title = stringResource(R.string.editor_section_platform)) {
-                OutlinedTextField(
+                OrdraField(
+                    label = stringResource(R.string.editor_order_title),
                     value = form.title,
                     onValueChange = { v -> onFormChange { it.copy(title = v) } },
-                    label = { Text(stringResource(R.string.editor_order_title)) },
-                    isError = errors.containsKey("title"),
-                    supportingText = { FieldError(errors["title"]) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
+                    required = true,
+                    placeholder = stringResource(R.string.editor_ph_order_title),
+                    error = errors["title"],
                 )
-                EnumDropdown(
-                    label = stringResource(R.string.editor_platform),
-                    options = Platform.entries,
+                PlatformGrid(
                     selected = form.platform,
-                    optionLabel = { platformLabel(it) },
-                    onSelect = { p -> onFormChange { it.copy(platform = p) } },
                     error = errors["platform"],
+                    onSelect = { p -> onFormChange { it.copy(platform = p) } },
                 )
                 if (form.platform == Platform.OTHER) {
-                    OutlinedTextField(
+                    OrdraField(
+                        label = stringResource(R.string.editor_custom_platform),
                         value = form.customPlatformName,
                         onValueChange = { v -> onFormChange { it.copy(customPlatformName = v) } },
-                        label = { Text(stringResource(R.string.editor_custom_platform)) },
-                        isError = errors.containsKey("customPlatformName"),
-                        supportingText = { FieldError(errors["customPlatformName"]) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
+                        required = true,
+                        placeholder = stringResource(R.string.editor_ph_custom_platform),
+                        error = errors["customPlatformName"],
                     )
                 }
-                OutlinedTextField(
+                OrdraField(
+                    label = stringResource(R.string.editor_seller),
                     value = form.sellerName,
                     onValueChange = { v -> onFormChange { it.copy(sellerName = v) } },
-                    label = { Text(stringResource(R.string.editor_seller)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
+                    placeholder = stringResource(R.string.editor_ph_seller),
                 )
             }
         }
@@ -363,7 +422,7 @@ private fun OrderFormContent(
         item {
             FormSection(title = stringResource(R.string.editor_section_items)) {
                 form.items.forEachIndexed { index, item ->
-                    ItemFields(
+                    ItemCard(
                         index = index,
                         item = item,
                         errors = errors,
@@ -380,11 +439,14 @@ private fun OrderFormContent(
                             }
                         } else null,
                     )
-                    if (index < form.items.lastIndex) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    if (index < form.items.lastIndex) Spacer(Modifier.height(10.dp))
                 }
-                TextButton(onClick = {
-                    onFormChange { it.copy(items = it.items + OrderItemForm()) }
-                }) {
+                OutlinedButton(
+                    onClick = {
+                        onFormChange { it.copy(items = it.items + OrderItemForm()) }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp))
                     Text(stringResource(R.string.editor_add_item))
@@ -395,32 +457,44 @@ private fun OrderFormContent(
         item {
             FormSection(title = stringResource(R.string.editor_section_pricing)) {
                 if (form.itemsSubtotalMinor > 0) {
-                    Text(
-                        "${stringResource(R.string.editor_items_subtotal)}: " +
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            stringResource(R.string.editor_items_subtotal),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
                             MoneyFormat.formatMinor(form.itemsSubtotalMinor, form.currencyCode),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MoneyField(
-                        value = form.shipping,
+                    OrdraField(
                         label = stringResource(R.string.editor_shipping),
+                        value = form.shipping,
+                        onValueChange = { v -> onFormChange { it.copy(shipping = v) } },
+                        placeholder = "0.00",
                         error = errors["shipping"],
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
-                        onChange = { v -> onFormChange { it.copy(shipping = v) } },
                     )
-                    MoneyField(
-                        value = form.discount,
+                    OrdraField(
                         label = stringResource(R.string.editor_discount),
+                        value = form.discount,
+                        onValueChange = { v -> onFormChange { it.copy(discount = v) } },
+                        placeholder = "0.00",
                         error = errors["discount"],
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.weight(1f),
-                        onChange = { v -> onFormChange { it.copy(discount = v) } },
                     )
                 }
-                MoneyField(
+                OrdraField(
+                    label = stringResource(R.string.editor_total),
                     value = form.total,
-                    label = stringResource(R.string.editor_total) + " *",
+                    onValueChange = { v -> onFormChange { it.copy(total = v) } },
+                    required = true,
+                    placeholder = "0.00",
                     error = errors["total"],
                     supporting = if (form.total.isBlank() && form.suggestedTotalMinor != 0L) {
                         stringResource(
@@ -428,19 +502,15 @@ private fun OrderFormContent(
                             MoneyFormat.formatMinor(form.suggestedTotalMinor, form.currencyCode),
                         )
                     } else null,
-                    modifier = Modifier.fillMaxWidth(),
-                    onChange = { v -> onFormChange { it.copy(total = v) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 )
             }
         }
 
         item {
             FormSection(title = stringResource(R.string.editor_section_payment)) {
-                EnumDropdown(
-                    label = stringResource(R.string.editor_payment_method),
-                    options = PaymentMethod.entries,
+                PaymentMethodCards(
                     selected = form.paymentMethod,
-                    optionLabel = { paymentMethodLabel(it) },
                     onSelect = { m ->
                         onFormChange {
                             it.copy(
@@ -452,22 +522,20 @@ private fun OrderFormContent(
                         }
                     },
                 )
-                EnumDropdown(
-                    label = stringResource(R.string.editor_payment_status),
-                    options = PaymentStatus.entries,
+                Spacer(Modifier.height(4.dp))
+                PaymentStatusSegment(
                     selected = form.paymentStatus,
-                    optionLabel = { paymentStatusLabel(it) },
                     onSelect = { s -> onFormChange { it.copy(paymentStatus = s) } },
                 )
                 if (form.paymentMethod == PaymentMethod.COD) {
                     MoneyFormat.parseToMinor(form.total)?.let { cod ->
-                        Text(
-                            stringResource(
+                        OrdraBanner(
+                            kind = OrdraBannerKind.WARN,
+                            icon = Icons.Filled.Payments,
+                            text = stringResource(
                                 R.string.editor_cod_note,
                                 MoneyFormat.formatMinor(cod, form.currencyCode),
                             ),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.tertiary,
                         )
                     }
                 }
@@ -476,59 +544,49 @@ private fun OrderFormContent(
 
         item {
             FormSection(title = stringResource(R.string.editor_section_delivery)) {
-                EnumDropdown(
+                OrdraSelect(
                     label = stringResource(R.string.editor_status),
-                    options = OrderStatus.entries,
+                    options = OrderStatus.entries.filter {
+                        it != OrderStatus.DRAFT || form.status == OrderStatus.DRAFT
+                    },
                     selected = form.status,
                     optionLabel = { orderStatusLabel(it) },
                     onSelect = { s -> onFormChange { it.copy(status = s) } },
                 )
-                EnumDropdown(
+                OrdraSelect(
                     label = stringResource(R.string.editor_courier),
                     options = Courier.entries,
-                    selected = form.courier,
+                    selected = form.courier.takeIf { it != Courier.UNKNOWN },
                     optionLabel = { courierLabel(it, null) },
                     onSelect = { c -> onFormChange { it.copy(courier = c) } },
                 )
                 if (form.courier == Courier.OTHER) {
-                    OutlinedTextField(
+                    OrdraField(
+                        label = stringResource(R.string.editor_custom_courier),
                         value = form.customCourierName,
                         onValueChange = { v -> onFormChange { it.copy(customCourierName = v) } },
-                        label = { Text(stringResource(R.string.editor_custom_courier)) },
-                        isError = errors.containsKey("customCourierName"),
-                        supportingText = { FieldError(errors["customCourierName"]) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
+                        error = errors["customCourierName"],
                     )
                 }
-                OutlinedTextField(
+                OrdraField(
+                    label = stringResource(R.string.editor_tracking),
                     value = form.trackingNumber,
                     onValueChange = { v -> onFormChange { it.copy(trackingNumber = v) } },
-                    label = { Text(stringResource(R.string.editor_tracking)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
+                    placeholder = stringResource(R.string.editor_ph_tracking),
                 )
-                ReminderChips(form.reminderTypes) { t ->
-                    onFormChange {
-                        it.copy(
-                            reminderTypes = if (t in it.reminderTypes) it.reminderTypes - t
-                            else it.reminderTypes + t,
-                        )
-                    }
-                }
-                DateField(
+                OrdraDateField(
                     label = stringResource(R.string.editor_ordered_date),
                     value = form.orderedDate,
                     onChange = { d -> onFormChange { it.copy(orderedDate = d) } },
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    DateField(
+                    OrdraDateField(
                         label = stringResource(R.string.editor_eta_start),
                         value = form.etaStart,
                         onChange = { d -> onFormChange { it.copy(etaStart = d) } },
                         modifier = Modifier.weight(1f),
                     )
-                    DateField(
+                    OrdraDateField(
                         label = stringResource(R.string.editor_eta_end),
                         value = form.etaEnd,
                         onChange = { d -> onFormChange { it.copy(etaEnd = d) } },
@@ -536,6 +594,36 @@ private fun OrderFormContent(
                     )
                 }
                 FieldError(errors["etaEnd"])
+                Column {
+                    Row {
+                        Text(
+                            stringResource(R.string.editor_reminders_label),
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    ReminderChips(form.reminderTypes) { t ->
+                        onFormChange {
+                            it.copy(
+                                reminderTypes = if (t in it.reminderTypes) it.reminderTypes - t
+                                else it.reminderTypes + t,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            FormSection(title = stringResource(R.string.editor_section_notes)) {
+                OrdraField(
+                    label = stringResource(R.string.editor_notes),
+                    value = form.notes,
+                    onValueChange = { v -> onFormChange { it.copy(notes = v) } },
+                    placeholder = stringResource(R.string.editor_ph_notes),
+                    singleLine = false,
+                    minLines = 3,
+                )
             }
         }
 
@@ -569,18 +657,6 @@ private fun OrderFormContent(
                 )
             }
         }
-
-        item {
-            FormSection(title = stringResource(R.string.editor_section_notes)) {
-                OutlinedTextField(
-                    value = form.notes,
-                    onValueChange = { v -> onFormChange { it.copy(notes = v) } },
-                    label = { Text(stringResource(R.string.editor_notes)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                )
-            }
-        }
     }
 }
 
@@ -611,86 +687,50 @@ private fun FieldError(message: String?) {
     }
 }
 
-@Composable
-private fun MoneyField(
-    value: String,
-    label: String,
-    error: String?,
-    modifier: Modifier = Modifier,
-    supporting: String? = null,
-    onChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onChange,
-        label = { Text(label) },
-        isError = error != null,
-        supportingText = { FieldError(error ?: supporting) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = modifier,
-        singleLine = true,
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun <T> EnumDropdown(
-    label: String,
-    options: List<T>,
-    selected: T?,
-    optionLabel: @Composable (T) -> String,
-    onSelect: (T) -> Unit,
-    error: String? = null,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = selected?.let { optionLabel(it) } ?: "",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            isError = error != null,
-            supportingText = { FieldError(error) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(optionLabel(option)) },
-                    onClick = {
-                        onSelect(option)
-                        expanded = false
-                    },
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DateField(
+private fun OrdraDateField(
     label: String,
     value: LocalDate?,
     onChange: (LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var dialogOpen by remember { mutableStateOf(false) }
-    OutlinedTextField(
-        value = value?.format(DATE_FMT) ?: "",
-        onValueChange = {},
-        readOnly = true,
-        label = { Text(label) },
-        trailingIcon = {
-            IconButton(onClick = { dialogOpen = true }) {
-                Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.editor_pick_date))
+    Column(modifier) {
+        Row {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Surface(
+            onClick = { dialogOpen = true },
+            color = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(10.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
+            ) {
+                Text(
+                    value?.format(DATE_FMT) ?: "—",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    color = if (value == null) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                    else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = stringResource(R.string.editor_pick_date),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
             }
-        },
-        modifier = modifier.fillMaxWidth(),
-    )
+        }
+    }
     if (dialogOpen) {
         val pickerState = rememberDatePickerState(
             initialSelectedDateMillis = value?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli(),
@@ -765,58 +805,74 @@ private fun ImagePickerField(
     }
 }
 
+/** Bordered "Item N" sub-card — mirrors the mockup's .wiz-item grouping. */
 @Composable
-private fun ItemFields(
+private fun ItemCard(
     index: Int,
     item: OrderItemForm,
     errors: Map<String, String>,
     onChange: (OrderItemForm) -> Unit,
     onRemove: (() -> Unit)?,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.Top) {
-            OutlinedTextField(
-                value = item.name,
-                onValueChange = { onChange(item.copy(name = it)) },
-                label = { Text(stringResource(R.string.editor_item_name)) },
-                isError = errors.containsKey("item_name_$index"),
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-            )
-            if (onRemove != null) {
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.editor_remove_item))
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.editor_item_header, index + 1),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                if (onRemove != null) {
+                    IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = stringResource(R.string.editor_remove_item),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
+            OrdraField(
+                label = stringResource(R.string.editor_item_name),
+                value = item.name,
+                onValueChange = { onChange(item.copy(name = it)) },
+                required = true,
+                placeholder = stringResource(R.string.editor_item_name),
+                error = errors["item_name_$index"],
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OrdraField(
+                    label = stringResource(R.string.editor_item_variant),
+                    value = item.variant,
+                    onValueChange = { onChange(item.copy(variant = it)) },
+                    placeholder = stringResource(R.string.editor_item_variant),
+                    modifier = Modifier.weight(1f),
+                )
+                OrdraField(
+                    label = stringResource(R.string.editor_item_qty),
+                    value = item.quantity,
+                    onValueChange = { onChange(item.copy(quantity = it.filter { c -> c.isDigit() })) },
+                    placeholder = stringResource(R.string.editor_item_qty),
+                    error = errors["item_qty_$index"],
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                OrdraField(
+                    label = stringResource(R.string.editor_item_price),
+                    value = item.unitPrice,
+                    onValueChange = { onChange(item.copy(unitPrice = it)) },
+                    placeholder = stringResource(R.string.editor_item_price),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
-        FieldError(errors["item_name_$index"])
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = item.variant,
-                onValueChange = { onChange(item.copy(variant = it)) },
-                label = { Text(stringResource(R.string.editor_item_variant)) },
-                modifier = Modifier.weight(2f),
-                singleLine = true,
-            )
-            OutlinedTextField(
-                value = item.quantity,
-                onValueChange = { onChange(item.copy(quantity = it.filter { c -> c.isDigit() })) },
-                label = { Text(stringResource(R.string.editor_item_qty)) },
-                isError = errors.containsKey("item_qty_$index"),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-            )
-            OutlinedTextField(
-                value = item.unitPrice,
-                onValueChange = { onChange(item.copy(unitPrice = it)) },
-                label = { Text(stringResource(R.string.editor_item_price)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.weight(1.5f),
-                singleLine = true,
-            )
-        }
-        FieldError(errors["item_qty_$index"])
     }
 }
 
@@ -881,16 +937,27 @@ private fun ReminderChips(selected: Set<ReminderType>, onToggle: (ReminderType) 
     }
 }
 
+/** Single review card + offline banner — mirrors the mockup editor review step. */
 @Composable
-private fun OrderReviewContent(form: OrderFormState, modifier: Modifier = Modifier) {
+private fun OrderReviewContent(
+    form: OrderFormState,
+    availableCategories: List<com.ordra.domain.model.Category>,
+    modifier: Modifier = Modifier,
+) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
+            OrdraBanner(
+                kind = OrdraBannerKind.INFO,
+                icon = Icons.Filled.Info,
+                text = stringResource(R.string.editor_review_offline),
+            )
+        }
+        item {
             FormSection(title = stringResource(R.string.editor_review_title)) {
-                ReviewRow(stringResource(R.string.editor_order_title), form.title.ifBlank { "-" })
                 ReviewRow(
                     stringResource(R.string.editor_platform),
                     platformLabel(
@@ -898,38 +965,28 @@ private fun OrderReviewContent(form: OrderFormState, modifier: Modifier = Modifi
                         form.customPlatformName.ifBlank { null },
                     ),
                 )
-                if (form.sellerName.isNotBlank()) {
-                    ReviewRow(stringResource(R.string.editor_seller), form.sellerName)
+                ReviewRow(stringResource(R.string.editor_order_title), form.title.ifBlank { "—" })
+                ReviewRow(
+                    stringResource(R.string.editor_seller),
+                    form.sellerName.ifBlank { "—" },
+                )
+                val filledItems = form.items.filterNot { it.isCompletelyEmpty }
+                filledItems.forEachIndexed { i, item ->
+                    val qty = item.quantity.toIntOrNull() ?: 1
+                    val price = MoneyFormat.parseToMinor(item.unitPrice)
+                    ReviewRow(
+                        stringResource(R.string.editor_item_header, i + 1),
+                        buildString {
+                            append(item.name)
+                            if (item.variant.isNotBlank()) append(" (${item.variant})")
+                            append(" ×$qty")
+                            if (price != null) {
+                                append(" — ")
+                                append(MoneyFormat.formatMinor(price * qty, form.currencyCode))
+                            }
+                        },
+                    )
                 }
-            }
-        }
-
-        val filledItems = form.items.filterNot { it.isCompletelyEmpty }
-        if (filledItems.isNotEmpty()) {
-            item {
-                FormSection(title = stringResource(R.string.editor_section_items)) {
-                    filledItems.forEach { item ->
-                        val qty = item.quantity.toIntOrNull() ?: 1
-                        val price = MoneyFormat.parseToMinor(item.unitPrice)
-                        Text(
-                            buildString {
-                                append(item.name)
-                                if (item.variant.isNotBlank()) append(" (${item.variant})")
-                                append(" ×$qty")
-                                if (price != null) {
-                                    append(" — ")
-                                    append(MoneyFormat.formatMinor(price * qty, form.currencyCode))
-                                }
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
-            }
-        }
-
-        item {
-            FormSection(title = stringResource(R.string.editor_section_pricing)) {
                 MoneyFormat.parseToMinor(form.shipping)?.let {
                     ReviewRow(stringResource(R.string.editor_shipping), MoneyFormat.formatMinor(it, form.currencyCode))
                 }
@@ -940,49 +997,59 @@ private fun OrderReviewContent(form: OrderFormState, modifier: Modifier = Modifi
                     stringResource(R.string.editor_total),
                     MoneyFormat.formatMinor(MoneyFormat.parseToMinor(form.total), form.currencyCode),
                 )
-            }
-        }
-
-        item {
-            FormSection(title = stringResource(R.string.editor_section_payment)) {
-                ReviewRow(stringResource(R.string.editor_payment_method), paymentMethodLabel(form.paymentMethod))
-                ReviewRow(stringResource(R.string.editor_payment_status), paymentStatusLabel(form.paymentStatus))
-            }
-        }
-
-        item {
-            FormSection(title = stringResource(R.string.editor_section_delivery)) {
+                ReviewRow(
+                    stringResource(R.string.editor_review_payment),
+                    "${paymentMethodLabel(form.paymentMethod)} · ${paymentStatusLabel(form.paymentStatus)}",
+                )
                 ReviewRow(stringResource(R.string.editor_status), orderStatusLabel(form.status))
-                if (form.courier != Courier.UNKNOWN) {
-                    ReviewRow(
-                        stringResource(R.string.editor_courier),
-                        courierLabel(form.courier, form.customCourierName.ifBlank { null }),
-                    )
-                }
-                if (form.trackingNumber.isNotBlank()) {
-                    ReviewRow(stringResource(R.string.editor_tracking), form.trackingNumber)
-                }
-                form.orderedDate?.let {
-                    ReviewRow(stringResource(R.string.editor_ordered_date), it.format(DATE_FMT))
-                }
-                if (form.etaStart != null || form.etaEnd != null) {
-                    ReviewRow(
-                        stringResource(R.string.editor_eta_start),
+                ReviewRow(
+                    stringResource(R.string.editor_courier),
+                    if (form.courier != Courier.UNKNOWN) {
+                        courierLabel(form.courier, form.customCourierName.ifBlank { null })
+                    } else "—",
+                )
+                ReviewRow(
+                    stringResource(R.string.editor_tracking),
+                    form.trackingNumber.ifBlank { "—" },
+                )
+                ReviewRow(
+                    stringResource(R.string.editor_ordered_date),
+                    form.orderedDate?.format(DATE_FMT) ?: "—",
+                )
+                ReviewRow(
+                    stringResource(R.string.editor_eta_start),
+                    if (form.etaStart != null || form.etaEnd != null) {
                         listOfNotNull(form.etaStart, form.etaEnd)
-                            .joinToString(" – ") { it.format(DATE_FMT) },
-                    )
+                            .joinToString(" – ") { it.format(DATE_FMT) }
+                    } else "—",
+                )
+                val reminderNames = mutableListOf<String>()
+                for (t in form.reminderTypes) reminderNames += reminderTypeLabel(t)
+                ReviewRow(
+                    stringResource(R.string.editor_review_reminders),
+                    if (reminderNames.isEmpty()) "—" else reminderNames.joinToString(", "),
+                )
+                if (form.notes.isNotBlank()) {
+                    ReviewRow(stringResource(R.string.editor_notes), form.notes)
                 }
-            }
-        }
-
-        if (form.notes.isNotBlank()) {
-            item {
-                FormSection(title = stringResource(R.string.editor_section_notes)) {
-                    Text(form.notes, style = MaterialTheme.typography.bodyMedium)
+                val chosen = availableCategories.filter { it.id in form.selectedCategoryIds }
+                if (chosen.isNotEmpty()) {
+                    ReviewRow(
+                        stringResource(R.string.editor_section_categories),
+                        chosen.joinToString(", ") { it.name },
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun reminderTypeLabel(type: ReminderType): String = when (type) {
+    ReminderType.DELIVERY_DAY -> stringResource(R.string.remind_delivery_day)
+    ReminderType.DAY_BEFORE -> stringResource(R.string.remind_day_before)
+    ReminderType.TWO_DAYS_BEFORE -> stringResource(R.string.remind_2_days)
+    ReminderType.CUSTOM -> stringResource(R.string.remind_custom)
 }
 
 @Composable
@@ -994,5 +1061,354 @@ private fun ReviewRow(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(value, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/** Manual entry / Import picker for new orders — mirrors mockup #entrySeg. */
+@Composable
+private fun EntrySegment(mode: EntryMode, onSelect: (EntryMode) -> Unit) {
+    OrdraSegmented(
+        options = listOf(EntryMode.MANUAL, EntryMode.IMPORT),
+        selected = mode,
+        onSelect = onSelect,
+        optionLabel = {
+            stringResource(
+                if (it == EntryMode.MANUAL) R.string.editor_entry_manual
+                else R.string.editor_entry_import,
+            )
+        },
+        optionIcon = {
+            if (it == EntryMode.MANUAL) Icons.Filled.EditNote
+            else Icons.Filled.DocumentScanner
+        },
+    )
+}
+
+/** Embedded import pane — pick → OCR → extracted fields → merge into the draft. */
+@Composable
+private fun EditorImportPane(
+    state: AddEditUiState,
+    onPick: (List<String>) -> Unit,
+    onFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
+    onApply: () -> Unit,
+    onDiscard: () -> Unit,
+) {
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> if (uri != null) onPick(listOf(uri.toString())) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        OrdraBanner(
+            kind = if (state.importForm == null) OrdraBannerKind.INFO else OrdraBannerKind.WARN,
+            icon = if (state.importForm == null) Icons.Filled.DocumentScanner else Icons.AutoMirrored.Filled.FactCheck,
+            text = stringResource(
+                if (state.importForm == null) R.string.editor_import_banner
+                else R.string.editor_import_review_banner,
+            ),
+        )
+        when {
+            state.importBusy -> {
+                Column(
+                    Modifier.fillMaxWidth().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        stringResource(R.string.editor_import_processing),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            state.importForm != null -> {
+                ExtractedFieldsCard(
+                    state = state,
+                    onFormChange = onFormChange,
+                )
+                Button(onClick = onApply, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.editor_review))
+                }
+                TextButton(onClick = onDiscard, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.editor_discard_confirm))
+                }
+            }
+            else -> {
+                Surface(
+                    onClick = {
+                        launcher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(vertical = 28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(
+                            Icons.Filled.AddPhotoAlternate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(34.dp),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            stringResource(R.string.editor_import_pick),
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        Text(
+                            stringResource(R.string.editor_import_pick_sub),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                if (state.importOcrFailed) {
+                    Text(
+                        stringResource(R.string.editor_import_ocr_failed),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** "Extracted fields" card — per-field confidence chips + editable inputs. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun ExtractedFieldsCard(
+    state: AddEditUiState,
+    onFormChange: ((OrderFormState) -> OrderFormState) -> Unit,
+) {
+    val draft = state.importResult?.draft ?: return
+    val form = state.importForm ?: return
+    FormSection(title = stringResource(R.string.editor_extracted_title)) {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            ConfChip(stringResource(R.string.editor_field_product), draft.title.confidence)
+            ConfChip(stringResource(R.string.editor_platform), draft.platform.confidence)
+            ConfChip(stringResource(R.string.editor_seller), draft.sellerName.confidence)
+            ConfChip(stringResource(R.string.editor_field_total_php), draft.totalMinor.confidence)
+            ConfChip(stringResource(R.string.editor_courier), draft.courier.confidence)
+            ConfChip(stringResource(R.string.editor_tracking), draft.trackingNumber.confidence)
+        }
+        OrdraField(
+            label = stringResource(R.string.editor_field_product),
+            value = form.title,
+            onValueChange = { v -> onFormChange { it.copy(title = v) } },
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OrdraField(
+                label = stringResource(R.string.editor_seller),
+                value = form.sellerName,
+                onValueChange = { v -> onFormChange { it.copy(sellerName = v) } },
+                modifier = Modifier.weight(1f),
+            )
+            OrdraField(
+                label = stringResource(R.string.editor_field_total_php),
+                value = form.total,
+                onValueChange = { v -> onFormChange { it.copy(total = v) } },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OrdraSelect(
+                label = stringResource(R.string.editor_platform),
+                options = Platform.entries,
+                selected = form.platform,
+                optionLabel = { platformLabel(it) },
+                onSelect = { p -> onFormChange { it.copy(platform = p) } },
+                modifier = Modifier.weight(1f),
+            )
+            OrdraSelect(
+                label = stringResource(R.string.editor_courier),
+                options = Courier.entries,
+                selected = form.courier.takeIf { it != Courier.UNKNOWN },
+                optionLabel = { courierLabel(it, null) },
+                onSelect = { c -> onFormChange { it.copy(courier = c) } },
+                modifier = Modifier.weight(1f),
+            )
+        }
+        OrdraField(
+            label = stringResource(R.string.editor_tracking),
+            value = form.trackingNumber,
+            onValueChange = { v -> onFormChange { it.copy(trackingNumber = v) } },
+        )
+    }
+}
+
+@Composable
+private fun ConfChip(field: String, confidence: Float) {
+    val (level, container, content) = when {
+        confidence >= 0.8f -> Triple(
+            stringResource(R.string.editor_import_conf_high),
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer,
+        )
+        confidence >= 0.5f -> Triple(
+            stringResource(R.string.editor_import_conf_medium),
+            com.ordra.core.ui.theme.OrdraAmber.copy(alpha = 0.18f),
+            androidx.compose.ui.graphics.Color(0xFFB45309),
+        )
+        else -> Triple(
+            stringResource(R.string.editor_import_conf_low),
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    Surface(color = container, shape = CircleShape) {
+        Text(
+            "$field · $level",
+            style = MaterialTheme.typography.labelSmall,
+            color = content,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+        )
+    }
+}
+
+/** 4-column brand picker — mirrors the mockup .plat-grid of colored platform badges. */
+@Composable
+private fun PlatformGrid(
+    selected: Platform?,
+    error: String?,
+    onSelect: (Platform) -> Unit,
+) {
+    Column {
+        Row {
+            Text(
+                stringResource(R.string.editor_platform),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            )
+            Text(" *", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+        }
+        Spacer(Modifier.height(6.dp))
+        Platform.entries.chunked(4).forEach { rowPlatforms ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                rowPlatforms.forEach { platform ->
+                    val on = platform == selected
+                    val tint = platformColor(platform)
+                    Surface(
+                        onClick = { onSelect(platform) },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (on) MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
+                        else MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(
+                            if (on) 1.5.dp else 1.dp,
+                            if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        ),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(vertical = 10.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(9.dp))
+                                    .background(tint, RoundedCornerShape(9.dp)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    platformLabel(platform).take(1),
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = androidx.compose.ui.graphics.Color.White,
+                                )
+                            }
+                            Spacer(Modifier.height(5.dp))
+                            Text(
+                                platformLabel(platform),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+                repeat(4 - rowPlatforms.size) { Spacer(Modifier.weight(1f)) }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+        FieldError(error)
+    }
+}
+
+/** Radio-card list — mirrors the mockup .radio-card payment options. */
+@Composable
+private fun PaymentMethodCards(
+    selected: PaymentMethod,
+    onSelect: (PaymentMethod) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        PaymentMethod.entries.forEach { method ->
+            val on = method == selected
+            Surface(
+                onClick = { onSelect(method) },
+                shape = RoundedCornerShape(12.dp),
+                color = if (on) MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
+                else MaterialTheme.colorScheme.surface,
+                border = BorderStroke(
+                    if (on) 1.5.dp else 1.dp,
+                    if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    RadioButton(selected = on, onClick = null)
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            paymentMethodLabel(method),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        )
+                        if (method == PaymentMethod.COD) {
+                            Text(
+                                stringResource(R.string.editor_payment_cod_sub),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Unpaid / Paid / Partial pill — mirrors the mockup payment-status .segmented. */
+@Composable
+private fun PaymentStatusSegment(
+    selected: PaymentStatus,
+    onSelect: (PaymentStatus) -> Unit,
+) {
+    val main = listOf(PaymentStatus.UNPAID, PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID)
+    val options = if (selected !in main) main + selected else main
+    Column {
+        Row {
+            Text(
+                stringResource(R.string.editor_payment_status),
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        OrdraSegmented(
+            options = options,
+            selected = selected,
+            onSelect = onSelect,
+            optionLabel = { paymentStatusLabel(it) },
+        )
     }
 }

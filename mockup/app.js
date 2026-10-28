@@ -162,6 +162,8 @@ const state = {
   theme: "light",
 };
 let draft = null;
+let sessionCats = []; /* categories created this session — mirrors the Room categories table */
+const allCats = () => [...new Set([...orders.flatMap(o => o.categories || []), ...sessionCats])];
 
 /* ---------- DOM ---------- */
 const $ = s => document.querySelector(s);
@@ -797,6 +799,7 @@ function startEdit(orderId) {
     tracking: o.tracking, orderedAt: o.orderedAt,
     etaStart: o.etaStart, etaEnd: o.etaEnd, notes: o.notes,
     reminders: o.reminders || ["dayof"], status: o.status,
+    categories: [...(o.categories || [])], image: o.image || null,
   } : {
     platform: null, customPlatformName: "", title: "", sellerName: "",
     items: [{ name: "", variant: "", qty: "1", price: "" }],
@@ -805,6 +808,7 @@ function startEdit(orderId) {
     courier: "", customCourierName: "", tracking: "", orderedAt: d(0),
     etaStart: "", etaEnd: "", notes: "",
     reminders: ["dayof"], status: "ORDERED",
+    categories: [], image: null,
   };
   showScreen("add"); renderEdit();
 }
@@ -958,6 +962,28 @@ function renderEdit() {
     <div class="card"><h4 class="card-title">Notes</h4>
       <textarea class="field" id="wNotes" rows="3" placeholder="e.g. Rider calls first">${esc(dr.notes)}</textarea>
     </div>
+
+    <div class="card"><h4 class="card-title">Categories</h4>
+      <div class="chip-row" style="padding-top:0" id="wCatChips">
+        ${allCats().map(c => `<button class="chip ${dr.categories.includes(c) ? "is-on" : ""}" data-cat="${esc(c)}" type="button">${esc(c)}</button>`).join("")}
+      </div>
+      <div class="field-row" style="margin-top:8px">
+        <span style="flex:1"><input class="field" id="wNewCat" placeholder="New category name"></span>
+        <button class="btn btn-tonal" id="wAddCat" type="button"><span class="mi">add</span>Add</button>
+      </div>
+    </div>
+
+    <div class="card"><h4 class="card-title">Product image</h4>
+      <label class="import-photo" id="wImgPick" ${dr.image ? "hidden" : ""}>
+        <input type="file" accept="image/*" id="wImgFile">
+        <span class="mi">add_photo_alternate</span><strong>Pick image</strong><br><small>Shown on this order — stays on device</small>
+      </label>
+      <div id="wImgView" ${dr.image ? "" : "hidden"} style="display:flex;align-items:center;gap:10px">
+        <img id="wImgThumb" src="${dr.image || ""}" alt="" style="width:44px;height:44px;border-radius:10px;object-fit:cover">
+        <span style="flex:1;font-size:13px;color:var(--text-2)">Image attached</span>
+        <button class="remove-item" id="wImgRm" type="button" aria-label="Remove image"><span class="mi">close</span></button>
+      </div>
+    </div>
     <div class="scroll-pad"></div></div>`;
   wireEditInputs();
   updateErrorUI();
@@ -1101,6 +1127,30 @@ function wireEditInputs() {
       : [...dr.reminders, b.dataset.rem];
     b.classList.toggle("is-on");
   });
+  body.querySelectorAll("[data-cat]").forEach(b => b.onclick = () => {
+    const c = b.dataset.cat;
+    dr.categories = dr.categories.includes(c)
+      ? dr.categories.filter(x => x !== c)
+      : [...dr.categories, c];
+    b.classList.toggle("is-on");
+  });
+  const addCat = $("#wAddCat");
+  if (addCat) addCat.onclick = () => {
+    collectDraft();
+    const name = $("#wNewCat").value.trim();
+    if (name && !allCats().includes(name)) {
+      sessionCats.push(name);
+      dr.categories = [...dr.categories, name];
+      renderEdit();
+    }
+  };
+  const imgFile = $("#wImgFile");
+  if (imgFile) imgFile.onchange = () => {
+    collectDraft();
+    if (imgFile.files[0]) { dr.image = URL.createObjectURL(imgFile.files[0]); renderEdit(); }
+  };
+  const imgRm = $("#wImgRm");
+  if (imgRm) imgRm.onclick = () => { dr.image = null; renderEdit(); };
   const courierSel = $("#wCourier");
   if (courierSel) courierSel.onchange = () => { collectDraft(); dr.courier = courierSel.value; renderEdit(); };
   const etaA = $("#wEtaA");
@@ -1164,6 +1214,7 @@ function editNext() {
     })),
     shippingMinor: ship ?? 0, discountMinor: disc ?? 0, totalMinor: parseMoney(dr.total),
     notes: dr.notes.trim(), reminders: dr.reminders,
+    categories: dr.categories, image: dr.image,
   });
   if (dr.courier || dr.tracking) o.shipStatus = o.shipStatus || "PREPARING"; else o.shipStatus = null;
   if (!existing) orders.unshift(o);

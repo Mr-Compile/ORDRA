@@ -57,6 +57,7 @@
     <string name="payment_cash">Cash</string>
     <string name="payment_other">Other</string>
     <string name="payment_unknown">Not set</string>
+    <string name="not_set">Not set</string>
     <string name="paystatus_unpaid">Unpaid</string>
     <string name="paystatus_partial">Partially paid</string>
     <string name="paystatus_paid">Paid</string>
@@ -113,6 +114,31 @@
     <string name="editor_keep_editing">Keep editing</string>
     <string name="editor_archive">Archive</string>
     <string name="editor_restore">Restore</string>
+    <string name="editor_entry_manual">Manual entry</string>
+    <string name="editor_entry_import">Import</string>
+    <string name="editor_import_banner">Import a marketplace screenshot — on-device OCR extracts the details for your review. Nothing saves until you confirm.</string>
+    <string name="editor_import_pick">Pick a screenshot</string>
+    <string name="editor_import_pick_sub">Shopee, TikTok Shop, Lazada or any order page</string>
+    <string name="editor_import_review_banner">Review before saving — every extracted field is a suggestion you can correct.</string>
+    <string name="editor_extracted_title">Extracted fields</string>
+    <string name="editor_import_processing">Reading screenshots…</string>
+    <string name="editor_import_ocr_failed">Couldn\'t read text from that image. Try a clearer screenshot or enter the details manually.</string>
+    <string name="editor_field_product">Product name</string>
+    <string name="editor_field_total_php">Total ₱</string>
+    <string name="editor_ph_order_title">e.g. Soundcore R50i earbuds</string>
+    <string name="editor_ph_custom_platform">e.g. Carousell, Viber seller</string>
+    <string name="editor_ph_seller">e.g. AudioHub PH</string>
+    <string name="editor_ph_tracking">e.g. JT824011592PH</string>
+    <string name="editor_ph_notes">e.g. Rider calls first</string>
+    <string name="editor_item_header">Item %1$d</string>
+    <string name="editor_payment_cod_sub">Cash on delivery — prepare exact amount</string>
+    <string name="editor_review_offline">Saved locally on this device — works offline.</string>
+    <string name="editor_review_reminders">Reminders</string>
+    <string name="editor_review_payment">Payment</string>
+    <string name="editor_import_conf_low">low</string>
+    <string name="editor_import_conf_medium">medium</string>
+    <string name="editor_import_conf_high">high</string>
+    <string name="editor_reminders_label">Reminders</string>
     <string name="editor_delete">Delete permanently</string>
     <string name="editor_delete_title">Delete this order?</string>
     <string name="editor_delete_body">This permanently removes the order and its items. This cannot be undone.</string>
@@ -293,8 +319,9 @@
     <string name="remind_delivery_day">On delivery day</string>
     <string name="remind_day_before">1 day before</string>
     <string name="remind_2_days">2 days before</string>
+    <string name="remind_custom">Custom</string>
     <string name="settings_daily_summary">Daily delivery summary</string>
-    <string name="settings_daily_summary_hint">One morning notification with today0027s deliveries and COD.</string>
+    <string name="settings_daily_summary_hint">One morning notification with today\'s deliveries and COD.</string>
     <string name="settings_notifications">Notifications</string>
     <string name="calendar_title">Delivery calendar</string>
     <string name="calendar_empty_day">No deliveries expected this day</string>
@@ -306,7 +333,7 @@
     <string name="import_pick">Choose screenshots</string>
     <string name="import_processing">Reading screenshots…</string>
     <string name="import_review_hint">Review the detected fields — correct anything before saving.</string>
-    <string name="import_ocr_failed">Couldn0027t read text from that image. Fill the fields manually below.</string>
+    <string name="import_ocr_failed">Couldn\'t read text from that image. Fill the fields manually below.</string>
     <string name="import_save">Save order</string>
     <string name="home_scan">Smart Import</string>
     <string name="field_title">Order title</string>
@@ -319,7 +346,7 @@
     <string name="settings_online_analysis">Online smart analysis</string>
     <string name="settings_online_analysis_hint">Sends only redacted OCR text to Groq when you ask during Smart Import. Off by default.</string>
     <string name="import_ai_analyze">Improve with ORDRA AI</string>
-    <string name="import_ai_unavailable">Smart analysis isn0027t available right now. You can still review the detected text and complete the order manually.</string>
+    <string name="import_ai_unavailable">Smart analysis isn\'t available right now. You can still review the detected text and complete the order manually.</string>
     <string name="import_ai_no_text">No scanned text to analyze.</string>
     <string name="import_ai_done">AI suggestions filled in empty fields — please review.</string>
     <!-- Detection assistance -->
@@ -377,5 +404,5 @@
     <string name="backup_exported">Backup exported.</string>
     <string name="backup_csv_exported">CSV exported.</string>
     <string name="backup_imported">Backup restored.</string>
-    <string name="backup_invalid">That file isn0027t a valid Ordra backup.</string>
+    <string name="backup_invalid">That file isn\'t a valid Ordra backup.</string>
 </resources>

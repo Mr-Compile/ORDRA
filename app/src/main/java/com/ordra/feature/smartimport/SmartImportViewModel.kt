@@ -180,25 +180,8 @@ class SmartImportViewModel @Inject constructor(
         )
     }
 
-    private fun formFrom(result: SmartImportResult): OrderFormState {
-        val d = result.draft
-        fun money(v: Long?) = v?.let { MoneyFormat.formatMinor(it, "PHP") }.orEmpty()
-        return OrderFormState(
-            title = d.title.value.orEmpty(),
-            platform = d.platform.value,
-            sellerName = d.sellerName.value.orEmpty(),
-            total = money(d.totalMinor.value),
-            shipping = money(d.shippingMinor.value),
-            discount = money(d.discountMinor.value),
-            paymentMethod = d.paymentMethod.value
-                ?: com.ordra.domain.model.PaymentMethod.UNKNOWN,
-            courier = d.courier.value ?: com.ordra.domain.model.Courier.UNKNOWN,
-            trackingNumber = d.trackingNumber.value.orEmpty(),
-            orderedDate = d.orderedDate.value,
-            etaStart = d.etaStart.value,
-            etaEnd = d.etaEnd.value,
-        )
-    }
+    private fun formFrom(result: SmartImportResult): OrderFormState =
+        orderFormStateFrom(result)
 
     fun confirm() {
         val state = _uiState.value

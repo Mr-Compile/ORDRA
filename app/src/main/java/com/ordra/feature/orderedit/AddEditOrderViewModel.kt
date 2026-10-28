@@ -5,23 +5,33 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ordra.app.navigation.OrdraRoutes
 import com.ordra.core.common.AppResult
+import com.ordra.core.ocr.OcrEngine
 import com.ordra.domain.model.Category
 import com.ordra.domain.model.Order
 import com.ordra.domain.model.OrderStatus
+import com.ordra.domain.model.PaymentMethod
+import com.ordra.domain.model.PaymentStatus
+import com.ordra.domain.model.ReminderType
 import com.ordra.domain.model.Shipment
+import com.ordra.domain.model.ShipmentStatus
+import com.ordra.domain.model.SmartImportResult
+import com.ordra.domain.model.TrackingStatusSource
 import com.ordra.domain.repository.CategoryRepository
 import com.ordra.domain.repository.ReminderRepository
 import com.ordra.domain.repository.ReminderScheduler
 import com.ordra.domain.repository.SettingsRepository
 import com.ordra.domain.repository.ShipmentRepository
+import com.ordra.domain.service.SmartImportParser
 import com.ordra.domain.usecase.ArchiveOrderUseCase
 import com.ordra.domain.usecase.CreateOrderUseCase
 import com.ordra.domain.usecase.DeleteOrderUseCase
 import com.ordra.domain.usecase.GetOrderDetailsUseCase
 import com.ordra.domain.usecase.RestoreOrderUseCase
 import com.ordra.domain.usecase.UpdateOrderUseCase
+import com.ordra.feature.smartimport.orderFormStateFrom
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +43,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 enum class EditorStep { FORM, REVIEW }
+
+/** New-order entry choice — mirrors the mockup's #entrySeg (manual | import). */
+enum class EntryMode { MANUAL, IMPORT }
 
 sealed interface AddEditEffect {
     data object Saved : AddEditEffect
@@ -49,6 +62,12 @@ data class AddEditUiState(
     val saveError: Boolean = false,
     val isArchived: Boolean = false,
     val availableCategories: List<Category> = emptyList(),
+    val entryMode: EntryMode = EntryMode.MANUAL,
+    val importBusy: Boolean = false,
+    val importOcrFailed: Boolean = false,
+    val importResult: SmartImportResult? = null,
+    val importForm: OrderFormState? = null,
+    val importedShipmentStatus: ShipmentStatus? = null,
 ) {
     val fieldErrors: Map<String, String> get() =
         if (attemptedSave) form.fieldErrors() else emptyMap()
@@ -67,6 +86,7 @@ class AddEditOrderViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val reminderRepository: ReminderRepository,
     private val reminderScheduler: ReminderScheduler,
+    private val ocrEngine: OcrEngine,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
@@ -116,8 +136,12 @@ class AddEditOrderViewModel @Inject constructor(
                         form = it.form.copy(
                             currencyCode = defaultCurrency,
                             platform = defaults.defaultPlatform,
-                            paymentMethod = defaults.defaultPaymentMethod
-                                ?: it.form.paymentMethod,
+                            // New-order defaults mirror the mockup draft: COD, unpaid,
+                            // on-delivery-day reminder, order date = today.
+                            paymentMethod = defaults.defaultPaymentMethod ?: PaymentMethod.COD,
+                            paymentStatus = PaymentStatus.UNPAID,
+                            orderedDate = LocalDate.now(),
+                            reminderTypes = setOf(ReminderType.DELIVERY_DAY),
                         ),
                         loaded = true,
                     )
@@ -152,6 +176,105 @@ class AddEditOrderViewModel @Inject constructor(
         _uiState.update { it.copy(step = EditorStep.FORM) }
     }
 
+    fun setEntryMode(mode: EntryMode) {
+        _uiState.update { it.copy(entryMode = mode) }
+    }
+
+    /** Embedded import mode: OCR + parse the picked screenshots, then review the
+     *  extracted fields — mirrors the mockup editor's Import tab. */
+    fun onImportImages(uris: List<String>) {
+        if (uris.isEmpty()) return
+        _uiState.update { it.copy(importBusy = true, importOcrFailed = false) }
+        viewModelScope.launch {
+            val text = uris.mapNotNull { ocrEngine.recognize(it) }
+                .joinToString("\n\n")
+                .takeIf { it.isNotBlank() }
+            val result = if (text == null) {
+                SmartImportResult(
+                    detectedPlatform = null,
+                    draft = com.ordra.domain.model.OrderDraft(),
+                    warnings = listOf("no_text"),
+                    overallConfidence = 0f,
+                    usedGroq = false,
+                )
+            } else {
+                SmartImportParser.parse(text)
+            }
+            _uiState.update {
+                it.copy(
+                    importBusy = false,
+                    importOcrFailed = text == null,
+                    importResult = result,
+                    importForm = if (text != null) orderFormStateFrom(result) else null,
+                )
+            }
+        }
+    }
+
+    fun updateImportForm(transform: (OrderFormState) -> OrderFormState) {
+        _uiState.update { s ->
+            s.copy(importForm = s.importForm?.let(transform))
+        }
+    }
+
+    fun discardImport() {
+        _uiState.update {
+            it.copy(
+                importResult = null,
+                importForm = null,
+                importOcrFailed = false,
+                importedShipmentStatus = null,
+            )
+        }
+    }
+
+    /** Extracted fields merge into the manual draft, then straight to review —
+     *  mirrors mockup importToDraft() + goReview(). */
+    fun applyImport() {
+        val extracted = _uiState.value.importForm ?: return
+        updateForm { f ->
+            f.copy(
+                title = extracted.title.ifBlank { f.title },
+                platform = extracted.platform ?: f.platform,
+                customPlatformName = extracted.customPlatformName.ifBlank { f.customPlatformName },
+                sellerName = extracted.sellerName.ifBlank { f.sellerName },
+                total = extracted.total.ifBlank { f.total },
+                shipping = extracted.shipping.ifBlank { f.shipping },
+                discount = extracted.discount.ifBlank { f.discount },
+                paymentMethod = if (extracted.paymentMethod != PaymentMethod.UNKNOWN) {
+                    extracted.paymentMethod
+                } else f.paymentMethod,
+                courier = if (extracted.courier != com.ordra.domain.model.Courier.UNKNOWN) {
+                    extracted.courier
+                } else f.courier,
+                customCourierName = extracted.customCourierName.ifBlank { f.customCourierName },
+                trackingNumber = extracted.trackingNumber.ifBlank { f.trackingNumber },
+                orderedDate = extracted.orderedDate ?: f.orderedDate,
+                etaStart = extracted.etaStart ?: f.etaStart,
+                etaEnd = extracted.etaEnd ?: f.etaEnd,
+                items = if (extracted.title.isNotBlank() && f.items.all { it.isCompletelyEmpty }) {
+                    listOf(
+                        OrderItemForm(
+                            name = extracted.title,
+                            quantity = "1",
+                            unitPrice = extracted.total,
+                        ),
+                    )
+                } else f.items,
+            )
+        }
+        _uiState.update {
+            it.copy(
+                entryMode = EntryMode.MANUAL,
+                importResult = null,
+                importForm = null,
+                importedShipmentStatus = it.importResult?.draft?.shipmentStatus?.value
+                    ?.takeIf { s -> s != ShipmentStatus.UNKNOWN },
+            )
+        }
+        goToReview()
+    }
+
     fun save() {
         val state = _uiState.value
         if (state.isSaving) return
@@ -168,9 +291,16 @@ class AddEditOrderViewModel @Inject constructor(
                 is AppResult.Success -> {
                     // Courier/tracking persist on the primary Shipment, not the Order.
                     state.form.toShipment(order.id, existingShipment, Instant.now())
-                        ?.let {
-                            existingShipment = it
-                            shipmentRepository.saveShipment(it)
+                        ?.let { shipment ->
+                            existingShipment = shipment
+                            shipmentRepository.saveShipment(shipment)
+                            state.importedShipmentStatus?.let { status ->
+                                shipmentRepository.updateShipmentStatus(
+                                    shipment.id,
+                                    status,
+                                    TrackingStatusSource.SCREENSHOT_OCR,
+                                )
+                            }
                         }
                     categoryRepository.setOrderCategories(
                         order.id,
