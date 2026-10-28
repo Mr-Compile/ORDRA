@@ -360,11 +360,14 @@ function ordiSvg(state = "idle") {
   const check = state === "success"
     ? `<circle cx="78" cy="18" r="8" fill="#35D0A0"/><path d="M74 18 L77 21.4 L82.6 14.6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : "";
   return `<svg class="ordi" viewBox="0 0 100 100" role="img" aria-label="Ordi, your ORDRA AI companion">
-    <rect x="12" y="22" width="76" height="72" rx="26" fill="url(#lg)"/>
+    <ellipse cx="50" cy="95" rx="30" ry="4.4" fill="rgba(20,22,77,.28)"/>
+    <line x1="70" y1="24" x2="74" y2="12" stroke="#7C5CFC" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="75" cy="9" r="3.4" fill="${state === "offline" ? "none" : "#35D0A0"}" ${state === "offline" ? `stroke="#14164D" stroke-width="1.6"` : ""}/>
+    <rect x="12" y="22" width="76" height="72" rx="26" fill="url(#ogBody)"/>
+    <rect x="12" y="22" width="76" height="72" rx="26" fill="url(#ogShade)"/>
+    <ellipse cx="38" cy="36" rx="24" ry="10" fill="rgba(255,255,255,.20)" transform="rotate(-8 38 36)"/>
     <line x1="16" y1="40" x2="84" y2="40" stroke="rgba(255,255,255,.25)" stroke-width="1.8" stroke-linecap="round"/>
     <line x1="50" y1="22" x2="50" y2="40" stroke="rgba(255,255,255,.25)" stroke-width="3.2" stroke-linecap="round"/>
-    <line x1="70" y1="22" x2="74" y2="12" stroke="#7C5CFC" stroke-width="2.4" stroke-linecap="round"/>
-    <circle cx="75" cy="9" r="3.4" fill="${state === "offline" ? "none" : "#35D0A0"}" ${state === "offline" ? `stroke="#14164D" stroke-width="1.6"` : ""}/>
     ${look[0]}${look[1]}${badge}${parcel}${check}
   </svg>`;
 }
@@ -423,7 +426,7 @@ function renderHome() {
           <button class="btn btn-tonal" type="button" onclick="showScreen('add',{fresh:true})">Add order</button>
         </div>
       </div>
-      ${ordiSvg(banner.state)}
+      <button class="ordi-btn" type="button" onclick="openChat()" aria-label="Chat with Ordi">${ordiSvg(banner.state)}</button>
     </div>
 
     ${featured ? `
@@ -1359,6 +1362,81 @@ $("#defPlatform").innerHTML = Object.values(PLATFORMS).map(p => `<option>${p.lab
 $("#clock").textContent = new Date().toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true }).replace(/\s?[AP]M/i, "");
 
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (state.theme === "system") applyTheme("system"); });
+
+/* ---------- Ordi chat (companion surface — answers reflect local data only, mirroring the "no invented updates" rule) ---------- */
+const ORDI_PROMPTS = ["What's arriving?", "COD to prepare", "Anything late?", "Detected updates", "How much did I spend?"];
+let chatLog = [];
+
+function ordiReply(q) {
+  const t = q.toLowerCase(), active = orders.filter(isActive), today = d(0);
+  const soon = active.filter(o => o.etaEnd && o.etaEnd <= d(3)).sort((a, b) => a.etaEnd.localeCompare(b.etaEnd));
+  const late = active.filter(o => o.etaEnd && o.etaEnd < today);
+  const cod = orders.filter(isPendingCod);
+  const codTotal = cod.reduce((s, o) => s + orderTotal(o), 0);
+
+  if (/arriv|eta|when|deliver|coming/.test(t)) {
+    if (!soon.length) return "Nothing is due in the next 3 days. Your next parcel isn't dated yet — add an ETA on its order and I'll watch it.";
+    return `Arriving soon: ${soon.slice(0, 3).map(o => `${itemsSummary(o)} (${fmtDate(o.etaStart)}–${fmtDate(o.etaEnd)})`).join(", ")}. ${cod.length ? `${cod.length} of your parcels still need COD cash.` : ""}`;
+  }
+  if (/cod|cash|prepare|pay/.test(t))
+    return cod.length
+      ? `You owe ${peso(codTotal)} across ${cod.length} COD parcel${cod.length === 1 ? "" : "s"}. Biggest: ${itemsSummary(cod.sort((a, b) => orderTotal(b) - orderTotal(a))[0])} at ${peso(orderTotal(cod[0]))}. Have the exact amount ready.`
+      : "No COD pending — everything due is already paid.";
+  if (/late|delay|problem|attention|fail|stuck/.test(t))
+    return late.length
+      ? `${late.length} parcel${late.length === 1 ? "" : "s"} passed their ETA: ${late.map(o => itemsSummary(o)).join(", ")}. Worth checking with the seller or courier.`
+      : "Nothing is past its ETA — all parcels are on schedule.";
+  if (/detect|notif|update|scan|track/.test(t))
+    return detections.length
+      ? `${detections.length} detected update${detections.length === 1 ? "" : "s"} waiting for your review — I never apply ambiguous ones without you. Open Detected updates to confirm.`
+      : "No pending detected updates. When a courier or marketplace notification matches a parcel, I'll suggest it here first.";
+  if (/spend|spen|total|much|analytics|bought/.test(t)) {
+    const mo = today.slice(0, 7);
+    const spent = orders.filter(o => (o.orderedAt || "").startsWith(mo)).reduce((s, o) => s + orderTotal(o), 0);
+    return `This month you've ordered ${peso(spent)} across ${orders.filter(o => (o.orderedAt || "").startsWith(mo)).length} orders. Full breakdown is in Spending analytics.`;
+  }
+  return `Right now you have ${active.length} active deliver${active.length === 1 ? "y" : "ies"}, ${peso(codTotal)} COD to prepare, and ${detections.length} update${detections.length === 1 ? "" : "s"} to review. Ask me about arrivals, COD, late parcels or spending.`;
+}
+
+function openChat() {
+  $("#chatOverlay").hidden = false;
+  $("#chatHead").hidden = true;
+  if (!chatLog.length) {
+    const active = orders.filter(isActive);
+    pushMsg("or", `Hey, I'm Ordi — your ORDRA AI companion. You've got ${active.length} active deliver${active.length === 1 ? "y" : "ies"} right now. What do you want to know?`);
+  }
+  $("#chatPrompts").innerHTML = ORDI_PROMPTS.map(p => `<button class="chip" type="button" data-qp="${esc(p)}">${esc(p)}</button>`).join("");
+  renderChat();
+}
+function closeChat() { $("#chatOverlay").hidden = true; $("#chatHead").hidden = false; }
+function pushMsg(who, text) {
+  chatLog.push({ who, text });
+  renderChat();
+}
+function renderChat() {
+  const box = $("#chatMsgs");
+  box.innerHTML = chatLog.map(m =>
+    `<div class="chat-msg ${m.who === "me" ? "me" : "or"}">${m.who === "or" ? `<span class="chat-avatar">${ordiSvg("idle")}</span>` : ""}<p>${esc(m.text)}</p></div>`).join("");
+  box.scrollTop = box.scrollHeight;
+}
+
+$("#chatHead").addEventListener("click", openChat);
+$("#chatClose").addEventListener("click", closeChat);
+$("#chatOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeChat(); });
+$("#chatForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const q = $("#chatText").value.trim();
+  if (!q) return;
+  $("#chatText").value = "";
+  pushMsg("me", q);
+  setTimeout(() => pushMsg("or", ordiReply(q)), 350);
+});
+document.addEventListener("click", e => {
+  const qp = e.target.closest("[data-qp]");
+  if (qp) { pushMsg("me", qp.dataset.qp); setTimeout(() => pushMsg("or", ordiReply(qp.dataset.qp)), 350); }
+});
+$("#chatHead").innerHTML = ordiSvg("idle");
+$("#chatOrdi").innerHTML = ordiSvg("happy");
 
 /* ---------- about (mirrors AboutScreen) ---------- */
 function renderAbout() {
