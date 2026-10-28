@@ -24,6 +24,8 @@
     <string name="swipe_action_failed">Couldn\'t update that order. Try again.</string>
     <string name="action_undo">Undo</string>
     <string name="action_open">Open order</string>
+    <string name="calendar_prev_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
 
     <!-- Platforms -->
     <string name="platform_shopee">Shopee</string>

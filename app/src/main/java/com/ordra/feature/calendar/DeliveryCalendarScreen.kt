@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -32,6 +34,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 data class CalendarUiState(
     val ordersByDay: Map<LocalDate, List<Order>> = emptyMap(),
@@ -41,7 +44,8 @@ data class CalendarUiState(
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(orderRepository: OrderRepository) : ViewModel() {
-    private val month = MutableStateFlow(YearMonth.now())
+    val monthAnchor: YearMonth = YearMonth.now()
+    private val month = MutableStateFlow(monthAnchor)
     private val selected = MutableStateFlow(LocalDate.now())
 
     val uiState: StateFlow<CalendarUiState> = combine(
@@ -57,7 +61,7 @@ class CalendarViewModel @Inject constructor(orderRepository: OrderRepository) : 
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CalendarUiState())
 
     fun selectDay(d: LocalDate) { selected.value = d }
-    fun shiftMonth(delta: Long) { month.value = month.value.plusMonths(delta) }
+    fun setMonth(m: YearMonth) { month.value = m }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +72,18 @@ fun DeliveryCalendarScreen(
     viewModel: CalendarViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val anchor = viewModel.monthAnchor
+    val pagerState = rememberPagerState(
+        initialPage = CALENDAR_CENTER_PAGE,
+    ) { CALENDAR_PAGER_COUNT }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { page ->
+            viewModel.setMonth(monthForPage(anchor, page))
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -86,73 +102,38 @@ fun DeliveryCalendarScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = { viewModel.shiftMonth(-1) }) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                IconButton(onClick = {
+                    scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = stringResource(R.string.calendar_prev_month),
+                    )
                 }
                 Text(
                     state.month.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) +
                         " " + state.month.year,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                IconButton(onClick = { viewModel.shiftMonth(1) }) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                IconButton(onClick = {
+                    scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = stringResource(R.string.calendar_next_month),
+                    )
                 }
             }
-            val first = state.month.atDay(1)
-            val offset = (first.dayOfWeek.value - 1)
-            val days = (1 - offset)..state.month.lengthOfMonth()
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(7),
+            HorizontalPager(
+                state = pagerState,
                 modifier = Modifier.fillMaxWidth().height(260.dp),
-                userScrollEnabled = false,
-            ) {
-                items(days.toList()) { day ->
-                    val date = state.month.atDay(day.coerceIn(1, state.month.lengthOfMonth()))
-                    val inMonth = day in 1..state.month.lengthOfMonth()
-                    val hasOrders = inMonth && state.ordersByDay.containsKey(date)
-                    Box(
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .padding(2.dp)
-                            .clickable(enabled = inMonth) { viewModel.selectDay(date) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (inMonth) {
-                            Surface(
-                                color = if (date == state.selectedDay) {
-                                    MaterialTheme.colorScheme.primary
-                                } else if (hasOrders) {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                } else {
-                                    MaterialTheme.colorScheme.surface
-                                },
-                                shape = MaterialTheme.shapes.small,
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center,
-                                ) {
-                                    Text(
-                                        day.toString(),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (date == state.selectedDay) {
-                                            MaterialTheme.colorScheme.onPrimary
-                                        } else MaterialTheme.colorScheme.onSurface,
-                                    )
-                                    if (hasOrders) {
-                                        Text(
-                                            "•",
-                                            color = if (date == state.selectedDay) {
-                                                MaterialTheme.colorScheme.onPrimary
-                                            } else MaterialTheme.colorScheme.tertiary,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            ) { page ->
+                MonthGrid(
+                    month = monthForPage(anchor, page),
+                    ordersByDay = state.ordersByDay,
+                    selectedDay = state.selectedDay,
+                    onSelectDay = viewModel::selectDay,
+                )
             }
             Spacer(Modifier.height(8.dp))
             val dayOrders = state.ordersByDay[state.selectedDay].orEmpty()
@@ -170,6 +151,71 @@ fun DeliveryCalendarScreen(
                             onClick = { onOpenOrder(order.id) },
                             modifier = Modifier.animateItem(),
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthGrid(
+    month: YearMonth,
+    ordersByDay: Map<LocalDate, List<Order>>,
+    selectedDay: LocalDate,
+    onSelectDay: (LocalDate) -> Unit,
+) {
+    val first = month.atDay(1)
+    val offset = (first.dayOfWeek.value - 1)
+    val days = (1 - offset)..month.lengthOfMonth()
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(7),
+        modifier = Modifier.fillMaxWidth().height(260.dp),
+        userScrollEnabled = false,
+    ) {
+        items(days.toList()) { day ->
+            val date = month.atDay(day.coerceIn(1, month.lengthOfMonth()))
+            val inMonth = day in 1..month.lengthOfMonth()
+            val hasOrders = inMonth && ordersByDay.containsKey(date)
+            Box(
+                modifier = Modifier
+                    .aspectRatio(1f)
+                    .padding(2.dp)
+                    .clickable(enabled = inMonth) { onSelectDay(date) },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (inMonth) {
+                    Surface(
+                        color = if (date == selectedDay) {
+                            MaterialTheme.colorScheme.primary
+                        } else if (hasOrders) {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                        shape = MaterialTheme.shapes.small,
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                day.toString(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (date == selectedDay) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else MaterialTheme.colorScheme.onSurface,
+                            )
+                            if (hasOrders) {
+                                Text(
+                                    "•",
+                                    color = if (date == selectedDay) {
+                                        MaterialTheme.colorScheme.onPrimary
+                                    } else MaterialTheme.colorScheme.tertiary,
+                                )
+                            }
+                        }
                     }
                 }
             }
