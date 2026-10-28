@@ -62,27 +62,7 @@
 
       <!-- ============ HOME ============ -->
       <section class="screen is-active" id="screen-home" data-screen="home">
-        <div class="scroll">
-          <p class="greeting" id="greeting">Good evening</p>
-          <h2 class="headline">All your orders.<br>One place.</h2>
-
-          <div id="aiBanner"></div>
-
-          <div class="stat-row" id="statRow"></div>
-
-          <div class="section-head">
-            <h3>Arriving soon</h3>
-            <button class="text-btn" type="button" data-goto="orders">See all</button>
-          </div>
-          <div id="arrivingList" class="stack"></div>
-
-          <div class="section-head">
-            <h3>Recent orders</h3>
-            <button class="text-btn" type="button" data-goto="orders">See all</button>
-          </div>
-          <div id="recentList" class="stack"></div>
-          <div class="scroll-pad"></div>
-        </div>
+        <div class="scroll" id="homeBody"></div>
       </section>
 
       <!-- ============ ORDERS ============ -->
@@ -90,26 +70,12 @@
         <div class="scroll">
           <label class="search-field">
             <span class="mi">search</span>
-            <input id="searchInput" type="search" placeholder="Search item, seller, tracking…" autocomplete="off">
+            <input id="searchInput" type="search" placeholder="Search orders" autocomplete="off">
+            <button class="icon-btn" id="searchClear" type="button" aria-label="Clear search" hidden><span class="mi">close</span></button>
           </label>
-          <div class="chip-row" id="filterChips" role="group" aria-label="Filter orders">
-            <button class="chip is-on" data-filter="all" type="button">All</button>
-            <button class="chip" data-filter="active" type="button">Active</button>
-            <button class="chip" data-filter="cod" type="button">COD</button>
-            <button class="chip" data-filter="delivered" type="button">Delivered</button>
-            <button class="chip" data-filter="archived" type="button">Archived</button>
-          </div>
           <div class="list-meta">
             <span id="listCount"></span>
-            <label class="sort-wrap">Sort
-              <select id="sortSelect">
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="eta">Delivery soonest</option>
-                <option value="total-desc">Highest total</option>
-                <option value="total-asc">Lowest total</option>
-              </select>
-            </label>
+            <button class="btn btn-text" id="filtersBtn" type="button"><span class="mi">tune</span>Filters</button>
           </div>
           <div id="ordersList" class="stack"></div>
           <div class="scroll-pad"></div>
@@ -197,56 +163,49 @@
 
           <div class="card">
             <h4 class="card-title">Notifications</h4>
-            <p class="card-sub">Delivery &amp; COD reminders via WorkManager — delivered/cancelled orders are skipped.</p>
-            <label class="switch-row"><span><strong>Delivery reminders</strong><small>Day of, 1 and 2 days before ETA</small></span><input type="checkbox" class="switch" checked></label>
-            <label class="switch-row"><span><strong>COD reminders</strong><small>Remind me to prepare exact cash</small></span><input type="checkbox" class="switch" checked></label>
-            <label class="switch-row"><span><strong>Morning summary</strong><small>One digest for today's deliveries</small></span><input type="checkbox" class="switch"></label>
+            <label class="switch-row"><span><strong>Daily delivery summary</strong><small>One digest for today's deliveries</small></span><input type="checkbox" class="switch" id="dailySummaryToggle"></label>
+          </div>
+
+          <div class="card">
+            <h4 class="card-title">AI assistance</h4>
+            <label class="switch-row"><span><strong>Online AI analysis</strong><small>Optional Groq assist for Smart Import — screenshot text is minimized first; falls back to local OCR</small></span><input type="checkbox" class="switch" id="aiToggle"></label>
           </div>
 
           <div class="card">
             <h4 class="card-title">Smart detection</h4>
-            <p class="card-sub">Optional — reads marketplace, courier and rider notifications on-device. Everything works without it.</p>
+            <p class="card-sub" id="detAccessLabel">Notification access: not granted — everything still works without it.</p>
             <button class="btn btn-outline" type="button" style="width:100%" onclick="toast('Opens system notification-access settings on device')"><span class="mi">notifications_paused</span>Notification access</button>
             <label class="switch-row" style="margin-top:8px"><span><strong>Marketplace notifications</strong></span><input type="checkbox" class="switch" checked></label>
             <label class="switch-row"><span><strong>Courier notifications</strong></span><input type="checkbox" class="switch" checked></label>
             <label class="switch-row"><span><strong>Rider / messaging notifications</strong><small>Via notifications only — never inboxes</small></span><input type="checkbox" class="switch"></label>
             <label class="switch-row"><span><strong>Auto-apply high-confidence</strong></span><input type="checkbox" class="switch"></label>
-            <button class="text-btn" type="button" data-goto="detections">Review detected updates →</button>
-            <button class="text-btn" type="button" data-goto="analytics" style="margin-top:2px">Spending analytics →</button>
+            <button class="nav-row" type="button" data-goto="detections"><span>Review detected updates</span><span class="mi">chevron_right</span></button>
           </div>
 
           <div class="card">
-            <h4 class="card-title">AI assistance</h4>
-            <p class="card-sub">Optional Groq-powered extraction. Key lives in local config only; screenshot text is minimized before sending.</p>
-            <label class="switch-row"><span><strong>Online AI analysis</strong><small>Strict JSON, falls back to local OCR</small></span><input type="checkbox" class="switch" id="aiToggle"></label>
-          </div>
-
-          <div class="card">
-            <h4 class="card-title">Backup &amp; export</h4>
-            <p class="card-sub">Local only — your data never leaves this device unless you share the file.</p>
+            <h4 class="card-title">Backup</h4>
+            <p class="card-sub">Backups are local files — restoring replaces everything on this device.</p>
             <div class="action-col" style="margin-top:0">
-              <button class="btn btn-outline" type="button" id="backupExport"><span class="mi">backup</span>Export backup (JSON)</button>
-              <button class="btn btn-outline" type="button" id="backupImport"><span class="mi">restore</span>Restore backup</button>
+              <button class="btn btn-outline" type="button" id="backupExport"><span class="mi">backup</span>Export backup</button>
+              <button class="btn btn-outline" type="button" id="backupImport"><span class="mi">restore</span>Import backup</button>
               <button class="btn btn-outline" type="button" id="csvExport"><span class="mi">table</span>Export CSV</button>
               <input type="file" id="backupFile" accept=".json,application/json" hidden>
             </div>
           </div>
 
-          <div class="card about-card">
-            <svg class="about-logo" viewBox="0 0 512 512" aria-hidden="true">
-              <rect width="512" height="512" rx="120" fill="url(#lg)"/>
-              <circle cx="256" cy="256" r="132" fill="none" stroke="#fff" stroke-width="42"/>
-              <path d="M194 238 L256 202 L318 238 L318 310 L256 346 L194 310 Z" fill="none" stroke="#fff" stroke-width="24" stroke-linejoin="round"/>
-              <path d="M224 273 L250 299 L300 247" fill="none" stroke="#35D0A0" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <div>
-              <strong>Ordra</strong>
-              <small>0.1.0 · UI mockup</small>
-              <small>Local-first. Your data stays on this device.</small>
-            </div>
+          <div class="card">
+            <h4 class="card-title">App</h4>
+            <button class="nav-row" type="button" data-goto="about"><span>About Ordra</span><span class="mi">chevron_right</span></button>
+            <button class="nav-row" type="button" data-goto="analytics"><span>Spending analytics</span><span class="mi">chevron_right</span></button>
+            <p class="card-sub">Ordra is local-first: no account, no cloud sync, no analytics collection.</p>
           </div>
           <div class="scroll-pad"></div>
         </div>
+      </section>
+
+      <!-- ============ ABOUT (mirrors AboutScreen) ============ -->
+      <section class="screen" id="screen-about" data-screen="about">
+        <div class="scroll" id="aboutBody"></div>
       </section>
     </div>
 
@@ -266,11 +225,24 @@
     <div class="dialog-overlay" id="dialogOverlay" hidden>
       <div class="dialog" role="alertdialog" aria-labelledby="dlgTitle" aria-describedby="dlgDesc">
         <h3 id="dlgTitle">Delete this order?</h3>
-        <p id="dlgDesc">This permanently removes the order and its items. This can't be undone.</p>
-        <div class="dialog-actions">
+        <div id="dlgDesc">This permanently removes the order and its items. This can't be undone.</div>
+        <div class="dialog-actions" id="dlgActions">
           <button class="btn btn-text" id="dlgCancel" type="button">Cancel</button>
           <button class="btn btn-danger" id="dlgConfirm" type="button">Delete</button>
         </div>
+      </div>
+    </div>
+
+    <!-- dropdown menu (mirrors DropdownMenu) -->
+    <div class="menu" id="popupMenu" hidden></div>
+
+    <!-- ============ ONBOARDING (mirrors OnboardingScreen — first run only) ============ -->
+    <div class="onboard" id="onboard" hidden>
+      <button class="btn btn-text onboard-skip" id="obSkip" type="button">Skip</button>
+      <div class="onboard-pages" id="obPages"></div>
+      <div class="onboard-footer">
+        <div class="onboard-dots" id="obDots"></div>
+        <button class="btn btn-fill" id="obNext" type="button">Next</button>
       </div>
     </div>
 

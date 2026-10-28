@@ -14,9 +14,11 @@ Per `docs/RULES.md` → **UI mockup consistency**: this mockup mirrors the live 
 
 | Screen | Covers |
 | --- | --- |
-| Home | Summary stats (active, arriving soon, COD to prepare), Ordi AI banner, arriving soon, recent orders |
-| Orders | Search, platform/status/COD/archived filters, sorting, order cards |
-| Order details | Shipment section (View timeline / Update status / Track externally, source attribution), items, price breakdown, payment/COD, notes, archive/delete, mark delivered, post-purchase (rating, favorite, returns/refunds/warranties/receipts) |
+| Onboarding | First-run 3-page intro (localStorage-gated, mirrors `OnboardingScreen`) |
+| Home | Ordi AI banner → summary stats (COD card opens COD overview) → upcoming deliveries → recent orders; appbar archive toggle flips to archived list (mirrors `HomeScreen`) |
+| Orders | Search + clear, Filters dialog (platform/status/category checkboxes, COD-only, archived — mirrors `FilterSheet`), appbar sort menu |
+| About | Version, privacy note, Ordi & ORDRA AI, licenses (mirrors `AboutScreen`) |
+| Order details | Hero (title, total, Update status + Mark delivered buttons), Shipment card (Update shipment status / Track externally / View timeline, source attribution), Items, Payment, Notes, post-purchase; ⋮ menu holds Archive/Delete; separate order-status vs shipment-status models |
 | Tracking timeline | Standalone shipment timeline screen (mirrors `ShipmentTimelineScreen`) |
 | COD overview | Pending COD totals, due today / next 3 days / all lists (mirrors `CodOverviewScreen`) |
 | New order | Form → Review flow (mirrors `AddEditOrderScreen`: Platform, Items, Pricing, Payment, Delivery + reminders, Notes sections → review → save) |
