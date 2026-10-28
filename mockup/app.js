@@ -165,6 +165,9 @@ let draft = null;
 
 /* ---------- DOM ---------- */
 const $ = s => document.querySelector(s);
+/* localStorage can throw (blocked storage / file:// privacy modes) — never let it kill the page */
+const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const device = $("#device"), appbar = $("#appbar"), toastEl = $("#toast");
 let toastTimer;
 function toast(msg) {
@@ -688,6 +691,26 @@ function askDelete() {
     ],
   });
 }
+
+/* ---------- dialog test triggers (stage rail — mockup chrome, not app UI) ---------- */
+function testDialog(kind) {
+  const o = orders.find(x => x.id === state.detailId) || orders.find(x => !TERMINAL.includes(x.status)) || orders[0];
+  const viaDetail = fn => { if (!o) return toast("No orders to test with"); state.detailId = o.id; showScreen("detail"); fn(o.id); };
+  switch (kind) {
+    case "filters": showScreen("orders"); openFiltersDialog(); break;
+    case "sort": showScreen("orders"); openSortMenu($('#appbar [aria-label="Sort"]')); break;
+    case "menu": viaDetail(id => openDetailMenu($('#appbar [aria-label="More options"]'), id)); break;
+    case "status": viaDetail(updateOrderStatus); break;
+    case "ship": viaDetail(updateShipStatus); break;
+    case "delivered": viaDetail(markDelivered); break;
+    case "delete": viaDetail(() => askDelete()); break;
+    case "chat": openChat(); break;
+    case "onboard": obPage = 0; renderOnboard(); $("#onboard").hidden = false; break;
+    case "toast": toast("Toasts confirm actions — they never ask questions"); break;
+  }
+}
+document.querySelectorAll("[data-dlg]").forEach(b =>
+  b.addEventListener("click", () => testDialog(b.dataset.dlg)));
 
 /* ---------- add/edit order — FORM → REVIEW (mirrors AddEditOrderScreen) ---------- */
 let editStep = "form";        // "form" | "review" — mirrors EditorStep
@@ -1593,14 +1616,14 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if
 
 /* ---------- Ordi chat (companion surface — answers reflect local data only, mirroring the "no invented updates" rule) ---------- */
 const ORDI_PROMPTS = ["What's arriving?", "COD to prepare", "Anything late?", "Detected updates", "How much did I spend?"];
-let chats = JSON.parse(localStorage.getItem("ordra_chats") || "[]"); // [{id,title,msgs:[{who,text}]}]
+let chats = JSON.parse(lsGet("ordra_chats") || "[]"); // [{id,title,msgs:[{who,text}]}]
 let chatIdx = -1;              // -1 = not started; index into chats once first message lands
 let chatLog = [];              // active chat messages (mirrors chats[chatIdx].msgs)
 let chatMode = "chat";         // "chat" | "history"
 
 function saveChats() {
   if (chatIdx >= 0 && chats[chatIdx]) chats[chatIdx].msgs = chatLog;
-  localStorage.setItem("ordra_chats", JSON.stringify(chats));
+  lsSet("ordra_chats", JSON.stringify(chats));
 }
 function startNewChat() {
   chatIdx = -1; chatLog = []; chatMode = "chat";
@@ -1762,8 +1785,8 @@ function renderOnboard() {
 }
 function finishOnboard() {
   const key = $("#obKey")?.value.trim();
-  if (key) { localStorage.setItem("ordra_groq_key", key); const g = $("#groqKey"); if (g) g.value = key; }
-  localStorage.setItem("ordra_onboarded", "1");
+  if (key) { lsSet("ordra_groq_key", key); const g = $("#groqKey"); if (g) g.value = key; }
+  lsSet("ordra_onboarded", "1");
   $("#onboard").hidden = true;
 }
 $("#obSkip").addEventListener("click", finishOnboard);
@@ -1771,7 +1794,7 @@ $("#obNext").addEventListener("click", () => {
   if (obPage === OB_PAGES.length - 1) return finishOnboard();
   obPage++; renderOnboard();
 });
-if (!localStorage.getItem("ordra_onboarded")) { $("#onboard").hidden = false; renderOnboard(); }
+if (!lsGet("ordra_onboarded")) { $("#onboard").hidden = false; renderOnboard(); }
 
 applyTheme("light");
 showScreen("home");
