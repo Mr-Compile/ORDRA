@@ -53,6 +53,7 @@ import com.ordra.core.ui.ai.CompanionAvatar
 import com.ordra.core.ui.ai.CompanionState
 import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.components.DeliveredCelebrationOverlay
+import com.ordra.core.ui.components.SkeletonList
 import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.core.ui.orderStatusLabel
 import com.ordra.core.ui.platformLabel
@@ -174,7 +175,7 @@ fun OrdersScreen(
             }
 
             when {
-                !uiState.loaded -> Unit
+                !uiState.loaded -> SkeletonList()
                 uiState.isEmpty -> Column(
                     modifier = Modifier.fillMaxSize().padding(24.dp),
                     verticalArrangement = Arrangement.Center,

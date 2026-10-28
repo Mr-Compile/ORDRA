@@ -54,6 +54,7 @@ import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.ai.OrdraAiBanner
 import com.ordra.core.ui.components.DeliveredCelebrationOverlay
 import com.ordra.core.ui.components.OrderSwipeAction
+import com.ordra.core.ui.components.SkeletonList
 import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.domain.model.Order
 import com.ordra.feature.ordi.OrdiChatSheet
@@ -123,7 +124,9 @@ fun HomeScreen(
         },
     ) { innerPadding ->
         Box(Modifier.fillMaxSize()) {
-            if (uiState.showingArchived) {
+            if (!uiState.loaded) {
+                SkeletonList(modifier = Modifier.padding(innerPadding))
+            } else if (uiState.showingArchived) {
                 ArchivedContent(
                     orders = uiState.archived,
                     onOpenOrder = onOpenOrder,

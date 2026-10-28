@@ -47,6 +47,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
 import com.ordra.core.common.MoneyFormat
+import com.ordra.core.ui.components.SkeletonList
 import com.ordra.core.ui.components.StatusChip
 import com.ordra.core.ui.courierLabel
 import com.ordra.core.ui.orderStatusLabel
@@ -112,7 +113,7 @@ fun OrderDetailScreen(
         },
     ) { padding ->
         when {
-            !uiState.loaded -> Unit
+            !uiState.loaded -> SkeletonList(modifier = Modifier.padding(padding))
             order == null -> Column(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
                 verticalArrangement = Arrangement.Center,

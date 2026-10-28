@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
+import com.ordra.core.ui.components.SkeletonList
 import com.ordra.core.ui.shipmentStatusLabel
 import com.ordra.domain.model.TrackingStatusSource
 import java.time.ZoneId
@@ -64,7 +65,9 @@ fun ShipmentTimelineScreen(
             )
         },
     ) { padding ->
-        if (uiState.loaded && uiState.events.isEmpty()) {
+        if (!uiState.loaded) {
+            SkeletonList(modifier = Modifier.padding(padding))
+        } else if (uiState.events.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
                 verticalArrangement = Arrangement.Center,
