@@ -14,6 +14,16 @@
     <string name="home_active_heading">Orders</string>
     <string name="home_archived_heading">Archived</string>
 
+    <!-- Order list actions -->
+    <string name="swipe_mark_delivered">Mark delivered</string>
+    <string name="swipe_archive">Archive</string>
+    <string name="swipe_restore">Restore</string>
+    <string name="swipe_order_archived">Order archived</string>
+    <string name="swipe_order_restored">Order restored</string>
+    <string name="swipe_order_delivered">Marked as delivered</string>
+    <string name="swipe_action_failed">Couldn\'t update that order. Try again.</string>
+    <string name="action_undo">Undo</string>
+
     <!-- Platforms -->
     <string name="platform_shopee">Shopee</string>
     <string name="platform_tiktok">TikTok Shop</string>
@@ -218,6 +228,16 @@
     <string name="ai_action_view_parcels">View parcels</string>
     <string name="ai_action_add_first">Add your first order</string>
     <string name="cd_ordi">Ordi, your ORDRA AI companion</string>
+    <string name="cd_ordi_chat_head">Open Ordi chat</string>
+    <string name="ordi_chat_title">Ordi</string>
+    <string name="ordi_chat_subtitle">Answers from your orders — always local</string>
+    <string name="ordi_chat_history">Chat history</string>
+    <string name="ordi_new_chat">New chat</string>
+    <string name="ordi_delete_chat">Delete chat</string>
+    <string name="ordi_no_chats">No chats yet</string>
+    <string name="ordi_greeting">Hi! I\'m Ordi. Ask me what\'s arriving, how much COD to prepare, or what\'s running late.</string>
+    <string name="ordi_input_hint">Ask Ordi…</string>
+    <string name="ordi_send">Send</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -270,10 +290,10 @@
     <string name="home_calendar">Calendar</string>
     <!-- Smart Import -->
     <string name="import_title">Smart Import</string>
-    <string name="import_intro_title">Scan an order screenshot</string>
-    <string name="import_intro_body">Ordra reads text on-device only. Nothing is uploaded — you review every detected field before saving.</string>
-    <string name="import_pick">Choose screenshot</string>
-    <string name="import_processing">Reading screenshot…</string>
+    <string name="import_intro_title">Scan order screenshots</string>
+    <string name="import_intro_body">Pick one or more screenshots of the same order. Ordra reads text on-device only — nothing is uploaded, and you review every detected field before saving.</string>
+    <string name="import_pick">Choose screenshots</string>
+    <string name="import_processing">Reading screenshots…</string>
     <string name="import_review_hint">Review the detected fields — correct anything before saving.</string>
     <string name="import_ocr_failed">Couldn0027t read text from that image. Fill the fields manually below.</string>
     <string name="import_save">Save order</string>

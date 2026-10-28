@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.ordra.data.local.OrdraDatabase
 import com.ordra.data.local.dao.BackupDao
 import com.ordra.data.local.dao.CategoryDao
+import com.ordra.data.local.dao.ChatDao
 import com.ordra.data.local.dao.DetectionDao
 import com.ordra.data.local.dao.PostPurchaseDao
 import com.ordra.data.local.dao.OrderDao
@@ -32,6 +33,7 @@ object DatabaseModule {
                 OrdraDatabase.MIGRATION_3_4,
                 OrdraDatabase.MIGRATION_4_5,
                 OrdraDatabase.MIGRATION_5_6,
+                OrdraDatabase.MIGRATION_6_7,
             )
             .build()
 
@@ -59,4 +61,7 @@ object DatabaseModule {
 
     @Provides
     fun provideBackupDao(database: OrdraDatabase): BackupDao = database.backupDao()
+
+    @Provides
+    fun provideChatDao(database: OrdraDatabase): ChatDao = database.chatDao()
 }

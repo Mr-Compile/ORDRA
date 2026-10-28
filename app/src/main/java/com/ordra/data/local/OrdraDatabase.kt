@@ -12,7 +12,10 @@ import com.ordra.data.local.dao.OrderDao
 import com.ordra.data.local.dao.ReminderDao
 import com.ordra.data.local.dao.ShipmentDao
 import com.ordra.data.local.dao.TrackingEventDao
+import com.ordra.data.local.dao.ChatDao
 import com.ordra.data.local.entity.CategoryEntity
+import com.ordra.data.local.entity.ChatMessageEntity
+import com.ordra.data.local.entity.ChatThreadEntity
 import com.ordra.data.local.entity.DetectionSuggestionEntity
 import com.ordra.data.local.entity.OrderCategoryEntity
 import com.ordra.data.local.entity.OrderEntity
@@ -47,8 +50,10 @@ import com.ordra.data.local.entity.TrackingEventEntity
         RefundEntity::class,
         WarrantyEntity::class,
         ReceiptEntity::class,
+        ChatThreadEntity::class,
+        ChatMessageEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class OrdraDatabase : RoomDatabase() {
@@ -60,6 +65,7 @@ abstract class OrdraDatabase : RoomDatabase() {
     abstract fun detectionDao(): DetectionDao
     abstract fun postPurchaseDao(): PostPurchaseDao
     abstract fun backupDao(): BackupDao
+    abstract fun chatDao(): ChatDao
 
     companion object {
         /**
@@ -306,6 +312,34 @@ abstract class OrdraDatabase : RoomDatabase() {
                 listOf("returns", "refunds", "warranties", "receipts").forEach { t ->
                     db.execSQL("CREATE INDEX IF NOT EXISTS `index_${t}_orderId` ON `$t` (`orderId`)")
                 }
+            }
+        }
+
+        /** v6 -> v7: Ordi chat threads + messages. */
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `chat_threads` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `title` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `chat_messages` (
+                        `id` TEXT NOT NULL PRIMARY KEY,
+                        `threadId` TEXT NOT NULL,
+                        `role` TEXT NOT NULL,
+                        `text` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_chat_messages_threadId_createdAt` ON `chat_messages` (`threadId`, `createdAt`)")
             }
         }
     }

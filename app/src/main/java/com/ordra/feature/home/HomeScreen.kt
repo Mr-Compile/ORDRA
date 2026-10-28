@@ -1,6 +1,7 @@
 package com.ordra.feature.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,13 +26,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,6 +51,7 @@ import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.ai.OrdraAiBanner
 import com.ordra.core.ui.components.OrderCard
 import com.ordra.domain.model.Order
+import com.ordra.feature.ordi.OrdiChatSheet
 import java.time.format.DateTimeFormatter
 
 private val ETA_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d")
@@ -72,6 +81,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var chatOpen by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -93,24 +103,58 @@ fun HomeScreen(
             }
         },
     ) { innerPadding ->
-        if (uiState.showingArchived) {
-            ArchivedContent(
-                orders = uiState.archived,
-                onOpenOrder = onOpenOrder,
-                modifier = Modifier.padding(innerPadding),
-            )
-        } else if (uiState.isEmpty && uiState.loaded) {
-            EmptyState(modifier = Modifier.padding(innerPadding))
-        } else {
-            HomeContent(
-                state = uiState,
-                onOpenOrder = onOpenOrder,
-                onOpenOrders = onOpenOrders,
-                onOpenCod = onOpenCod,
-                onAddOrder = onAddOrder,
-                modifier = Modifier.padding(innerPadding),
+        Box(Modifier.fillMaxSize()) {
+            if (uiState.showingArchived) {
+                ArchivedContent(
+                    orders = uiState.archived,
+                    onOpenOrder = onOpenOrder,
+                    modifier = Modifier.padding(innerPadding),
+                )
+            } else if (uiState.isEmpty && uiState.loaded) {
+                EmptyState(modifier = Modifier.padding(innerPadding))
+            } else {
+                HomeContent(
+                    state = uiState,
+                    onOpenOrder = onOpenOrder,
+                    onOpenOrders = onOpenOrders,
+                    onOpenCod = onOpenCod,
+                    onAddOrder = onAddOrder,
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+            OrdiChatHead(
+                onClick = { chatOpen = true },
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(innerPadding)
+                    .padding(start = 20.dp, bottom = 8.dp),
             )
         }
+    }
+    if (chatOpen) {
+        OrdiChatSheet(onDismiss = { chatOpen = false })
+    }
+}
+
+/** Floating Ordi chat head — opens the Ordi chat sheet. */
+@Composable
+private fun OrdiChatHead(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val label = stringResource(R.string.cd_ordi_chat_head)
+    Surface(
+        onClick = onClick,
+        modifier = modifier.semantics {
+            contentDescription = label
+        },
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 4.dp,
+        shadowElevation = 6.dp,
+    ) {
+        CompanionAvatar(
+            state = CompanionState.IDLE,
+            size = 56.dp,
+            animated = true,
+        )
     }
 }
 
