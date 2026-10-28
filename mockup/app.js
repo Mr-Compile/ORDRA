@@ -281,23 +281,50 @@ function openDetailMenu(btn, id) {
 
 /* ---------- shared bits ---------- */
 const platOf = o => PLATFORMS[o.platform] || PLATFORMS.OTHER;
-const statusChip = s => {
-  const st = STATUSES[s];
-  return `<span class="status-chip" style="color:${st.color};background:${st.color}1f">${st.label}</span>`;
+/* status icons — DESIGN_SYSTEM "Icon pairing" table */
+const STATUS_ICONS = {
+  DRAFT: "draft", ORDERED: "receipt_long", PROCESSING: "inventory_2", PACKED: "inventory_2",
+  SHIPPED: "local_shipping", DELIVERED: "check_circle", CANCELLED: "cancel",
+  RETURNED: "assignment_return", REFUNDED: "currency_exchange",
+  UNKNOWN: "help", PREPARING: "inventory_2", PICKED_UP: "local_shipping",
+  IN_TRANSIT: "route", ARRIVED_AT_HUB: "warehouse", OUT_FOR_DELIVERY: "local_shipping",
+  DELIVERY_FAILED: "error", RETURNING: "assignment_return",
 };
+const chipFor = (s, table, hero) => {
+  const st = table[s];
+  return `<span class="status-chip ${hero ? "hero" : ""}" style="color:${st.color};background:${st.color}1f"><span class="mi">${STATUS_ICONS[s] || "help"}</span>${st.label}</span>`;
+};
+const statusChip = s => chipFor(s, STATUSES);
+const platformBadge = o => {
+  const p = platOf(o);
+  return `<span class="plat-chip" style="color:${p.color};background:${p.color}1c">${esc(o.customPlatformName || p.label)}</span>`;
+};
+const courierBadge = o => o.courier ? `<span class="courier-chip"><span class="mi">local_shipping</span>${esc(o.courier)}</span>` : "";
 const codChip = () => `<span class="cod-chip"><span class="mi">payments</span>COD</span>`;
 
+/* compact TrackingProgress — shipment step dots */
+function shipProgress(o) {
+  const ship = o.shipStatus ? SHIP_STATUSES[o.shipStatus] : null;
+  if (!ship || ship.step < 0) return "";
+  const step = ship.step;
+  return `<span class="tprog">${TIMELINE_STEPS.map((_, i) => {
+    const cls = i < step ? "done" : i === step ? "now" : "";
+    return `<span class="tprog-dot ${cls}"></span>${i < TIMELINE_STEPS.length - 1 ? `<span class="tprog-line ${i < step ? "done" : ""}"></span>` : ""}`;
+  }).join("")}</span>`;
+}
+
+/* ParcelCard standard variant — PlatformBadge → name → CourierBadge+tracking → StatusChip → progress → ETA */
 function orderCard(o) {
-  const p = platOf(o);
   const eta = o.status === "DELIVERED" ? `Delivered ${fmtDate(o.deliveredAt)}`
     : TERMINAL.includes(o.status) ? STATUSES[o.status].label
     : o.etaEnd ? `ETA ${fmtDate(o.etaStart)} – ${fmtDate(o.etaEnd)}` : "No ETA yet";
   return `<button class="order-card" data-open="${o.id}" type="button">
-    <span class="plat-badge" style="background:${p.color}">${p.initial}</span>
     <span class="order-main">
+      <span style="display:flex;gap:6px;align-items:center;margin-bottom:6px">${platformBadge(o)}${o.isCod && o.paymentStatus !== "PAID" ? codChip() : ""}</span>
       <span class="order-title">${esc(itemsSummary(o))}</span>
-      <span class="order-sub">${esc(o.sellerName)} · ${esc(o.customPlatformName || p.label)} · ${eta}</span>
-      <span style="display:flex;gap:6px;margin-top:7px">${statusChip(o.status)}${o.isCod && o.paymentStatus !== "PAID" ? codChip() : ""}</span>
+      <span class="order-sub">${courierBadge(o)}${o.tracking ? `<span class="mono" style="font-size:11px;color:var(--text-2)">${esc(o.tracking)}</span>` : ""}<span>·</span>${eta}</span>
+      <span style="display:flex;gap:6px;margin-top:7px;align-items:center">${statusChip(o.status)}</span>
+      ${shipProgress(o)}
     </span>
     <span class="order-side"><span class="order-total">${peso(orderTotal(o))}</span><span class="mi" style="font-size:17px;color:var(--text-2)">chevron_right</span></span>
   </button>`;
@@ -381,6 +408,8 @@ function renderHome() {
 
   const upcoming = soon.slice(0, 3);
   const recent = [...orders].filter(o => !o.archived).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 3);
+  // featured ParcelCard — the most important current shipment (soonest ETA active order)
+  const featured = soon[0] || active.filter(o => o.status !== "DELIVERED").sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] || null;
 
   body.innerHTML = `
     <div class="ai-banner" style="margin-top:10px">
@@ -396,6 +425,19 @@ function renderHome() {
       </div>
       ${ordiSvg(banner.state)}
     </div>
+
+    ${featured ? `
+      <button class="order-card parcel-featured" data-open="${featured.id}" type="button" style="margin-top:0">
+        <span class="order-main">
+          <span style="display:flex;gap:6px;align-items:center;margin-bottom:7px">${platformBadge(featured)}${featured.isCod && featured.paymentStatus !== "PAID" ? codChip() : ""}</span>
+          <span class="order-title">${esc(itemsSummary(featured))}</span>
+          <span class="order-sub" style="margin-top:3px">${courierBadge(featured)}${featured.tracking ? `<span class="mono" style="font-size:11px;color:var(--text-2)">${esc(featured.tracking)}</span>` : ""}</span>
+          <span style="display:flex;gap:6px;margin-top:8px;align-items:center">${statusChip(featured.status)}${featured.shipStatus ? chipFor(featured.shipStatus, SHIP_STATUSES) : ""}</span>
+          ${shipProgress(featured)}
+          <span class="parcel-eta"><span class="mi">event</span>${featured.status === "DELIVERED" ? `Delivered ${fmtDate(featured.deliveredAt)}` : featured.etaEnd ? `ETA ${fmtDate(featured.etaStart)} – ${fmtDate(featured.etaEnd)}` : "No ETA yet"}</span>
+        </span>
+        <span class="order-side"><span class="order-total" style="font-size:16px">${peso(orderTotal(featured))}</span></span>
+      </button>` : ""}
 
     <div class="stat-row">
       <div class="stat-card"><span class="stat-ico indigo"><span class="mi">package_2</span></span><div class="stat-num">${active.length}</div><div class="stat-label">Active orders</div></div>
@@ -540,8 +582,8 @@ function renderDetail() {
       <span class="plat-badge" style="background:${p.color}">${p.initial}</span>
       <div>
         <h3>${esc(itemsSummary(o))}</h3>
-        <div class="order-sub">${esc(o.customPlatformName || p.label)} · ${esc(o.sellerName)} · Ordered ${fmtDate(o.orderedAt)}</div>
-        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${statusChip(o.status)}${o.archived ? `<span class="status-chip" style="color:var(--text-2);background:var(--surface-var)">Archived</span>` : ""}</div>
+        <div class="order-sub">${esc(o.sellerName)} · Ordered ${fmtDate(o.orderedAt)}</div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">${platformBadge(o)}${statusChip(o.status)}${o.archived ? `<span class="status-chip" style="color:var(--text-2);background:var(--surface-var)"><span class="mi">archive</span>Archived</span>` : ""}</div>
       </div>
       <span class="order-side"><span class="order-total" style="font-size:17px">${peso(orderTotal(o))}</span></span>
     </div>
@@ -575,10 +617,7 @@ function renderDetail() {
     <div class="scroll-pad"></div>`;
 }
 
-const statusChip2 = (s, table) => {
-  const st = table[s];
-  return `<span class="status-chip" style="color:${st.color};background:${st.color}1f">${st.label}</span>`;
-};
+const statusChip2 = (s, table) => chipFor(s, table);
 
 /* StatusProgression: shipment DELIVERED → order DELIVERED; shipment RETURNED → order RETURNED */
 function applyShipStatus(o, s) {
@@ -895,20 +934,16 @@ function renderTimeline() {
   if (!o) { body.innerHTML = `<div class="empty"><p>No parcel selected.</p></div>`; return; }
   const ship = o.shipStatus ? SHIP_STATUSES[o.shipStatus] : null;
   const step = ship ? ship.step : -1;
+  /* SCREEN_SPECS hierarchy: status chip hero → ETA → order summary + badges → stepper → events → courier → tracking+copy */
   body.innerHTML = `
-    <div class="detail-hero" style="margin-top:10px">
-      <span class="plat-badge" style="background:${platOf(o).color}">${platOf(o).initial}</span>
-      <div>
-        <h3>${esc(itemsSummary(o))}</h3>
-        <div class="order-sub">${esc(o.sellerName)} · ${esc(o.customPlatformName || platOf(o).label)}</div>
-      </div>
-      <span class="order-side">${ship ? statusChip2(o.shipStatus, SHIP_STATUSES) : ""}</span>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+      ${ship ? chipFor(o.shipStatus, SHIP_STATUSES, true) : `<span class="status-chip hero" style="color:var(--text-2);background:var(--surface-var)"><span class="mi">help</span>No shipment yet</span>`}
+      <div class="parcel-eta"><span class="mi">event</span>${o.shipStatus === "DELIVERED" ? `Delivered ${fmtDate(o.deliveredAt)}` : o.etaStart ? `ETA ${fmtDate(o.etaStart)} – ${fmtDate(o.etaEnd)}` : "No ETA set"}</div>
     </div>
-    <div class="card"><h4 class="card-title">Shipment</h4>
-      <div class="kv-row"><span class="k">Courier</span><span class="v">${esc(o.courier || "Not set")}</span></div>
-      <div class="kv-row"><span class="k">Tracking</span><span class="v">${o.tracking ? `<span class="mono">${esc(o.tracking)}</span>` : "—"}</span></div>
-      <div class="kv-row"><span class="k">ETA</span><span class="v">${o.etaStart ? `${fmtDate(o.etaStart)} – ${fmtDate(o.etaEnd)}` : "—"}</span></div>
-      <div class="kv-row"><span class="k">Source</span><span class="v">Set manually</span></div>
+    <div class="card" style="margin-top:10px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">${platformBadge(o)}${courierBadge(o)}</div>
+      <div class="item-name" style="font-size:15px">${esc(itemsSummary(o))}</div>
+      <div class="order-sub">${esc(o.sellerName)} · Ordered ${fmtDate(o.orderedAt)} · ${peso(orderTotal(o))}</div>
     </div>
     ${ship && step >= 0 ? `
       <div class="card"><h4 class="card-title">Tracking</h4>
@@ -919,9 +954,14 @@ function renderTimeline() {
         }).join("")}</ul>
       </div>` : `
       <div class="banner warn" style="margin-top:10px"><span class="mi">info</span>
-        ${!ship ? "No shipment yet — tracking appears once a courier or tracking number is set."
+        ${!ship ? "Statuses appear here as updates are detected or added — manual update is always available."
           : ship.step < 0 ? `${ship.label}.` : ""}
       </div>`}
+    <div class="card"><h4 class="card-title">Courier</h4>
+      <div class="kv-row"><span class="k">Courier</span><span class="v">${courierBadge(o) || "Not set"}</span></div>
+      <div class="kv-row"><span class="k">Tracking</span><span class="v">${o.tracking ? `<span class="mono">${esc(o.tracking)}</span> <button class="copy-btn" type="button" aria-label="Copy tracking number" onclick="navigator.clipboard?.writeText('${esc(o.tracking)}');toast('Tracking number copied')"><span class="mi">content_copy</span></button>` : "—"}</span></div>
+      <div class="kv-row"><span class="k">Source</span><span class="v">Set manually · updated ${fmtDate(o.createdAt)}</span></div>
+    </div>
     <div class="action-col">
       <button class="btn btn-outline" type="button" onclick="updateShipStatus('${o.id}')">Update shipment status</button>
       <button class="btn btn-tonal" type="button" data-goto="detail"><span class="mi">arrow_back</span>Back to order</button>

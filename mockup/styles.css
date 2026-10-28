@@ -3,9 +3,12 @@
 
 :root {
   --font: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
-  --radius-s: 10px;
-  --radius-m: 14px;
-  --radius-l: 20px;
+  /* DESIGN_SYSTEM radius tokens: chips 8, inputs/buttons 12, cards 16, featured/bento 22 */
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-xl: 22px;
+  --grad-brand: linear-gradient(135deg, #5B5FEF 0%, #7C5CFC 100%);
   --ease: cubic-bezier(.2, .8, .3, 1);
 }
 
@@ -253,7 +256,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .order-sub {
   font-size: 12px; color: var(--text-2); margin-top: 2px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
 }
 .order-side { text-align: right; flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
 .order-total { font-size: 14px; font-weight: 800; letter-spacing: -.01em; }
@@ -265,10 +268,60 @@ button { font-family: inherit; cursor: pointer; }
 .chip.is-on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .chip-row { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; scrollbar-width: none; }
 
+/* StatusChip = icon + text + semantic color (DESIGN_SYSTEM unified status system) */
 .status-chip {
+  display: inline-flex; align-items: center; gap: 4px;
   font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
-  padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+  padding: 3px 8px; border-radius: var(--radius-s); white-space: nowrap;
 }
+.status-chip .mi { font-size: 14px; }
+.status-chip.hero { font-size: 13px; padding: 7px 14px; border-radius: var(--radius-m); }
+.status-chip.hero .mi { font-size: 18px; }
+
+/* PlatformBadge — tonal chip, subdued platform tint */
+.plat-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; padding: 3px 9px;
+  border-radius: var(--radius-s); white-space: nowrap;
+}
+/* CourierBadge — neutral outlined chip */
+.courier-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; color: var(--text-2);
+  border: 1px solid var(--outline); border-radius: var(--radius-s);
+  padding: 2px 8px; white-space: nowrap;
+}
+.courier-chip .mi { font-size: 13px; }
+
+/* compact horizontal TrackingProgress */
+.tprog { display: flex; align-items: center; gap: 0; margin-top: 9px; }
+.tprog-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--outline); flex: 0 0 auto;
+}
+.tprog-dot.done { background: var(--mint); }
+.tprog-dot.now { background: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent); }
+.tprog-line { flex: 1; height: 2px; background: var(--outline); }
+.tprog-line.done { background: var(--mint); }
+
+/* featured ParcelCard — largest emphasis, xl radius, brand-tinted edge */
+.parcel-featured {
+  border-radius: var(--radius-xl) !important;
+  padding: 16px 16px 14px !important;
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--outline)) !important;
+  background:
+    radial-gradient(140% 120% at 100% 0%, color-mix(in srgb, var(--secondary) 9%, transparent), transparent 55%),
+    var(--surface) !important;
+  align-items: flex-start !important;
+}
+.parcel-featured .order-title { font-size: 15px; }
+.parcel-eta {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+  font-size: 12px; font-weight: 700; color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+  padding: 4px 10px; border-radius: var(--radius-s);
+}
+.parcel-eta .mi { font-size: 15px; }
 .cod-chip {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 10.5px; font-weight: 700;
@@ -487,7 +540,9 @@ button { font-family: inherit; cursor: pointer; }
 .navbar {
   flex: 0 0 auto; height: 74px;
   display: flex; align-items: center; justify-content: space-around;
-  background: var(--nav-bg); border-top: 1px solid var(--outline);
+  background: color-mix(in srgb, var(--nav-bg) 84%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--outline);
   padding: 0 8px 12px; position: relative;
 }
 .nav-item {
