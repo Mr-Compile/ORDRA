@@ -10,6 +10,11 @@
   --radius-xl: 22px;
   --grad-brand: linear-gradient(135deg, #5B5FEF 0%, #7C5CFC 100%);
   --ease: cubic-bezier(.2, .8, .3, 1);
+  /* Motion tokens from app OrdraMotion / docs/uiux/MOTION_AND_FEEDBACK.md:
+     micro 100-150ms, standard 200-300ms, emphasis <=400ms */
+  --dur-micro: 120ms;
+  --dur-standard: 250ms;
+  --dur-emphasis: 350ms;
 }
 
 .device[data-theme="light"] {
@@ -241,9 +246,25 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--surface); border: 1px solid var(--outline);
   border-radius: var(--radius-l); padding: 12px 14px;
   text-align: left; width: 100%; color: var(--text);
-  transition: transform .15s var(--ease), border-color .15s;
+  position: relative; overflow: hidden;
+  transition: transform var(--dur-micro) var(--ease), border-color var(--dur-micro);
 }
 .order-card:hover { border-color: var(--primary); transform: translateY(-1px); }
+/* Swipe-action affordances — mirrors in-app swipe: → delivered, ← archive/restore */
+.order-card::before,
+.order-card::after {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  font-size: 11px; font-weight: 700; opacity: 0;
+  transition: opacity var(--dur-micro) var(--ease);
+  pointer-events: none; white-space: nowrap;
+}
+.order-card::before { content: "✓ Delivered"; left: 10px; color: var(--mint); }
+.order-card::after { content: "Archive"; right: 10px; color: var(--text-2); }
+.order-card:hover::before, .order-card:hover::after { opacity: .95; }
+.order-card:hover {
+  background: linear-gradient(90deg, var(--mint-bg) 0%, var(--surface) 32%,
+    var(--surface) 68%, var(--surface-var) 100%);
+}
 .plat-badge {
   width: 42px; height: 42px; flex: 0 0 auto;
   border-radius: 12px; display: flex; align-items: center; justify-content: center;

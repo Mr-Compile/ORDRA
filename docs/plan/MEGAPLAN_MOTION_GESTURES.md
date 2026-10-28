@@ -36,15 +36,15 @@ DONE / IN PROGRESS / PENDING / BLOCKED
 
 | WS | Scope | Status | Notes |
 |---|---|---|---|
-| M0 | Motion foundation | IN PROGRESS | `OrdraMotion` tokens, shared `rememberReducedMotion`, this doc |
-| M1 | Screen/step transitions + predictive back | PENDING | NavHost slide/fade, AnimatedContent on Smart Import + Editor steps, `enableOnBackInvokedCallback` |
-| M2 | List & status micro-motion | PENDING | `Modifier.animateItem()` on all keyed lists; StatusChip `animateColorAsState` |
-| M3 | Swipe order cards | PENDING | `SwipeToDismissBox`: left=archive, right=mark delivered (restore on archived list); undo snackbar; VM actions; `SwipeActionTest` |
-| M4 | Long-press quick actions | PENDING | `combinedClickable` + `OrderActionsSheet` ModalBottomSheet: Open / Mark delivered / Archive-Restore |
-| M5 | Calendar month swipe | PENDING | `HorizontalPager` centered paging; `monthForPage` + `CalendarPageTest` |
-| M6 | Delivered confirmation moment | PENDING | Mint check scale+fade overlay <=400ms + haptic; fired from detail dialog, swipe, and sheet |
-| M7 | Loading skeletons | PENDING | Static `SkeletonCard`s on Home/Orders/Detail/Timeline (no shimmer) |
-| M8 | Mockup sync + docs + QA evidence | PENDING | CSS motion tokens, drag/long-press affordances, delivered overlay, `MOTION_AND_FEEDBACK.md` additions, `docs/qa/MOTION_GESTURE_EVIDENCE.md` |
+| M0 | Motion foundation | DONE | `OrdraMotion` tokens, shared `rememberReducedMotion`, this doc |
+| M1 | Screen/step transitions + predictive back | DONE | NavHost slide/fade, AnimatedContent on Smart Import + Editor steps, `enableOnBackInvokedCallback` |
+| M2 | List & status micro-motion | DONE | `Modifier.animateItem()` on all keyed lists; StatusChip `animateColorAsState` |
+| M3 | Swipe order cards | DONE | `SwipeToDismissBox`: left=archive, right=mark delivered (restore on archived list); undo snackbar; VM actions; `SwipeActionTest` |
+| M4 | Long-press quick actions | DONE | `combinedClickable` + `OrderActionsSheet` ModalBottomSheet: Open / Mark delivered / Archive-Restore |
+| M5 | Calendar month swipe | DONE | `HorizontalPager` centered paging; `monthForPage` + `CalendarPageTest` |
+| M6 | Delivered confirmation moment | DONE | Mint check scale+fade overlay <=400ms + haptic; fired from detail dialog, swipe, and sheet |
+| M7 | Loading skeletons | DONE | Static `SkeletonCard`s on Home/Orders/Detail/Timeline (no shimmer) |
+| M8 | Mockup sync + docs + QA evidence | DONE | CSS motion tokens, drag/long-press affordances, delivered overlay, `MOTION_AND_FEEDBACK.md` additions, `docs/qa/MOTION_GESTURE_EVIDENCE.md` |
 
 ## Acceptance
 
