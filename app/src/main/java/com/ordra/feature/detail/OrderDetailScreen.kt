@@ -3,6 +3,7 @@ package com.ordra.feature.detail
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -47,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
 import com.ordra.core.common.MoneyFormat
+import com.ordra.core.ui.components.DeliveredCelebrationOverlay
 import com.ordra.core.ui.components.SkeletonList
 import com.ordra.core.ui.components.StatusChip
 import com.ordra.core.ui.courierLabel
@@ -85,6 +87,7 @@ fun OrderDetailScreen(
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showDeliveredDialog by remember { mutableStateOf(false) }
+    var showDelivered by remember { mutableStateOf(false) }
     var showStatusPicker by remember { mutableStateOf(false) }
     var showShipmentPicker by remember { mutableStateOf(false) }
 
@@ -92,6 +95,7 @@ fun OrderDetailScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 OrderDetailEffect.Deleted -> onNavigateBack()
+                OrderDetailEffect.Delivered -> showDelivered = true
                 is OrderDetailEffect.OpenUrl ->
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(effect.url)))
             }
@@ -100,6 +104,7 @@ fun OrderDetailScreen(
 
     val order = uiState.order
 
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
             DetailTopBar(
@@ -141,6 +146,10 @@ fun OrderDetailScreen(
                 modifier = Modifier.padding(padding),
             )
         }
+    }
+    if (showDelivered) {
+        DeliveredCelebrationOverlay(onFinished = { showDelivered = false })
+    }
     }
 
     if (showDeliveredDialog) {

@@ -37,6 +37,7 @@ data class OrderDetailUiState(
 
 sealed interface OrderDetailEffect {
     data object Deleted : OrderDetailEffect
+    data object Delivered : OrderDetailEffect
     data class OpenUrl(val url: String) : OrderDetailEffect
 }
 
@@ -148,11 +149,12 @@ class OrderDetailViewModel @Inject constructor(
 
     fun setOrderStatus(status: OrderStatus) {
         viewModelScope.launch {
-            updateOrderStatus(orderId, status)
-            if (status == OrderStatus.DELIVERED) {
+            val result = updateOrderStatus(orderId, status)
+            if (status == OrderStatus.DELIVERED && result is AppResult.Success) {
                 _uiState.value.shipment?.let {
                     shipmentRepository.updateShipmentStatus(it.id, ShipmentStatus.DELIVERED)
                 }
+                _effects.send(OrderDetailEffect.Delivered)
             }
         }
     }
