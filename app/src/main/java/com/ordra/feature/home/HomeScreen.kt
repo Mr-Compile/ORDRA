@@ -52,6 +52,7 @@ import com.ordra.core.ui.ai.CompanionAvatar
 import com.ordra.core.ui.ai.CompanionState
 import com.ordra.core.ui.ai.CompanionVariant
 import com.ordra.core.ui.ai.OrdraAiBanner
+import com.ordra.core.ui.components.DeliveredCelebrationOverlay
 import com.ordra.core.ui.components.OrderSwipeAction
 import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.domain.model.Order
@@ -90,13 +91,16 @@ fun HomeScreen(
     var chatOpen by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var actionOrder by remember { mutableStateOf<Order?>(null) }
+    var showDelivered by remember { mutableStateOf(false) }
 
     OrderActionEffects(
         events = viewModel.actionEvents,
         snackbarHostState = snackbarHostState,
         onUndo = viewModel::undoOrderAction,
+        onDelivered = { showDelivered = true },
     )
 
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -153,6 +157,10 @@ fun HomeScreen(
                     .padding(start = 20.dp, bottom = 8.dp),
             )
         }
+    }
+    if (showDelivered) {
+        DeliveredCelebrationOverlay(onFinished = { showDelivered = false })
+    }
     }
     actionOrder?.let { order ->
         OrderActionsSheet(

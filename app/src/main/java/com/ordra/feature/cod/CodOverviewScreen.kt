@@ -1,6 +1,7 @@
 package com.ordra.feature.cod
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,6 +35,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ordra.R
 import com.ordra.core.common.MoneyFormat
+import com.ordra.core.ui.components.DeliveredCelebrationOverlay
 import com.ordra.core.ui.components.OrderSwipeAction
 import com.ordra.core.ui.components.SwipeableOrderCard
 import com.ordra.domain.model.Order
@@ -50,13 +52,16 @@ fun CodOverviewScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var actionOrder by remember { mutableStateOf<Order?>(null) }
+    var showDelivered by remember { mutableStateOf(false) }
 
     OrderActionEffects(
         events = viewModel.actionEvents,
         snackbarHostState = snackbarHostState,
         onUndo = viewModel::undoOrderAction,
+        onDelivered = { showDelivered = true },
     )
 
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -152,6 +157,10 @@ fun CodOverviewScreen(
                 }
             }
         }
+    }
+    if (showDelivered) {
+        DeliveredCelebrationOverlay(onFinished = { showDelivered = false })
+    }
     }
 
     actionOrder?.let { order ->
